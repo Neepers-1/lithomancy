@@ -250,6 +250,8 @@ class Dialog {
             if (self.data.buttons[key].callback) {
                 self.data.buttons[key].callback(self.element);
             }
+            // FIX: Standard Foundry behavior closes the dialog on button click
+            self.close();
         });
 
         // Execute Render Callback (The script relies on this to bind listeners)
@@ -721,9 +723,12 @@ async function updateUI(token) {
     html.find('[data-ui="forecast-wrap"]').html(`<div style="width:140px; text-align:center; font-size:0.7em; color:#2ecc71; font-weight:700; margin:0; padding:6px 0;">Forecast Locked</div>`);
   }
 
-  // --- TEAM SLIDERS (just update display, no re-render) ---
+  // --- TEAM SLIDERS (Reset Logic Added Here) ---
   html.find('#disp-pc').text(data.playerCount + ' PCs');
+  html.find('.team-slider[data-target="playerCount"]').val(data.playerCount); // FIXED: Update Slider Position
+  
   html.find('#disp-npc').text(data.npcCount + ' NPCs');
+  html.find('.team-slider[data-target="npcCount"]').val(data.npcCount); // FIXED: Update Slider Position
 }
 
 /* ==================================================
@@ -1045,7 +1050,7 @@ function openLithomancyMonitor(token, miner) {
   if (!data) return;
 
   // Build initial HTML with data-ui markers for targeted updates
-  const editIcon = (key, label) => `<i class="fas fa-pen-square edit-btn" data-key="${key}" data-label="${label}" style="margin-left:6px; cursor:pointer; opacity:0.3; font-size:0.85em;" title="GM Edit"></i>`;
+  const editIcon = (key, label) => ``; // FIX: Removed icons by returning empty string
 
   const btnGroup = (action, color, icon) => `
     <div class="litho-toolrow">
