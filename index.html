@@ -15,6 +15,7 @@
     display: flex; align-items: center; justify-content: center;
     min-height: 100vh;
     font-family: 'Spectral', serif;
+    padding-top: 42px;
   }
 
   /* ── Foundry Dialog mock ── */
@@ -148,7 +149,115 @@
   .cycle-row:last-child{ border-bottom:none; }
   .help-header{ user-select:none; }
 
-  /* Reel */
+  /* ── Active Player Bar ── */
+  #active-player-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 7500;
+    background: rgba(10,10,12,0.95); border-bottom: 1px solid #2a2a2e;
+    padding: 6px 16px; display: flex; align-items: center; gap: 12px;
+  }
+  #active-player-bar .ap-label {
+    font-family: 'Cinzel', serif; font-size: 0.7em; color: #555; letter-spacing: 1px; white-space: nowrap;
+  }
+  .player-chip {
+    font-family: 'Cinzel', serif; font-size: 0.75em; font-weight: 700;
+    padding: 4px 14px; border-radius: 20px; border: 1px solid #333;
+    background: #1a1a1e; color: #555; cursor: pointer; transition: 0.2s;
+    white-space: nowrap;
+  }
+  .player-chip:hover { border-color: #a29bfe; color: #a29bfe; }
+  .player-chip.active {
+    border-color: var(--pc, #a29bfe); color: var(--pc, #a29bfe);
+    background: rgba(162,155,254,0.1);
+    box-shadow: 0 0 8px rgba(162,155,254,0.3);
+  }
+  .player-chip[data-player="Mycha"].active       { --pc: #ff79c6; border-color:#ff79c6; color:#ff79c6; background:rgba(255,121,198,0.1); box-shadow:0 0 8px rgba(255,121,198,0.3); }
+  .player-chip[data-player="Kaninchen"].active   { --pc: #00e5ff; border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.1);   box-shadow:0 0 8px rgba(0,229,255,0.3); }
+  .player-chip[data-player="Orcblood"].active    { --pc: #ff5555; border-color:#ff5555; color:#ff5555; background:rgba(255,85,85,0.1);   box-shadow:0 0 8px rgba(255,85,85,0.3); }
+  .player-chip[data-player="Magnus"].active      { --pc: #f1c40f; border-color:#f1c40f; color:#f1c40f; background:rgba(241,196,15,0.1);  box-shadow:0 0 8px rgba(241,196,15,0.3); }
+  .player-chip[data-player="Gamemaster"].active  { --pc: #a29bfe; border-color:#a29bfe; color:#a29bfe; background:rgba(162,155,254,0.1); box-shadow:0 0 8px rgba(162,155,254,0.3); }
+  #btn-leaderboard {
+    margin-left: auto; font-family: 'Cinzel', serif; font-size: 0.75em; font-weight: 700;
+    padding: 4px 16px; border-radius: 4px; border: 1px solid #d4af37;
+    background: rgba(212,175,55,0.1); color: #d4af37; cursor: pointer; transition: 0.2s;
+    white-space: nowrap;
+  }
+  #btn-leaderboard:hover { background: rgba(212,175,55,0.25); box-shadow: 0 0 10px rgba(212,175,55,0.4); }
+
+  /* ── Leaderboard Panel ── */
+  #leaderboard-panel {
+    position: fixed; top: 0; right: -480px; width: 460px; height: 100vh;
+    background: radial-gradient(circle at 50% 0%, #1e1e22, #0d0d0f);
+    border-left: 2px solid #3a3a3c; z-index: 8500;
+    transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: -10px 0 40px rgba(0,0,0,0.8);
+  }
+  #leaderboard-panel.open { right: 0; }
+  #lb-header {
+    padding: 16px 20px; border-bottom: 2px solid #3a3a3c;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  #lb-header h2 {
+    font-family: 'Cinzel', serif; font-size: 1.2em; font-weight: 800;
+    color: #d4af37; text-shadow: 0 0 10px rgba(212,175,55,0.4);
+    display: flex; align-items: center; gap: 8px;
+  }
+  #lb-close {
+    background: transparent; border: 1px solid #444; color: #777;
+    border-radius: 4px; width: 28px; height: 28px; cursor: pointer; transition: 0.2s;
+    font-size: 0.9em;
+  }
+  #lb-close:hover { border-color: #e74c3c; color: #e74c3c; }
+  #lb-body { flex: 1; overflow-y: auto; padding: 16px; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+  .lb-player-card {
+    background: linear-gradient(135deg, #1a1a1e, #141416);
+    border: 1px solid #2a2a2e; border-radius: 8px; margin-bottom: 12px;
+    overflow: hidden; transition: border-color 0.2s;
+  }
+  .lb-player-card:hover { border-color: #444; }
+  .lb-player-header {
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #222;
+  }
+  .lb-player-name {
+    font-family: 'Cinzel', serif; font-weight: 800; font-size: 1.05em;
+  }
+  .lb-rank { font-family: 'Cinzel', serif; font-size: 1.4em; font-weight: 800; color: #333; width: 28px; text-align: center; }
+  .lb-rank.gold   { color: #f1c40f; text-shadow: 0 0 8px rgba(241,196,15,0.6); }
+  .lb-rank.silver { color: #95a5a6; text-shadow: 0 0 8px rgba(149,165,166,0.4); }
+  .lb-rank.bronze { color: #e67e22; text-shadow: 0 0 8px rgba(230,126,34,0.4); }
+  .lb-stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1px; background: #1a1a1e;
+  }
+  .lb-stat {
+    background: #141416; padding: 8px 10px; text-align: center;
+  }
+  .lb-stat-val {
+    font-family: 'Cinzel', serif; font-weight: 800; font-size: 1.3em; color: #fff;
+  }
+  .lb-stat-lbl {
+    font-size: 0.6em; color: #555; letter-spacing: 0.5px; text-transform: uppercase;
+    font-family: 'Cinzel', serif; margin-top: 2px;
+  }
+  .lb-score-badge {
+    margin-left: auto; font-family: 'Cinzel', serif; font-size: 0.8em; font-weight: 700;
+    padding: 3px 10px; border-radius: 12px; border: 1px solid currentColor;
+  }
+  #lb-footer {
+    padding: 12px 16px; border-top: 1px solid #2a2a2e; flex-shrink: 0;
+    display: flex; gap: 8px;
+  }
+  #lb-footer button {
+    flex: 1; background: #1c1c1e; border: 1px solid #333; color: #777;
+    border-radius: 4px; padding: 8px; cursor: pointer; font-family: 'Cinzel', serif;
+    font-size: 0.75em; font-weight: 700; transition: 0.2s;
+  }
+  #lb-footer button:hover { border-color: #a29bfe; color: #a29bfe; }
+  #lb-footer button.danger:hover { border-color: #e74c3c; color: #e74c3c; }
+
+  /* ── Reel ── */
   .reel-frame{ border:1px solid #333;border-radius:6px;background:radial-gradient(circle,#252528,#18181a);padding:10px;color:#dcdcdc; }
   .reel-window{ height:180px;overflow:hidden;position:relative;border:1px solid #444;background:#111;border-radius:4px;box-shadow:0 0 10px #000 inset; }
   .reel-strip{ position:absolute;top:0;width:100%;transition:transform 8s cubic-bezier(0.1,0.9,0.2,1); }
@@ -159,7 +268,33 @@
 </head>
 <body>
 
-<!-- Chat Log -->
+<!-- Active Player Bar -->
+<div id="active-player-bar">
+  <span class="ap-label">ACTIVE MINER:</span>
+  <button class="player-chip" data-player="Mycha">Mycha</button>
+  <button class="player-chip" data-player="Kaninchen">Kaninchen</button>
+  <button class="player-chip" data-player="Orcblood">Orcblood</button>
+  <button class="player-chip" data-player="Magnus">Magnus</button>
+  <button class="player-chip" data-player="Gamemaster" style="border-color:#a29bfe44;"><i class="fas fa-crown" style="font-size:0.8em;margin-right:4px;"></i>Gamemaster</button>
+  <button id="btn-leaderboard"><i class="fas fa-trophy"></i> Leaderboard</button>
+</div>
+
+<!-- Leaderboard Panel -->
+<div id="leaderboard-panel">
+  <div id="lb-header">
+    <h2><i class="fas fa-trophy" style="color:#d4af37;"></i> Miner Leaderboard</h2>
+    <button id="lb-close"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="lb-body">
+    <div style="text-align:center;color:#444;font-style:italic;padding:40px 0;font-family:'Spectral',serif;">Loading records...</div>
+  </div>
+  <div id="lb-footer">
+    <button id="lb-refresh"><i class="fas fa-sync-alt"></i> Refresh</button>
+    <button id="lb-reset-mine" class="danger" style="display:none;"><i class="fas fa-user-times"></i> Reset Player</button>
+    <button id="lb-reset-all" class="danger" style="display:none;"><i class="fas fa-trash"></i> Reset All</button>
+  </div>
+</div>
+
 <div id="chat-log-wrap"></div>
 <!-- Notifications -->
 <div id="notif-wrap"></div>
@@ -351,8 +486,186 @@ const game = {
 };
 
 /* ═══════════════════════════════════════════════════════════
- * LITHOMANCY MONITOR — FULL GAME CODE (ADAPTED FROM MACRO)
+ * LEADERBOARD & PLAYER SYSTEM
  * ═══════════════════════════════════════════════════════════ */
+
+const PLAYERS = ["Mycha", "Kaninchen", "Orcblood", "Magnus", "Gamemaster"];
+const PLAYER_COLORS = {
+  Mycha:      "#ff79c6",
+  Kaninchen:  "#00e5ff",
+  Orcblood:   "#ff5555",
+  Magnus:     "#f1c40f",
+  Gamemaster: "#a29bfe"
+};
+
+let activePlayer = null;
+
+// ── localStorage (sync, works on GitHub Pages) ───────────────
+function blankStats() {
+  return {
+    successes:      0,
+    explosions:     0,
+    bloodSpent:     0,
+    fractureDmg:    0,
+    roundsSurvived: 0,
+    nat20s:         0,
+    nat1s:          0,
+    gamesPlayed:    0
+  };
+}
+
+function loadStats(name) {
+  try {
+    const raw = localStorage.getItem(`litho_lb_${name}`);
+    return raw ? JSON.parse(raw) : blankStats();
+  } catch(e) { return blankStats(); }
+}
+
+function saveStats(name, stats) {
+  try { localStorage.setItem(`litho_lb_${name}`, JSON.stringify(stats)); }
+  catch(e) { console.warn('localStorage save failed:', e); }
+}
+
+function loadAllStats() {
+  const all = {};
+  for (const name of PLAYERS) all[name] = loadStats(name);
+  return all;
+}
+
+// Fully synchronous — no await needed anywhere
+function awardStat(statKey, amount = 1) {
+  if (!activePlayer) return;
+  const stats = loadStats(activePlayer);
+  stats[statKey] = (stats[statKey] || 0) + amount;
+  saveStats(activePlayer, stats);
+}
+
+function computeScore(s) {
+  return (s.successes      * 100)
+       + (s.fractureDmg    *   2)
+       + (s.nat20s         *  25)
+       - (s.explosions     *  30)
+       - (s.nat1s          *  10)
+       + (s.roundsSurvived *  10)
+       + Math.floor(s.bloodSpent / 10);
+}
+
+function renderLeaderboard() {
+  const body = document.getElementById('lb-body');
+  const all = loadAllStats();
+  const ranked = PLAYERS
+    .map(name => ({ name, stats: all[name], score: computeScore(all[name]) }))
+    .sort((a, b) => b.score - a.score);
+
+  const rankLabels  = ['gold','silver','bronze','',''];
+  const rankSymbols = ['1st','2nd','3rd','4th','5th'];
+
+  body.innerHTML = ranked.map((p, i) => {
+    const s   = p.stats;
+    const col = PLAYER_COLORS[p.name] || '#a29bfe';
+    const isActive = p.name === activePlayer;
+    const isDM = p.name === 'Gamemaster';
+    return `
+    <div class="lb-player-card" style="${isActive ? `border-color:${col};box-shadow:0 0 12px ${col}22;` : ''}">
+      <div class="lb-player-header" style="background:linear-gradient(90deg,${col}18,transparent);">
+        <div class="lb-rank ${rankLabels[i]}">${rankSymbols[i]}</div>
+        <div class="lb-player-name" style="color:${col};text-shadow:0 0 8px ${col}66;">
+          ${isDM ? '<i class="fas fa-crown" style="font-size:0.8em;margin-right:4px;"></i>' : ''}${p.name}
+        </div>
+        ${isActive ? `<span style="font-size:0.6em;color:${col};border:1px solid ${col};padding:2px 7px;border-radius:10px;margin-left:4px;">ACTIVE</span>` : ''}
+        <div class="lb-score-badge" style="color:${col};">${p.score} pts</div>
+      </div>
+      <div class="lb-stats-grid">
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#2ecc71;">${s.successes}</div>
+          <div class="lb-stat-lbl">⛏ Harvests</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#e74c3c;">${s.explosions}</div>
+          <div class="lb-stat-lbl">💥 Explosions</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#00e5ff;">${s.bloodSpent}</div>
+          <div class="lb-stat-lbl">❤ HP Sacrificed</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#e0e0e0;">${s.fractureDmg}</div>
+          <div class="lb-stat-lbl">🔨 Fracture DMG</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#f1c40f;">${s.nat20s}</div>
+          <div class="lb-stat-lbl">🎯 Nat 20s</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#e74c3c;">${s.nat1s}</div>
+          <div class="lb-stat-lbl">💀 Nat 1s</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#a29bfe;">${s.roundsSurvived}</div>
+          <div class="lb-stat-lbl">🔄 Rounds</div>
+        </div>
+        <div class="lb-stat">
+          <div class="lb-stat-val" style="color:#777;">${s.gamesPlayed}</div>
+          <div class="lb-stat-lbl">🎲 Games</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Wire up player chips and leaderboard panel
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.player-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.player;
+      if (activePlayer === name) {
+        activePlayer = null;
+        btn.classList.remove('active');
+        showNotif('Player deselected — stats paused.', 'warn');
+      } else {
+        activePlayer = name;
+        document.querySelectorAll('.player-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        showNotif(`Now tracking: ${name}`, 'success');
+      }
+      // Show reset buttons only for Gamemaster
+      const isGM = activePlayer === 'Gamemaster';
+      document.getElementById('lb-reset-mine').style.display = isGM ? '' : 'none';
+      document.getElementById('lb-reset-all').style.display  = isGM ? '' : 'none';
+      // Re-render if leaderboard is open so ACTIVE badge updates
+      if (document.getElementById('leaderboard-panel').classList.contains('open')) renderLeaderboard();
+    });
+  });
+
+  document.getElementById('btn-leaderboard').addEventListener('click', () => {
+    document.getElementById('leaderboard-panel').classList.add('open');
+    renderLeaderboard();
+  });
+  document.getElementById('lb-close').addEventListener('click', () => {
+    document.getElementById('leaderboard-panel').classList.remove('open');
+  });
+  document.getElementById('lb-refresh').addEventListener('click', renderLeaderboard);
+
+  document.getElementById('lb-reset-mine').addEventListener('click', () => {
+    if (activePlayer !== 'Gamemaster') return showNotif('Only the Gamemaster can reset stats.', 'error');
+    const target = prompt('Enter player name to reset:');
+    if (!target || !PLAYERS.includes(target)) return showNotif('Invalid player name.', 'error');
+    if (!confirm(`Reset all stats for ${target}?`)) return;
+    saveStats(target, blankStats());
+    showNotif(`${target}'s stats reset.`, 'success');
+    renderLeaderboard();
+  });
+
+  document.getElementById('lb-reset-all').addEventListener('click', () => {
+    if (activePlayer !== 'Gamemaster') return showNotif('Only the Gamemaster can reset stats.', 'error');
+    if (!confirm('Reset ALL leaderboard stats? This cannot be undone.')) return;
+    for (const name of PLAYERS) saveStats(name, blankStats());
+    showNotif('All leaderboard stats reset.', 'success');
+    renderLeaderboard();
+  });
+});
+
+
 
 const SOUNDS = {};
 const TYPES = ["Combat Prowess Node", "Arcane Enhancement Node", "Ability Enhancement Node", "Skill Enhancement Node"];
@@ -457,15 +770,21 @@ function computeDerivedState(data) {
       deltaLabel = "<span style='color:#2ed573; text-shadow: 0 0 10px #2ed573; animation: litho-glow 1s infinite;'>HARMONIC SINGULARITY</span>";
       bonusLabel = "<span style='color:#2ed573; font-weight:bold;'>CRIT (d8) + 2</span>";
       waveColor = "#2ed573"; waveSpeed = "0.5s";
-    } else if (trueDelta <= 3) {
+    } else if (trueDelta <= 2) {
       deltaLabel = "HIGH COHERENCE"; bonusLabel = "<span style='color:#2ecc71; font-weight:bold;'>+2 DMG</span>";
       waveColor = "#2ecc71"; waveSpeed = "1s";
-    } else if (trueDelta <= 9) {
+    } else if (trueDelta <= 5) {
       deltaLabel = "PARTIAL COHERENCE"; bonusLabel = "<span style='color:#f1c40f;'>+1 DMG</span>";
       waveColor = "#f1c40f"; waveSpeed = "2s";
-    } else {
+    } else if (trueDelta <= 8) {
+      deltaLabel = "NEUTRAL"; bonusLabel = "<span style='color:#aaa;'>No Modifier</span>";
+      waveColor = "#555"; waveSpeed = "3s";
+    } else if (trueDelta <= 13) {
       deltaLabel = "DISSONANT"; bonusLabel = "<span style='color:#e74c3c; font-weight:bold;'>-1 DMG</span>";
-      waveColor = "#e74c3c"; waveSpeed = "0.2s";
+      waveColor = "#e74c3c"; waveSpeed = "0.5s";
+    } else {
+      deltaLabel = "SEVERE DISSONANCE"; bonusLabel = "<span style='color:#c0392b; font-weight:bold;'>-2 DMG</span>";
+      waveColor = "#c0392b"; waveSpeed = "0.2s";
     }
   }
 
@@ -844,6 +1163,10 @@ function triggerFinalImpact(token, data, amount) {
 }
 
 function triggerSuccess(token, data) {
+  // Track harvest + rounds survived
+  awardStat('successes');
+  awardStat('gamesPlayed');
+  if (data.round > 1) awardStat('roundsSurvived', data.round - 1);
   const activeColor = TIER_COLORS[data.trueTierLevel - 1] || "#fff";
   new Dialog({
     title: "HARVEST SECURED",
@@ -868,6 +1191,10 @@ function triggerSuccess(token, data) {
 }
 
 function triggerDetonation(token, data) {
+  // Track explosion + rounds survived
+  awardStat('explosions');
+  awardStat('gamesPlayed');
+  if (data.round > 1) awardStat('roundsSurvived', data.round - 1);
   _lithoDialog = null; _lithoHtml = null;
   const tier = data.trueTierLevel || 1;
   const dmgMap = { 1:"2d6", 2:"3d6", 3:"4d6", 4:"6d6", 5:"8d6" };
@@ -891,6 +1218,8 @@ function triggerDetonation(token, data) {
 }
 
 async function applyBlood(token, data, amount, power, type, isCrit, source) {
+  // Track blood sacrificed (only PC blood counts for the active player)
+  if (source === 'pc') awardStat('bloodSpent', amount);
   const critText = isCrit ? " (PERFECT CONDUCTIVITY!)" : "";
   const srcLabel = source === 'npc' ? 'NPC' : 'Player';
   addChatMessage(`<strong>Bio-Infusion (${srcLabel}):</strong> ${amount}hp infused for ${power} charge${critText}.`);
@@ -1175,9 +1504,11 @@ function openLithomancyMonitor(token, miner) {
     if (d20 === 20) {
       pctText = "<span style='color:#2ecc71;'>PERFECT READ (NAT 20)</span>";
       d.resMin = d.trueResonance; d.resMax = d.trueResonance;
+      awardStat('nat20s');
     } else if (d20 === 1) {
       pctText = "<span style='color:#e74c3c;'>WIDENED SPREAD (NAT 1)</span>";
       d.resMin = Math.max(5, d.trueResonance - 12); d.resMax = Math.min(20, d.trueResonance + 12);
+      awardStat('nat1s');
     } else {
       const range = total >= 20 ? 4 : 8;
       pctText = `±${range} Variance`;
@@ -1200,9 +1531,11 @@ function openLithomancyMonitor(token, miner) {
     if (d20 === 20) {
       pctText = "<span style='color:#2ecc71;'>PERFECT READ (NAT 20)</span>";
       d.stabMin = d.trueStability; d.stabMax = d.trueStability;
+      awardStat('nat20s');
     } else if (d20 === 1) {
       pctText = "<span style='color:#e74c3c;'>WIDENED SPREAD (NAT 1)</span>";
       d.stabMin = Math.max(0, d.trueStability - 12); d.stabMax = Math.min(20, d.trueStability + 12);
+      awardStat('nat1s');
     } else {
       const range = total >= 20 ? 4 : 8;
       pctText = `±${range} Variance`;
@@ -1227,10 +1560,12 @@ function openLithomancyMonitor(token, miner) {
         let dType = "d4", bonus = 0, sLoss = 0;
         if (d.knownResonance && d.knownStability) {
           const delta = Math.abs(d.trueResonance - d.currentStability);
-          if (delta === 0) { dType = "d8"; sLoss = 0; bonus = 2; }
-          else if (delta <= 3) { bonus = 2; sLoss = 1; }
-          else if (delta <= 9) { bonus = 1; sLoss = 1; }
-          else { bonus = -1; sLoss = 1; }
+          if (delta === 0)       { dType = "d8"; sLoss = 0; bonus = 2; }
+          else if (delta <= 2)   { bonus = 2;  sLoss = 1; }
+          else if (delta <= 5)   { bonus = 1;  sLoss = 1; }
+          else if (delta <= 8)   { bonus = 0;  sLoss = 1; }
+          else if (delta <= 13)  { bonus = -1; sLoss = 1; }
+          else                   { bonus = -2; sLoss = 1; }
         } else { sLoss = 1; }
         const roll = await new Roll(`1${dType} + ${bonus}`).evaluate();
         const dmg = Math.max(0, roll.total);
@@ -1249,6 +1584,8 @@ function openLithomancyMonitor(token, miner) {
       }
       addChatMessage(`<div style="font-family:'Spectral',serif;"><div style="color:#00e5ff;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">FRACTURE SEQUENCE (x${count})</div><div style="margin-top:4px;">${breakdown.join("")}</div><div style="border-top:1px dashed #444;margin-top:4px;padding-top:4px;"><strong>Total:</strong> ${totalDmg} DMG / -${totalStabLoss} Stability</div></div>`);
       showDamagePopup(totalDmg);
+      // Track fracture damage on leaderboard
+      if (totalDmg > 0) awardStat('fractureDmg', totalDmg);
       if (!d.cycleHistory) d.cycleHistory = [];
       const actNum = d.cycleHistory.filter(h=>h.includes("<b>Action")).length + 1;
       d.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap;width:140px;"><b>Action ${actNum}</b> (<span style="color:#a29bfe;">Fracture x${count}</span>)</div><div>-${totalDmg} HP / -${totalStabLoss} Stab</div></div>`);
