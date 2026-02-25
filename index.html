@@ -1,1400 +1,1325 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Lithomancy Monitor v73.0</title>
-    <style>
-        /* Embed the CSS directly for portability */
-        .litho-window.window-app { background: transparent !important; box-shadow: none !important; border: none !important; }
-        .litho-window .window-content { background: transparent !important; padding: 0 !important; overflow: visible !important; }
-        .litho-window .window-header { display: none !important; }
-        .litho-window .window-resizable-handle { display: none !important; }
-        .litho-window .dialog-buttons { display: flex; gap: 10px; margin-top: 10px; }
-        .litho-window .dialog-button { flex: 1; background: #1c1c1e; color: #dcdcdc; border: 1px solid #444; border-radius: 4px; padding: 8px; cursor: pointer; font-family: "Cinzel", serif; font-weight: 700; transition: 0.2s; }
-        .litho-window .dialog-button:hover { background: #2a2a2e; color: #fff; border-color: #a29bfe; box-shadow: 0 0 10px rgba(162,155,254,0.3); }
-        .litho-popup-box { font-family: "Spectral", serif; color: #dcdcdc; background: radial-gradient(circle at 50% 0%, #2a2a2e, #121212); border: 3px solid #3a3a3c; border-radius: 8px; padding: 16px; box-shadow: 0 0 40px #000, 0 0 10px #000 inset; position: relative; }
-        @keyframes litho-shake-hard { 0% { transform: translate(2px, 2px); } 25% { transform: translate(-2px, -2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, 2px); } 100% { transform: translate(2px, 2px); } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lithomancy Monitor v73.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Spectral:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0c;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    font-family: 'Spectral', serif;
+  }
+
+  /* ── Foundry Dialog mock ── */
+  .fvtt-dialog-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9000;
+  }
+  .fvtt-dialog {
+    background: radial-gradient(circle at 50% 0%, #2a2a2e, #121212);
+    border: 2px solid #3a3a3c; border-radius: 8px; padding: 16px;
+    box-shadow: 0 0 40px #000;
+    min-width: 320px; max-width: 560px;
+    font-family: 'Spectral', serif; color: #dcdcdc;
+    position: relative; z-index: 9001;
+  }
+  .fvtt-dialog h2 {
+    font-family: 'Cinzel', serif; font-size: 1em; color: #a29bfe;
+    margin-bottom: 12px; border-bottom: 1px solid #444; padding-bottom: 8px;
+  }
+  .fvtt-dialog .dialog-buttons {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .fvtt-dialog .dialog-buttons button {
+    flex: 1; background: #1c1c1e; color: #dcdcdc; border: 1px solid #444;
+    border-radius: 4px; padding: 8px 12px; cursor: pointer;
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8em;
+    transition: 0.2s; min-width: 80px;
+  }
+  .fvtt-dialog .dialog-buttons button:hover {
+    background: #2a2a2e; color: #fff; border-color: #a29bfe;
+  }
+
+  /* ── Chat log ── */
+  #chat-log-wrap {
+    position: fixed; bottom: 16px; right: 16px; width: 320px;
+    max-height: 260px; overflow-y: auto; z-index: 8000;
+    display: flex; flex-direction: column; gap: 6px;
+    scrollbar-width: thin; scrollbar-color: #333 transparent;
+  }
+  .chat-msg {
+    background: rgba(18,18,18,0.95); border: 1px solid #333;
+    border-radius: 6px; padding: 8px 10px;
+    font-family: 'Spectral', serif; font-size: 0.78em; color: #aaa;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+
+  /* ── Notification ── */
+  #notif-wrap {
+    position: fixed; top: 16px; right: 16px; z-index: 9500;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .notif {
+    background: #1c1c1e; border-left: 3px solid #f39c12; padding: 8px 14px;
+    color: #dcdcdc; border-radius: 4px; font-size: 0.85em;
+    animation: slideIn 0.2s ease; font-family: 'Spectral', serif;
+  }
+  .notif.error { border-left-color: #e74c3c; }
+  .notif.success { border-left-color: #2ecc71; }
+
+  /* ══════════════════════════════════════════
+     MAIN MONITOR STYLES (unchanged from original)
+  ══════════════════════════════════════════ */
+  .litho-window .window-resizable-handle { display: none !important; }
+  .litho-alchemy { min-width: 1080px; }
+  .litho-alchemy, .litho-popup-box {
+    --stone-dark: #121212; --text-main: #dcdcdc; --text-muted: #777;
+    --accent: #a29bfe; --gold: #d4af37; --edge: #3a3a3c;
+    --bio-glow: #00e5ff; --bio-deep: #0077c2;
+    font-family: "Spectral", serif; color: var(--text-main);
+    background: radial-gradient(circle at 50% 0%, #2a2a2e, #121212);
+    border: 3px solid var(--edge); border-radius: 8px; padding: 16px;
+    box-shadow: 0 0 40px #000, 0 0 10px #000 inset; position: relative;
+  }
+  @keyframes litho-shake { 0%{transform:translate(1px,1px)}50%{transform:translate(-1px,-1px)}100%{transform:translate(1px,1px)} }
+  @keyframes litho-shake-hard { 0%{transform:translate(2px,2px)}25%{transform:translate(-2px,-2px)}50%{transform:translate(2px,-2px)}75%{transform:translate(-2px,2px)}100%{transform:translate(2px,2px)} }
+  @keyframes litho-pop { 0%{opacity:0;transform:scale(0.7)}100%{opacity:1;transform:scale(1)} }
+  @keyframes litho-glow { 0%{filter:drop-shadow(0 0 2px var(--accent));opacity:0.8}50%{filter:drop-shadow(0 0 8px var(--accent));opacity:1}100%{filter:drop-shadow(0 0 2px var(--accent));opacity:0.8} }
+  @keyframes litho-pulse { 0%{box-shadow:0 0 6px rgba(162,155,254,0.3)}50%{box-shadow:0 0 15px rgba(162,155,254,0.6)}100%{box-shadow:0 0 6px rgba(162,155,254,0.3)} }
+  @keyframes litho-btnpulse { 0%{box-shadow:0 0 0 0 rgba(231,76,60,0.6)}70%{box-shadow:0 0 0 10px rgba(231,76,60,0)}100%{box-shadow:0 0 0 0 rgba(231,76,60,0)} }
+  @keyframes litho-wave { 0%{height:20%}50%{height:100%}100%{height:20%} }
+
+  .litho-header{ display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(0,0,0,0.4);border-bottom:2px solid var(--edge);margin-bottom:12px;border-radius:4px; }
+  .litho-title{ display:flex;align-items:center;gap:10px;font-family:"Cinzel",serif;letter-spacing:1px;font-weight:800;font-size:1.5em;color:var(--gold);text-shadow:0 0 10px rgba(212,175,55,0.3); }
+  .litho-title small{ display:block;font-weight:600;font-size:0.5em;color:var(--text-muted);letter-spacing:0.5px;margin-top:2px;font-family:"Spectral",serif;text-shadow:none; }
+  .litho-controls button{ background:transparent;border:1px solid var(--edge);color:var(--text-muted);border-radius:4px;width:30px;height:30px;cursor:pointer;transition:0.2s; }
+  .litho-controls button:hover{ border-color:var(--accent);color:#fff; }
+  .litho-controls .ok{ color:#2ecc71;border-color:rgba(46,204,113,0.3); }
+  .litho-controls .bad{ color:#e74c3c;border-color:rgba(231,76,60,0.3); }
+  .litho-grid{ display:grid;grid-template-columns:1.1fr 1.4fr;gap:12px; }
+  .litho-panel{ background:rgba(0,0,0,0.2);border:1px solid var(--edge);border-radius:6px;padding:12px;box-shadow:inset 0 0 10px rgba(0,0,0,0.5); }
+  .litho-subgrid{ display:grid;grid-template-columns:0.7fr 1fr 1fr 1fr;gap:10px; }
+  .litho-cap{ font-family:"Cinzel",serif;font-weight:700;font-size:0.8em;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer; }
+  .litho-card{ background:linear-gradient(180deg,#252528,#18181a);border:1px solid #3a3a3c;border-radius:4px;padding:10px;text-align:center;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(0,0,0,0.5);display:flex;flex-direction:column;justify-content:space-between;align-items:center;min-height:170px; }
+  .litho-card > div { width:100%; }
+  .litho-icon{ font-size:2.4em;margin:8px 0 6px 0;color:var(--text-muted); }
+  .litho-value{ font-weight:700;font-size:1em;color:#fff;font-family:"Cinzel",serif; }
+  .litho-small{ font-size:0.8em;color:var(--text-muted);margin-top:4px;font-style:italic; }
+  .litho-btn{ width:100%;margin-top:auto;background:rgba(255,255,255,0.05);border:1px solid var(--edge);color:var(--text-main);border-radius:4px;padding:6px 8px;cursor:pointer;transition:0.2s;font-family:"Cinzel",serif;font-weight:700;font-size:0.8em; }
+  .litho-btn:hover{ background:rgba(255,255,255,0.1);color:#fff;border-color:var(--accent); }
+  .litho-btn:disabled{ cursor:not-allowed;opacity:0.3; }
+  .litho-dial{ width:112px!important;height:112px!important;min-width:112px;min-height:112px;border-radius:50%;border:4px solid #222;position:relative;display:flex;align-items:center;justify-content:center;background:#111;box-shadow:0 0 10px #000 inset;margin:0 auto;flex-shrink:0;aspect-ratio:1/1; }
+  .litho-dial .ticks{ position:absolute;inset:4px;border-radius:50%;background:repeating-conic-gradient(#333 0 1deg,transparent 1deg 15deg);pointer-events:none; }
+  .litho-dial .center{ position:relative;text-align:center;padding:6px 8px;border-radius:4px;background:rgba(0,0,0,0.8);border:1px solid #333;min-width:72px; }
+  .litho-dial .sub{ font-size:0.6em;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px; }
+  .litho-dial .main{ font-size:1.3em;font-weight:700;font-family:"Cinzel",serif; }
+  .litho-q{ animation:litho-glow 2s infinite ease-in-out;font-weight:700;color:var(--accent);font-size:1.4em; }
+  .litho-lock{ color:#2ecc71;font-weight:700;letter-spacing:1px;font-family:"Cinzel",serif;font-size:0.7em; }
+  .litho-danger{ color:#ff3d00;font-size:1.45em;font-weight:900;text-shadow:0 0 10px rgba(255,61,0,0.4); }
+  .litho-muted{ color:var(--text-muted);font-size:1.2em; }
+  .litho-bars{ height:52px;display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:6px 0; }
+  .litho-bar{ width:6px;border-radius:2px;background:#333; }
+  .litho-input{ width:72px;text-align:center;padding:6px 8px;background:#111;border:1px solid #444;color:#fff;border-radius:4px;font-family:"Spectral",serif;font-weight:700; }
+  .litho-offer{ width:92px;padding:8px 10px;border-radius:4px;border:1px solid var(--bio-glow);background:rgba(0,229,255,0.15);color:#fff;font-family:"Cinzel",serif;font-weight:700;cursor:pointer; }
+  .litho-offer:hover{ background:rgba(0,229,255,0.3);box-shadow:0 0 12px var(--bio-glow); }
+  .litho-toolrow{ display:grid;grid-template-columns:1.15fr 1.85fr;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed #333; }
+  .litho-toolrow:first-child{ border-top:none; }
+  .litho-toolname{ color:var(--text-muted);font-size:0.9em;text-align:right;display:flex;gap:8px;align-items:center;justify-content:flex-end;font-family:"Spectral",serif;font-weight:600; }
+  .litho-dicebar{ display:flex;gap:6px; }
+  .litho-dice{ flex:1;height:32px;border-radius:2px;background:#1c1c1e;border:1px solid #333;cursor:pointer;font-family:"Cinzel",serif;font-weight:700;transition:0.2s;color:#dcdcdc; }
+  .litho-dice:hover{ transform:translateY(-1px);filter:brightness(1.2); }
+  .litho-dice:disabled{ cursor:not-allowed;opacity:0.2!important; }
+  .litho-footer{ display:flex;gap:10px;align-items:center;margin-top:12px; }
+  .litho-round{ flex:1;background:#111;border:1px solid #333;border-radius:4px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center; }
+  .litho-round b{ font-family:"Cinzel",serif;color:var(--accent); }
+  .litho-decay{ display:flex;flex-direction:column;align-items:flex-end;gap:2px;color:var(--text-muted); }
+  .v-slider{ -webkit-appearance:slider-vertical;appearance:slider-vertical;width:12px;margin:0 auto;outline:none;background:transparent;cursor:pointer; }
+  .v-slider::-webkit-slider-thumb{ -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:#a29bfe;border:2px solid #222; }
+  .cycle-row{ display:grid;grid-template-columns:auto 1fr;gap:8px;padding:4px 0;border-bottom:1px dashed #333;color:#dcdcdc;font-size:0.95em;align-items:start;text-align:left; }
+  .cycle-row:last-child{ border-bottom:none; }
+  .help-header{ user-select:none; }
+
+  /* Reel */
+  .reel-frame{ border:1px solid #333;border-radius:6px;background:radial-gradient(circle,#252528,#18181a);padding:10px;color:#dcdcdc; }
+  .reel-window{ height:180px;overflow:hidden;position:relative;border:1px solid #444;background:#111;border-radius:4px;box-shadow:0 0 10px #000 inset; }
+  .reel-strip{ position:absolute;top:0;width:100%;transition:transform 8s cubic-bezier(0.1,0.9,0.2,1); }
+  .reel-item{ height:30px;display:flex;align-items:center;justify-content:center;font-family:'Spectral',serif;font-size:0.9em;font-weight:700;border-bottom:1px dashed #333;letter-spacing:0.5px;color:#777; }
+  .reel-sigil{ position:absolute;top:50%;left:0;right:0;height:2px;background:#a29bfe;transform:translateY(-50%);box-shadow:0 0 8px #a29bfe;pointer-events:none;z-index:10; }
+  .reel-glow{ text-shadow:0 0 10px #a29bfe;color:#fff;font-size:1.1em; }
+</style>
 </head>
 <body>
-    <script>
-        /* =============================================================
-         * LITHOMANCY MONITOR v73.0 (Patched & Assembled)
-         * Context: Foundry V13 | DnD5e 5.2.0
-         * Features: 
-         * - Single-render Dialog with targeted DOM updates (No Flicker).
-         * - Tiers 1-2 (3d6), Tier 3 (4d6).
-         * - Dynamic Slider: Low HP = Happy Face.
-         * - Clean UI (No Edit Buttons).
-         * - Sequential Fracture Processing.
-         * - Fixed Miner Reduction (Xd2).
-         * ============================================================= */
 
-        // --- SAFETY CLEANUP ---
-        $('#board').css({ "filter": "none" });
-        Object.values(ui.windows).forEach(w => {
-          if (w.id?.includes("litho-")) w.close();
-          if (w.id?.includes("lithomancy-monitor")) w.close();
-        });
+<!-- Chat Log -->
+<div id="chat-log-wrap"></div>
+<!-- Notifications -->
+<div id="notif-wrap"></div>
+<!-- Dialog container -->
+<div id="dialog-container"></div>
 
-        // --- GLOBAL THEME INJECTION ---
-        if (!document.getElementById('litho-global-css')) {
-          const styleEl = document.createElement('style');
-          styleEl.id = 'litho-global-css';
-          styleEl.textContent = `
-            .litho-window.window-app { background: transparent !important; box-shadow: none !important; border: none !important; }
-            .litho-window .window-content { background: transparent !important; padding: 0 !important; overflow: visible !important; }
-            .litho-window .window-header { display: none !important; }
-            .litho-window .window-resizable-handle { display: none !important; }
-            .litho-window .dialog-buttons { display: flex; gap: 10px; margin-top: 10px; }
-            .litho-window .dialog-button { flex: 1; background: #1c1c1e; color: #dcdcdc; border: 1px solid #444; border-radius: 4px; padding: 8px; cursor: pointer; font-family: "Cinzel", serif; font-weight: 700; transition: 0.2s; }
-            .litho-window .dialog-button:hover { background: #2a2a2e; color: #fff; border-color: #a29bfe; box-shadow: 0 0 10px rgba(162,155,254,0.3); }
-            .litho-popup-box { font-family: "Spectral", serif; color: #dcdcdc; background: radial-gradient(circle at 50% 0%, #2a2a2e, #121212); border: 3px solid #3a3a3c; border-radius: 8px; padding: 16px; box-shadow: 0 0 40px #000, 0 0 10px #000 inset; position: relative; }
-            @keyframes litho-shake-hard { 0% { transform: translate(2px, 2px); } 25% { transform: translate(-2px, -2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, 2px); } 100% { transform: translate(2px, 2px); } }
-          `;
-          document.head.appendChild(styleEl);
+<!-- Main Monitor Mount -->
+<div id="litho-mount"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+ * FOUNDRY VTT SHIM LAYER
+ * Mocks: canvas, game, ui, Dialog, ChatMessage, AudioHelper,
+ *        Roll, fromUuid, Hooks, Sequence
+ * ═══════════════════════════════════════════════════════════ */
+
+// ── Dice roller ─────────────────────────────────────────────
+class Roll {
+  constructor(formula) { this.formula = formula; this.total = 0; this.terms = []; }
+  async evaluate() {
+    const result = this._parseAndRoll(this.formula);
+    this.total = result.total;
+    this.terms = result.terms;
+    return this;
+  }
+  _parseAndRoll(formula) {
+    // handle "XdY + Z" or "XdY - Z" etc.
+    let total = 0;
+    const terms = [];
+    const cleaned = formula.replace(/\s/g,'');
+    // split by + and - while keeping sign
+    const parts = cleaned.match(/[+\-]?[^+\-]+/g) || [];
+    for (const part of parts) {
+      const dMatch = part.match(/([+\-]?)(\d+)d(\d+)/i);
+      const nMatch = part.match(/([+\-]?\d+)$/);
+      if (dMatch) {
+        const sign = dMatch[1] === '-' ? -1 : 1;
+        const num = parseInt(dMatch[2]);
+        const sides = parseInt(dMatch[3]);
+        const rolls = [];
+        for (let i = 0; i < num; i++) {
+          const r = Math.floor(Math.random() * sides) + 1;
+          rolls.push(r);
+          total += sign * r;
         }
+        terms.push({ results: rolls.map(r=>({result:r})), number:num, faces:sides });
+      } else if (nMatch) {
+        total += parseInt(nMatch[1]);
+      }
+    }
+    return { total, terms };
+  }
+  async toMessage({ flavor } = {}) {
+    const msgHtml = `<div style="font-size:0.85em;">${flavor || ''}<div style="margin-top:4px;border-top:1px dashed #333;padding-top:4px;">🎲 <strong>Result: ${this.total}</strong></div></div>`;
+    addChatMessage(msgHtml);
+  }
+}
 
-        // --- CONFIGURATION ---
-        const SOUNDS = {
-          SUCCESS: "sounds/lock.wav",
-          ROUND: "sounds/doors/door-close.wav",
-          FRACTURE: "Playlist.mmq5xxQiSCXqJepL.PlaylistSound.WipfWZZhyQiPsVmz",
-          STABILIZE: "Playlist.mmq5xxQiSCXqJepL.PlaylistSound.LvX8Gw14vVyfD8bF",
-          TUNE: "Playlist.mmq5xxQiSCXqJepL.PlaylistSound.fCRqHxCfksBIikjK",
-          FAIL: "Playlist.mmq5xxQiSCXqJepL.PlaylistSound.OltgDvkdvgbGXIoQ",
-          LOOP: "Playlist.mmq5xxQiSCXqJepL.PlaylistSound.0IpqBlUl6uhQ4XCj",
-          AMBIENCE: "Playlist.yT5mXI9PAgjfvRUJ.PlaylistSound.zDojqaaauKyYAhta"
-        };
-        const TYPES = ["Combat Prowess Node", "Arcane Enhancement Node", "Ability Enhancement Node", "Skill Enhancement Node"];
-        const TYPE_ICONS = ["fa-fist-raised", "fa-scroll", "fa-dna", "fa-tools"];
-        const TIERS = ["Faint (Tier 1)", "Pale (Tier 2)", "Bright (Tier 3)", "Radiant (Tier 4)", "Prismatic (Tier 5)"];
-        const TIER_COLORS = ["#7f8c8d", "#2ecc71", "#3498db", "#9b59b6", "#f1c40f"];
+// ── ChatMessage ──────────────────────────────────────────────
+const ChatMessage = {
+  create({ content }) { addChatMessage(content); }
+};
 
-        // State Tracking
-        let activeAmbiencePath = null;
-        let activeResonanceLoop = null;
-        let _lithoDialog = null; // Singleton reference
-        let _lithoHtml = null;   // Cached jQuery handle to the rendered DOM
+function addChatMessage(html) {
+  const log = document.getElementById('chat-log-wrap');
+  if (!log) return;
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  // keep only last 20
+  while (log.children.length > 20) log.removeChild(log.firstChild);
+}
 
-        // --- MAIN EXECUTION ---
-        let nodeToken = canvas.tokens.controlled[0];
-        if (!nodeToken) {
-          if (!canvas.scene) ui.notifications.warn("⚠️ No active scene found.");
-          // Fallback logic removed for strict token requirement or modified as needed
-          // nodeToken = { document: canvas.scene, id: canvas.scene.id, actor: game.user.character }; 
-        }
-        
-        if (nodeToken) {
-            const minerActor = game.user.character || nodeToken.actor;
-            (async () => {
-                if (!nodeToken.document.getFlag("world", "lithomancy")) {
-                  await initializeNode(nodeToken);
-                }
-                await engageAtmosphere();
-                openLithomancyMonitor(nodeToken, minerActor);
-            })();
-        }
+// ── Notifications ─────────────────────────────────────────────
+const ui = {
+  notifications: {
+    warn(msg) { showNotif(msg, 'warn'); },
+    error(msg) { showNotif(msg, 'error'); },
+    info(msg) { showNotif(msg, 'success'); }
+  },
+  windows: {}
+};
 
-        /* ==================================================
-         * INITIALIZATION
-         * ================================================== */
-        async function initializeNode(token) {
-          const typeIndex = Math.floor(Math.random() * TYPES.length);
-          const shellHP = 12;
-          // PATCH: Start Stability 5-25 (Prevents 0-death spawn)
-          const trueStability = Math.floor(Math.random() * 21) + 5;
-          const trueResonance = Math.floor(Math.random() * 16) + 5;
-          const data = {
-            trueType: TYPES[typeIndex], trueTier: TIERS[0], trueTierLevel: 1,
-            trueShellHP: shellHP, trueShellMax: shellHP,
-            trueStability: trueStability, trueResonance: trueResonance,
-            knownType: false, knownTier: false, knownShell: false, knownStability: false, knownResonance: false,
-            currentShellHP: shellHP, currentStability: trueStability,
-            stabMin: 0, stabMax: 20, resMin: 5, resMax: 20,
-            round: 1, actionsUsed: 0, actionsMax: 4,
-            nextDecayValue: null,
-            bloodSacrificed: 0,
-            npcBloodSacrificed: 0,
-            playerCount: 4,
-            npcCount: 0,
-            cycleHistory: []
-          };
-          await token.document.setFlag("world", "lithomancy", data);
-        }
+function showNotif(msg, type='warn') {
+  const wrap = document.getElementById('notif-wrap');
+  const div = document.createElement('div');
+  div.className = 'notif' + (type==='error'?' error':type==='success'?' success':'');
+  div.textContent = msg;
+  wrap.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+}
 
-        /* ==================================================
-         * AUDIO ENGINE
-         * ================================================== */
-        async function engageAtmosphere() {
-          if (!activeAmbiencePath) {
-            try {
-              const soundDoc = await fromUuid(SOUNDS.AMBIENCE);
-              if (soundDoc) {
-                activeAmbiencePath = soundDoc.path;
-                const isPlaying = Array.from(game.audio.playing.values()).some(s => s.src === activeAmbiencePath);
-                if (!isPlaying) {
-                  /* playlists left alone — only litho ambience managed */
-                  AudioHelper.play({ src: activeAmbiencePath, loop: true, volume: 0.5 }, false);
-                }
-              }
-            } catch (err) { }
-          }
-          $('#board').css({
-            "transition": "filter 2s ease",
-            "filter": "blur(5px) grayscale(80%) brightness(0.4)"
-          });
-        }
+// ── Dialog (rendered inline) ──────────────────────────────────
+let _dialogCounter = 0;
+class Dialog {
+  constructor({ title='', content='', buttons={}, render:onRender, close:onClose } = {}, opts={}) {
+    this.title = title;
+    this.content = content;
+    this.buttons = buttons;
+    this.onRender = onRender;
+    this.onClose = onClose;
+    this.opts = opts;
+    this.id = opts.id || `dialog-${_dialogCounter++}`;
+    ui.windows[this.id] = this;
+  }
+  render(show) {
+    if (!show) return;
+    const container = document.getElementById('dialog-container');
 
-        async function manageHarmonicLoop(isHarmonized) {
-          if (isHarmonized && !activeResonanceLoop) {
-            try {
-              const soundDoc = await fromUuid(SOUNDS.LOOP);
-              if (soundDoc) {
-                activeResonanceLoop = await AudioHelper.play({ src: soundDoc.path, loop: true, volume: 0.4 }, false);
-              }
-            } catch (e) { }
-          } else if (!isHarmonized && activeResonanceLoop) {
-            const sound = game.audio.playing.get(activeResonanceLoop.id);
-            if (sound) sound.stop();
-            else game.audio.playing.forEach(s => { if (s.src.includes("0IpqBlUl6uhQ4XCj")) s.stop(); });
-            activeResonanceLoop = null;
-          }
-        }
+    // Overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'fvtt-dialog-overlay';
+    overlay.id = `overlay-${this.id}`;
 
-        async function playToolSound(action) {
-          let soundUuid = "";
-          if (action === "shell") soundUuid = SOUNDS.FRACTURE;
-          else if (action === "heal" || action === "narrow" || action === "stab") soundUuid = SOUNDS.STABILIZE;
-          else if (action === "res") soundUuid = SOUNDS.TUNE;
-          if (!soundUuid) return;
-          try {
-            const soundDoc = await fromUuid(soundUuid);
-            if (soundDoc) AudioHelper.play({ src: soundDoc.path, volume: 0.6, loop: false }, false);
-          } catch (e) { }
-        }
+    const box = document.createElement('div');
+    box.className = 'fvtt-dialog';
+    box.id = this.id;
 
-        async function disengageAtmosphere() {
-          $('#board').css({ "filter": "" });
-          if (activeAmbiencePath) {
-            game.audio.playing.forEach(s => { if (s.src === activeAmbiencePath) s.stop(); });
-          }
-          if (activeResonanceLoop) {
-            game.audio.playing.get(activeResonanceLoop.id)?.stop();
-          }
-          /* Only stop the specific sounds we started — ambience and resonance loop are already handled above */
-          activeAmbiencePath = null;
-          activeResonanceLoop = null;
-        }
+    box.innerHTML = `<h2>${this.title}</h2><div class="dialog-content">${this.content}</div><div class="dialog-buttons"></div>`;
 
-        /* ==================================================
-         * HELPER FUNCTIONS
-         * ================================================== */
-        function actionLabel(act) {
-          if (act === "shell") return "Fracture";
-          if (act === "heal") return "Stabilize";
-          if (act === "res") return "Tune Harmony";
-          if (act === "narrow") return "Tune Volatility";
-          return act;
-        }
+    const btnWrap = box.querySelector('.dialog-buttons');
+    for (const [key, cfg] of Object.entries(this.buttons)) {
+      const btn = document.createElement('button');
+      btn.textContent = cfg.label || key;
+      btn.addEventListener('click', () => {
+        if (cfg.callback) cfg.callback($(box));
+        this.close();
+      });
+      btnWrap.appendChild(btn);
+    }
 
-        function narrowRange(data, type, amount) {
-          let shrink = Math.ceil(amount / 2);
-          if (type === "res") {
-            data.resMin = Math.min(data.trueResonance, data.resMin + shrink);
-            data.resMax = Math.max(data.trueResonance, data.resMax - shrink);
-          } else {
-            data.stabMin = Math.min(data.currentStability, data.stabMin + shrink);
-            data.stabMax = Math.max(data.currentStability, data.stabMax - shrink);
-          }
-        }
+    overlay.appendChild(box);
+    container.appendChild(overlay);
 
-        function computeDerivedState(data) {
-          const actionsLeft = 4 - data.actionsUsed;
-          const isRoundDone = actionsLeft <= 0;
-          const typeIdx = TYPES.indexOf(data.trueType);
-          const isResDetermined = data.resMin === data.resMax;
-          const isStabDetermined = data.stabMin === data.stabMax;
-          const gaugesUnknown = !data.knownResonance || !data.knownStability;
-          const shellPct = data.currentShellHP / data.trueShellMax;
-          const activeColor = TIER_COLORS[data.trueTierLevel - 1] || "#fff";
-          const tierLvl = data.trueTierLevel || 1;
+    // Close on overlay click (outside box)
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) this.close(); });
 
-          // Stability dial
-          const stabRangeStart = (data.stabMin / 20) * 360;
-          const stabRangeEnd = (data.stabMax / 20) * 360;
-          let stabColor = "#2ecc71", stabShake = "", stabPulse = "";
-          const estCenter = (data.stabMin + data.stabMax) / 2;
-          if (!data.knownStability) {
-            stabPulse = "animation: litho-pulse 2s infinite ease-in-out; border-color: #9b59b6;";
-          } else {
-            if (estCenter <= 5) { stabColor = "#e74c3c"; stabShake = "animation: litho-shake-hard 0.5s infinite;"; }
-            else if (estCenter <= 10) { stabColor = "#f39c12"; stabShake = "animation: litho-shake 1s infinite;"; }
-          }
+    if (this.onRender) this.onRender($(box));
+    return this;
+  }
+  close() {
+    const el = document.getElementById(`overlay-${this.id}`);
+    if (el) el.remove();
+    delete ui.windows[this.id];
+    if (this.onClose) this.onClose();
+  }
+  setPosition() {}
+}
 
-          // Resonance dial
-          const resRangeStart = (data.resMin / 25) * 360;
-          const resRangeEnd = (data.resMax / 25) * 360;
-          let resColor = "#3498db", resShake = "", resPulse = "";
-          const resSpread = data.resMax - data.resMin;
-          if (!data.knownResonance) {
-            resPulse = "animation: litho-pulse 2s infinite ease-in-out; border-color: #9b59b6;";
-          } else {
-            if (resSpread > 12) { resShake = "animation: litho-shake-hard 0.5s infinite;"; resColor = "#e74c3c"; }
-            else if (resSpread > 5) { resColor = "#f39c12"; }
-            else { resShake = "animation: litho-glow 1.5s infinite ease-in-out;"; resColor = "#2ecc71"; }
-          }
+// ── AudioHelper (silent stub) ──────────────────────────────────
+const AudioHelper = {
+  play() { return { id: Math.random(), stop() {} }; }
+};
 
-          // Harmonics
-          let deltaLabel = "UNKNOWN";
-          let bonusLabel = `<span style="font-size:2em; color:#a29bfe; animation: litho-glow 2s infinite;">?</span>`;
-          let waveColor = "#333", waveSpeed = "0s";
-          let isHarmonized = false;
-          if (data.knownResonance && data.knownStability) {
-            const trueDelta = Math.abs(data.trueResonance - data.currentStability);
-            if (trueDelta === 0) {
-              isHarmonized = true;
-              deltaLabel = "<span style='color:#2ed573; text-shadow: 0 0 10px #2ed573; animation: litho-glow 1s infinite;'>HARMONIC SINGULARITY</span>";
-              bonusLabel = "<span style='color:#2ed573; font-weight:bold;'>CRIT (d8) + 2</span>";
-              waveColor = "#2ed573"; waveSpeed = "0.5s";
-            } else if (trueDelta <= 3) {
-              deltaLabel = "HIGH COHERENCE";
-              bonusLabel = "<span style='color:#2ecc71; font-weight:bold;'>+2 DMG</span>";
-              waveColor = "#2ecc71"; waveSpeed = "1s";
-            } else if (trueDelta <= 9) {
-              deltaLabel = "PARTIAL COHERENCE";
-              bonusLabel = "<span style='color:#f1c40f;'>+1 DMG</span>";
-              waveColor = "#f1c40f"; waveSpeed = "2s";
-            } else {
-              deltaLabel = "DISSONANT";
-              bonusLabel = "<span style='color:#e74c3c; font-weight:bold;'>-1 DMG</span>";
-              waveColor = "#e74c3c"; waveSpeed = "0.2s";
-            }
-          }
+// ── fromUuid (stub — audio not supported standalone) ──────────
+async function fromUuid(uuid) { return null; }
 
-          // Shell
-          let crackOverlay = "", gemShake = "", shellDesc = "SOLID", shellDescColor = "#2ecc71";
-          if (data.knownShell) {
-            if (shellPct < 0.75) { shellDesc = "CHIPPED"; shellDescColor = "#f1c40f"; crackOverlay += `<path d="M30,30 L45,45 L40,60" stroke="#111" stroke-width="2" fill="none"/>`; }
-            if (shellPct < 0.50) { shellDesc = "CRACKED"; shellDescColor = "#e67e22"; crackOverlay += `<path d="M70,20 L60,40 L75,50" stroke="#111" stroke-width="2" fill="none"/>`; }
-            if (shellPct < 0.25) { shellDesc = "CRUMBLING"; shellDescColor = "#e74c3c"; crackOverlay += `<path d="M50,50 L50,80 L30,90" stroke="#111" stroke-width="3" fill="none"/><path d="M50,50 L80,30" stroke="#111" stroke-width="2" fill="none"/>`; gemShake = "animation: litho-shake 0.2s infinite;"; }
-          } else { shellDesc = "UNKNOWN"; shellDescColor = "#555"; }
+// ── Hooks ─────────────────────────────────────────────────────
+const Hooks = { once() {} };
 
-          // --- DYNAMIC SLIDER CALCULATION (PATCHED: Low=Happy) ---
-          const baseFloors = [20, 25, 30, 38, 45];
-          // Dice Counts: T1=3, T2=3, T3=4, T4=4, T5=5
-          const diceCounts = [3, 3, 4, 4, 5]; 
-          const tierIdx = (data.trueTierLevel || 1) - 1;
+// ── canvas & game ─────────────────────────────────────────────
+// We store node data in localStorage keyed by token id
+const _nodeStore = {};
 
-          // 1. BEST CASE (Green/Happy): The specific Floor for this tier.
-          // Example: Tier 1 Floor is 20. If HP is 20, we want 100% Quality.
-          const sMin = baseFloors[tierIdx] || 20;
+const _tokenDoc = {
+  _flags: {},
+  getFlag(scope, key) { return this._flags[key] ?? null; },
+  setFlag(scope, key, val) { this._flags[key] = JSON.parse(JSON.stringify(val)); },
+  unsetFlag(scope, key) { delete this._flags[key]; }
+};
 
-          // 2. WORST CASE (Red/Angry): Base + MaxDice (Standard Range)
-          // PATCH: Standard Max (No Crit Buffer) for tighter slider
-          const tDiceCount = diceCounts[tierIdx] || 3;
-          const sMax = sMin + (tDiceCount * 6);
+const nodeToken = {
+  id: 'standalone-node',
+  document: _tokenDoc,
+  actor: null
+};
 
-          // 3. RELATIVE CALCULATION
-          // Formula: (Ceiling - Current) / (Ceiling - Floor)
-          // This calculates exactly where the current HP sits within the possible range.
-          let sQual = ((sMax - data.currentShellHP) / (sMax - sMin)) * 100;
+const canvas = {
+  tokens: { controlled: [nodeToken] },
+  scene: { id: 'standalone-scene' }
+};
 
-          // Clamp to 0-100 so damage doesn't break the visual bounds
-          sQual = Math.max(0, Math.min(100, sQual));
+const game = {
+  user: { character: null },
+  audio: { playing: new Map() },
+  modules: { get() { return null; } }
+};
 
-          const pcPct = Math.min(100, ((data.bloodSacrificed || 0) / 250) * 100);
-          const npcPct = Math.min(100, ((data.npcBloodSacrificed || 0) / 250) * 100);
+/* ═══════════════════════════════════════════════════════════
+ * LITHOMANCY MONITOR — FULL GAME CODE (ADAPTED FROM MACRO)
+ * ═══════════════════════════════════════════════════════════ */
 
-          return {
-            actionsLeft, isRoundDone, typeIdx, isResDetermined, isStabDetermined, gaugesUnknown,
-            shellPct, activeColor, tierLvl,
-            stabRangeStart, stabRangeEnd, stabColor, stabShake, stabPulse,
-            resRangeStart, resRangeEnd, resColor, resShake, resPulse,
-            deltaLabel, bonusLabel, waveColor, waveSpeed, isHarmonized,
-            crackOverlay, gemShake, shellDesc, shellDescColor, sQual,
-            pcPct, npcPct
-          };
-        }
+const SOUNDS = {};
+const TYPES = ["Combat Prowess Node", "Arcane Enhancement Node", "Ability Enhancement Node", "Skill Enhancement Node"];
+const TYPE_ICONS = ["fa-fist-raised", "fa-scroll", "fa-dna", "fa-tools"];
+const TIERS = ["Faint (Tier 1)", "Pale (Tier 2)", "Bright (Tier 3)", "Radiant (Tier 4)", "Prismatic (Tier 5)"];
+const TIER_COLORS = ["#7f8c8d", "#2ecc71", "#3498db", "#9b59b6", "#f1c40f"];
 
-        /* ==================================================
-         * DOM UPDATE (No re-render — patches elements in place)
-         * ================================================== */
-        async function updateUI(token) {
-          const html = _lithoHtml;
-          if (!html || !html.length) return;
-          const data = token.document.getFlag("world", "lithomancy");
-          if (!data) return;
-          const s = computeDerivedState(data);
-          await manageHarmonicLoop(s.isHarmonized);
+let activeAmbiencePath = null;
+let activeResonanceLoop = null;
+let _lithoDialog = null;
+let _lithoHtml = null;
 
-          // --- TYPE CARD ---
-          const typeIcon = data.knownType ? TYPE_ICONS[s.typeIdx] : "fa-question";
-          const dispType = data.knownType ? data.trueType : "Unknown Resonance";
-          html.find('[data-ui="type-icon"]').attr("class", `fas ${typeIcon}`)
-            .css({ color: data.knownType ? '#a29bfe' : '#333', textShadow: data.knownType ? '0 0 10px rgba(162,155,254,0.5)' : 'none' });
-          html.find('[data-ui="type-label"]').html(dispType);
-          if (data.knownType) {
-            html.find('[data-ui="type-btn-wrap"]').html(`<div class="litho-small litho-btn" style="border:none;">Identified</div>`);
-          }
+async function initializeNode(token) {
+  const typeIndex = Math.floor(Math.random() * TYPES.length);
+  const shellHP = 12;
+  const trueStability = Math.floor(Math.random() * 21) + 5;
+  const trueResonance = Math.floor(Math.random() * 16) + 5;
+  const data = {
+    trueType: TYPES[typeIndex], trueTier: TIERS[0], trueTierLevel: 1,
+    trueShellHP: shellHP, trueShellMax: shellHP,
+    trueStability, trueResonance,
+    knownType: false, knownTier: false, knownShell: false, knownStability: false, knownResonance: false,
+    currentShellHP: shellHP, currentStability: trueStability,
+    stabMin: 0, stabMax: 20, resMin: 5, resMax: 20,
+    round: 1, actionsUsed: 0, actionsMax: 4,
+    nextDecayValue: null,
+    bloodSacrificed: 0, npcBloodSacrificed: 0,
+    playerCount: 4, npcCount: 0,
+    cycleHistory: []
+  };
+  await token.document.setFlag("world", "lithomancy", data);
+}
 
-          // --- TIER CARD ---
-          const dispTierLabel = data.knownTier ? data.trueTier : "Unknown Structure";
-          html.find('[data-ui="tier-label"]').html(dispTierLabel).css({ color: s.activeColor, textShadow: `0 0 5px ${s.activeColor}` });
-          // Gems
-          for (let i = 1; i <= 5; i++) {
-            const gem = html.find(`.set-tier-btn[data-tier="${i}"]`);
-            if (data.knownTier && i <= data.trueTierLevel) {
-              gem.css({ opacity: 1, color: s.activeColor, textShadow: `0 0 10px ${s.activeColor}` });
-            } else {
-              gem.css({ opacity: 0.2, color: '#444', textShadow: 'none' });
-            }
-          }
-          if (data.knownTier) {
-            html.find('[data-ui="tier-btn-wrap"]').html(`<div class="litho-small litho-btn" style="border:none;">Structure Known</div>`);
-          }
+async function engageAtmosphere() {
+  // In standalone mode we skip actual audio but keep the visual effect
+  document.body.style.transition = 'filter 2s ease';
+  document.body.style.filter = 'none'; // Don't blur the page itself
+}
 
-          // --- SHELL CARD ---
-          const shellIcon = html.find('[data-ui="shell-icon"]');
-          shellIcon.css({ color: data.knownShell ? (s.shellPct < 0.25 ? '#e74c3c' : '#888') : '#333' });
-          html.find('[data-ui="shell-gem-wrap"]').css({ animation: s.gemShake || 'none' });
-          html.find('[data-ui="shell-cracks"]').html(s.crackOverlay);
-          html.find('[data-ui="shell-hp"]').html(data.knownShell ? `${data.currentShellHP}/${data.trueShellMax}` : "?? / ??");
-          html.find('[data-ui="shell-desc"]').html(s.shellDesc).css({ color: s.shellDescColor });
-          if (data.knownShell) {
-            html.find('[data-ui="shell-quality-wrap"]').html(`
-              <div style="display:flex; flex-direction:column; align-items:center; font-size:0.55em; color:#aaa; font-family:'Cinzel',serif; font-weight:bold; height:100px;">
-                <div style="color:#2ecc71; margin-bottom:2px;"><i class="fas fa-smile" style="font-size:1.2em;"></i></div>
-                <input type="range" min="0" max="100" value="${s.sQual}" disabled style="-webkit-appearance:slider-vertical; appearance:slider-vertical; height:70px; width:8px; opacity:0.8;">
-                <div style="color:#e74c3c; margin-top:2px;"><i class="fas fa-angry" style="font-size:1.2em;"></i></div>
-              </div>`);
-            html.find('[data-ui="shell-btn-wrap"]').html(`
-              <div style="display:flex; gap:5px; height:30px;">
-                <button id="reroll-shell" class="litho-btn" style="flex:1; padding: 2px; font-size: 0.8em; line-height: 1;" title="Re-roll Shell"><i class="fas fa-dice"></i></button>
-                <button id="edit-shell" class="litho-btn" style="flex:1; padding: 2px; font-size: 0.8em; line-height: 1;" title="Edit HP"><i class="fas fa-edit"></i></button>
-              </div>`);
-            // Re-bind shell buttons
-            html.find('#reroll-shell').off('click').on('click', () => doScanShell(token, data));
-            html.find('#edit-shell').off('click').on('click', () => doEditShell(token, data));
-          } else {
-            html.find('[data-ui="shell-quality-wrap"]').html(`<div style="width:20px;"></div>`);
-            if (data.knownTier) {
-              html.find('[data-ui="shell-btn-wrap"]').html(`<button id="scan-shell" class="litho-btn">Inspect Shell</button>`);
-              html.find('#scan-shell').off('click').on('click', () => doScanShell(token, data));
-            } else {
-              html.find('[data-ui="shell-btn-wrap"]').html(`<button class="litho-btn" disabled>Awaiting Lattice</button>`);
-            }
-          }
+async function manageHarmonicLoop(isHarmonized) {}
+async function playToolSound(action) {}
 
-          // --- RESONANCE DIAL ---
-          const resDial = html.find('[data-ui="res-dial"]');
-          if (data.knownResonance) {
-            resDial.css({
-              background: `conic-gradient(transparent ${s.resRangeStart}deg, ${s.resColor} ${s.resRangeStart}deg ${s.resRangeEnd}deg, transparent ${s.resRangeEnd}deg)`,
-              boxShadow: `0 0 10px ${s.resColor}`,
-              animation: s.resShake || s.resPulse || 'none',
-              borderColor: s.resShake ? '' : (s.resPulse ? '#9b59b6' : '#222')
-            });
-          } else {
-            resDial.css({ background: '#111', boxShadow: '0 0 10px #000', animation: s.resPulse || 'none', borderColor: s.resPulse ? '#9b59b6' : '#222' });
-          }
-          const resSubLabel = s.isResDetermined ? `<span class="litho-lock">LOCKED</span>` : `TUNING...`;
-          const resMainLabel = data.knownResonance
-            ? (s.isResDetermined ? `<b>${data.resMin}</b>` : `${data.resMin}-${data.resMax}`)
-            : `<span class="litho-q">?</span>`;
-          html.find('[data-ui="res-sub"]').html(resSubLabel);
-          html.find('[data-ui="res-main"]').html(resMainLabel);
-          if (data.knownResonance) {
-            html.find('[data-ui="res-btn-wrap"]').html('');
-          }
+async function disengageAtmosphere() {}
 
-          // --- STABILITY DIAL ---
-          const stabDial = html.find('[data-ui="stab-dial"]');
-          if (data.knownStability) {
-            stabDial.css({
-              background: `conic-gradient(transparent ${s.stabRangeStart}deg, ${s.stabColor} ${s.stabRangeStart}deg ${s.stabRangeEnd}deg, transparent ${s.stabRangeEnd}deg)`,
-              boxShadow: `0 0 15px ${s.stabColor}`,
-              animation: s.stabShake || s.stabPulse || 'none',
-              borderColor: s.stabShake ? '' : (s.stabPulse ? '#9b59b6' : '#222')
-            });
-          } else {
-            stabDial.css({ background: '#111', boxShadow: '0 0 15px #000', animation: s.stabPulse || 'none', borderColor: s.stabPulse ? '#9b59b6' : '#222' });
-          }
-          const stabSubLabel = s.isStabDetermined ? `<span class="litho-lock">LOCKED</span>` : `READING...`;
-          const stabMainLabel = data.knownStability
-            ? (s.isStabDetermined ? `<b>${data.stabMin}</b>` : `${data.stabMin}-${data.stabMax}`)
-            : `<span style="font-size:1.5em; color:#a29bfe;">?</span>`;
-          html.find('[data-ui="stab-sub"]').html(stabSubLabel);
-          html.find('[data-ui="stab-main"]').html(stabMainLabel);
-          if (data.knownStability) {
-            html.find('[data-ui="stab-btn-wrap"]').html('');
-          }
+function actionLabel(act) {
+  if (act === "shell") return "Fracture";
+  if (act === "heal") return "Stabilize";
+  if (act === "res") return "Tune Harmony";
+  if (act === "narrow") return "Tune Volatility";
+  return act;
+}
 
-          // --- HARMONICS ---
-          html.find('[data-ui="wave-label"]').html(s.deltaLabel);
-          html.find('[data-ui="wave-bonus"]').html(s.bonusLabel);
-          html.find('[data-ui="wave-bars"]').find('.litho-bar').each(function (i) {
-            $(this).css({ background: s.waveColor, animationDuration: s.waveSpeed });
-          });
+function narrowRange(data, type, amount) {
+  let shrink = Math.ceil(amount / 2);
+  if (type === "res") {
+    data.resMin = Math.min(data.trueResonance, data.resMin + shrink);
+    data.resMax = Math.max(data.trueResonance, data.resMax - shrink);
+  } else {
+    data.stabMin = Math.min(data.currentStability, data.stabMin + shrink);
+    data.stabMax = Math.max(data.currentStability, data.stabMax - shrink);
+  }
+}
 
-          // --- BIO-RESONANCE ---
-          html.find('[data-ui="pc-fill"]').css({ height: s.pcPct + '%' });
-          html.find('[data-ui="npc-fill"]').css({ height: s.npcPct + '%' });
-          html.find('[data-ui="pc-total"]').text(data.bloodSacrificed || 0);
-          html.find('[data-ui="npc-total"]').text(data.npcBloodSacrificed || 0);
+function computeDerivedState(data) {
+  const actionsLeft = 4 - data.actionsUsed;
+  const isRoundDone = actionsLeft <= 0;
+  const typeIdx = TYPES.indexOf(data.trueType);
+  const isResDetermined = data.resMin === data.resMax;
+  const isStabDetermined = data.stabMin === data.stabMax;
+  const gaugesUnknown = !data.knownResonance || !data.knownStability;
+  const shellPct = data.currentShellHP / data.trueShellMax;
+  const activeColor = TIER_COLORS[data.trueTierLevel - 1] || "#fff";
 
-          // --- ACTION CHARGE + DICE BUTTONS ---
-          html.find('[data-ui="charge-count"]').text(s.actionsLeft);
-          html.find('.dice-btn').each(function () {
-            const n = parseInt($(this).data('n'));
-            const act = $(this).data('act');
-            const isLocked = s.gaugesUnknown
-              || (act === "res" && s.isResDetermined)
-              || (act === "narrow" && s.isStabDetermined);
-            const disabled = (n > s.actionsLeft || isLocked);
-            $(this).prop('disabled', disabled).css({ opacity: disabled ? 0.2 : 1 });
-          });
+  const stabRangeStart = (data.stabMin / 20) * 360;
+  const stabRangeEnd = (data.stabMax / 20) * 360;
+  let stabColor = "#2ecc71", stabShake = "", stabPulse = "";
+  const estCenter = (data.stabMin + data.stabMax) / 2;
+  if (!data.knownStability) { stabPulse = "animation: litho-pulse 2s infinite ease-in-out; border-color: #9b59b6;"; }
+  else {
+    if (estCenter <= 5) { stabColor = "#e74c3c"; stabShake = "animation: litho-shake-hard 0.5s infinite;"; }
+    else if (estCenter <= 10) { stabColor = "#f39c12"; stabShake = "animation: litho-shake 1s infinite;"; }
+  }
 
-          // Scan buttons disable when round is done
-          html.find('#scan-type, #scan-freq, #scan-stab').prop('disabled', s.isRoundDone).css({ opacity: s.isRoundDone ? 0.5 : 1, cursor: s.isRoundDone ? 'not-allowed' : 'pointer' });
+  const resRangeStart = (data.resMin / 25) * 360;
+  const resRangeEnd = (data.resMax / 25) * 360;
+  let resColor = "#3498db", resShake = "", resPulse = "";
+  const resSpread = data.resMax - data.resMin;
+  if (!data.knownResonance) { resPulse = "animation: litho-pulse 2s infinite ease-in-out; border-color: #9b59b6;"; }
+  else {
+    if (resSpread > 12) { resShake = "animation: litho-shake-hard 0.5s infinite;"; resColor = "#e74c3c"; }
+    else if (resSpread > 5) { resColor = "#f39c12"; }
+    else { resShake = "animation: litho-glow 1.5s infinite ease-in-out;"; resColor = "#2ecc71"; }
+  }
 
-          // --- ACTION PIPS ---
-          html.find('[data-ui="action-pips"]').html(
-            Array(4).fill(0).map((_, i) =>
-              `<i class="fas fa-dice-d20" style="font-size:2.8em; margin:0 5px; color:${i < data.actionsUsed ? '#222' : '#a29bfe'}; text-shadow:${i < data.actionsUsed ? 'none' : '0 0 8px #a29bfe'};"></i>`
-            ).join("")
-          );
+  let deltaLabel = "UNKNOWN";
+  let bonusLabel = `<span style="font-size:2em; color:#a29bfe; animation: litho-glow 2s infinite;">?</span>`;
+  let waveColor = "#333", waveSpeed = "0s", isHarmonized = false;
+  if (data.knownResonance && data.knownStability) {
+    const trueDelta = Math.abs(data.trueResonance - data.currentStability);
+    if (trueDelta === 0) {
+      isHarmonized = true;
+      deltaLabel = "<span style='color:#2ed573; text-shadow: 0 0 10px #2ed573; animation: litho-glow 1s infinite;'>HARMONIC SINGULARITY</span>";
+      bonusLabel = "<span style='color:#2ed573; font-weight:bold;'>CRIT (d8) + 2</span>";
+      waveColor = "#2ed573"; waveSpeed = "0.5s";
+    } else if (trueDelta <= 3) {
+      deltaLabel = "HIGH COHERENCE"; bonusLabel = "<span style='color:#2ecc71; font-weight:bold;'>+2 DMG</span>";
+      waveColor = "#2ecc71"; waveSpeed = "1s";
+    } else if (trueDelta <= 9) {
+      deltaLabel = "PARTIAL COHERENCE"; bonusLabel = "<span style='color:#f1c40f;'>+1 DMG</span>";
+      waveColor = "#f1c40f"; waveSpeed = "2s";
+    } else {
+      deltaLabel = "DISSONANT"; bonusLabel = "<span style='color:#e74c3c; font-weight:bold;'>-1 DMG</span>";
+      waveColor = "#e74c3c"; waveSpeed = "0.2s";
+    }
+  }
 
-          // --- ROUND + DECAY ---
-          html.find('[data-ui="round-num"]').text(data.round);
-          const dieType = "d4";
-          const nextDecayStr = data.knownTier ? `${data.round}${dieType}` : `${data.round}d?`;
-          const decayDisplay = data.nextDecayValue !== null
-            ? `<span class="litho-danger">-${data.nextDecayValue}</span>`
-            : `<span class="litho-muted">-${nextDecayStr}</span>`;
-          html.find('[data-ui="decay-display"]').html(decayDisplay);
+  let crackOverlay = "", gemShake = "", shellDesc = "SOLID", shellDescColor = "#2ecc71";
+  if (data.knownShell) {
+    if (shellPct < 0.75) { shellDesc = "CHIPPED"; shellDescColor = "#f1c40f"; crackOverlay += `<path d="M30,30 L45,45 L40,60" stroke="#111" stroke-width="2" fill="none"/>`; }
+    if (shellPct < 0.50) { shellDesc = "CRACKED"; shellDescColor = "#e67e22"; crackOverlay += `<path d="M70,20 L60,40 L75,50" stroke="#111" stroke-width="2" fill="none"/>`; }
+    if (shellPct < 0.25) { shellDesc = "CRUMBLING"; shellDescColor = "#e74c3c"; crackOverlay += `<path d="M50,50 L50,80 L30,90" stroke="#111" stroke-width="3" fill="none"/><path d="M50,50 L80,30" stroke="#111" stroke-width="2" fill="none"/>`; gemShake = "animation: litho-shake 0.2s infinite;"; }
+  } else { shellDesc = "UNKNOWN"; shellDescColor = "#555"; }
 
-          // --- END ROUND BUTTON ---
-          const endBtn = html.find('#btn-end-round');
-          endBtn.prop('disabled', !s.isRoundDone);
-          if (s.isRoundDone) {
-            endBtn.css({ background: 'linear-gradient(#7a1f1a,#4a0f0c)', color: '#fff', cursor: 'pointer', opacity: 1, animation: 'litho-btnpulse 1.5s infinite', border: '1px solid #b84a3c' });
-          } else {
-            endBtn.css({ background: '#1c1c1e', color: '#555', cursor: 'not-allowed', opacity: 0.6, animation: 'none', border: '1px solid #333' });
-          }
+  const baseFloors = [20, 25, 30, 38, 45];
+  const diceCounts = [3, 3, 4, 4, 5];
+  const tierIdx = (data.trueTierLevel || 1) - 1;
+  const sMin = baseFloors[tierIdx] || 20;
+  const tDiceCount = diceCounts[tierIdx] || 3;
+  const sMax = sMin + (tDiceCount * 6);
+  let sQual = ((sMax - data.currentShellHP) / (sMax - sMin)) * 100;
+  sQual = Math.max(0, Math.min(100, sQual));
 
-          // --- FORECAST BUTTON ---
-          if (data.nextDecayValue === null) {
-            html.find('[data-ui="forecast-wrap"]').html(`<button id="btn-est-decay" class="litho-btn" style="width:140px; border-color:#8e44ad; color:#a29bfe; margin:0; padding:6px 0;">Forecast (2d8)</button>`);
-            html.find('#btn-est-decay').off('click').on('click', () => doForecast(token, data));
-          } else {
-            html.find('[data-ui="forecast-wrap"]').html(`<div style="width:140px; text-align:center; font-size:0.7em; color:#2ecc71; font-weight:700; margin:0; padding:6px 0;">Forecast Locked</div>`);
-          }
+  const pcPct = Math.min(100, ((data.bloodSacrificed || 0) / 250) * 100);
+  const npcPct = Math.min(100, ((data.npcBloodSacrificed || 0) / 250) * 100);
 
-          // --- TEAM SLIDERS (just update display, no re-render) ---
-          html.find('#disp-pc').text(data.playerCount + ' PCs');
-          html.find('#disp-npc').text(data.npcCount + ' NPCs');
-        }
+  return {
+    actionsLeft, isRoundDone, typeIdx, isResDetermined, isStabDetermined, gaugesUnknown,
+    shellPct, activeColor, tierLvl: data.trueTierLevel || 1,
+    stabRangeStart, stabRangeEnd, stabColor, stabShake, stabPulse,
+    resRangeStart, resRangeEnd, resColor, resShake, resPulse,
+    deltaLabel, bonusLabel, waveColor, waveSpeed, isHarmonized,
+    crackOverlay, gemShake, shellDesc, shellDescColor, sQual,
+    pcPct, npcPct
+  };
+}
 
-        /* ==================================================
-         * ACTION HANDLERS (operate on data, then call updateUI)
-         * ================================================== */
+async function updateUI(token) {
+  const html = _lithoHtml;
+  if (!html || !html.length) return;
+  const data = token.document.getFlag("world", "lithomancy");
+  if (!data) return;
+  const s = computeDerivedState(data);
 
-        async function doScanShell(token, data) {
-          const pBonus = data.playerCount || 4;
-          const baseFloors = [20, 25, 30, 38, 45];
-          const baseTierHP = baseFloors[data.trueTierLevel - 1] || 20;
-          // UPDATED DICE MAP (3d6/3d6/4d6)
-          const diceMap = ["3d6", "3d6", "4d6", "4d6", "5d6"];
-          const tierRoll = await new Roll(diceMap[data.trueTierLevel - 1] || "3d6").evaluate();
-          const startHP = baseTierHP + tierRoll.total;
-          // PATCH: Fixed d2 for all tiers
-          const minerDiceMap = ["d2", "d2", "d2", "d2", "d2"]; 
-          const mDice = minerDiceMap[data.trueTierLevel - 1] || "d2";
-          const pRoll = await new Roll(`${pBonus}${mDice}`).evaluate();
-          const hpAfterMiners = startHP - pRoll.total;
-          const roll = await new Roll("1d20").evaluate();
-          const d20 = roll.total;
-          let pct = 0, pctText = "";
-          if (d20 === 1) { pct = 40; pctText = "<span style='color:#e74c3c;'>+40% (CRIT FAIL)</span>"; }
-          else if (d20 === 20) { pct = 0; pctText = "<span style='color:#2ecc71;'>+0% (CRIT SUCCESS)</span>"; }
-          else { pct = (20 - d20) * 2; pctText = `+${pct}%`; }
-          const pctAddition = Math.round(startHP * (pct / 100));
-          const calculatedHP = hpAfterMiners + pctAddition;
-          data.trueShellMax = Math.max(calculatedHP, baseTierHP);
-          data.currentShellHP = data.trueShellMax;
-          data.knownShell = true;
-          const breakdown = `<div style="font-family:'Spectral', serif; font-size: 0.95em;">
-            <div style="color:#a29bfe; font-family:'Cinzel', serif; font-weight:bold; margin-bottom:4px; border-bottom: 1px solid #444;">Extraction Diagnostics:</div>
-            <div><b>1. Base Core:</b> ${baseTierHP} + [${tierRoll.total}] <i>(${tierRoll.formula})</i> = <b>${startHP} HP</b></div>
-            <div><b>2. Miner Impact:</b> ${startHP} - [${pRoll.total}] <i>(${pRoll.formula})</i> = <b>${hpAfterMiners} HP</b></div>
-            <div><b>3. Scan Shift:</b> Rolled <b>${d20}</b> &rarr; <b>${pctText}</b> (+${pctAddition} HP)</div>
-            <div style="margin-top:4px; padding-top:4px; border-top: 1px dashed #444;">
-            <b>4. Final Integrity:</b> ${hpAfterMiners} + ${pctAddition} = ${calculatedHP}<br>
-            <i>(Floor limit: ${baseTierHP})</i> &rarr; <span style="font-size: 1.2em; color: #00e5ff; font-weight: bold;">${data.trueShellMax} HP</span></div></div>`;
-          await roll.toMessage({ flavor: breakdown });
-          await token.document.setFlag("world", "lithomancy", data);
-          await consumeActions(token, data, 0);
-        }
+  // TYPE CARD
+  const typeIcon = data.knownType ? TYPE_ICONS[s.typeIdx] : "fa-question";
+  const dispType = data.knownType ? data.trueType : "Unknown Resonance";
+  html.find('[data-ui="type-icon"]').attr("class", `fas ${typeIcon}`)
+    .css({ color: data.knownType ? '#a29bfe' : '#333', textShadow: data.knownType ? '0 0 10px rgba(162,155,254,0.5)' : 'none' });
+  html.find('[data-ui="type-label"]').html(dispType);
+  if (data.knownType) {
+    html.find('[data-ui="type-btn-wrap"]').html(`<div class="litho-small litho-btn" style="border:none;">Identified</div>`);
+  }
 
-        function doEditShell(token, data) {
-          new Dialog({
-            title: "Edit Shell HP",
-            content: `<div class="litho-popup-box">
-              <label style="color:#aaa;">Current HP:</label>
-              <input type="number" id="hp-cur" value="${data.currentShellHP}" style="width:100%; margin-bottom:10px; background:#111; color:#fff; border:1px solid #444; padding:5px;">
-              <label style="color:#aaa;">Max HP:</label>
-              <input type="number" id="hp-max" value="${data.trueShellMax}" style="width:100%; background:#111; color:#fff; border:1px solid #444; padding:5px;">
-            </div>`,
-            buttons: {
-              save: {
-                label: "Save", callback: async (h) => {
-                  data.currentShellHP = parseInt(h.find('#hp-cur').val());
-                  data.trueShellMax = parseInt(h.find('#hp-max').val());
-                  await token.document.setFlag("world", "lithomancy", data);
-                  updateUI(token);
-                }
-              }
-            }
-          }, { classes: ["litho-window"] }).render(true);
-        }
+  // TIER CARD
+  const dispTierLabel = data.knownTier ? data.trueTier : "Unknown Structure";
+  html.find('[data-ui="tier-label"]').html(dispTierLabel).css({ color: s.activeColor, textShadow: `0 0 5px ${s.activeColor}` });
+  for (let i = 1; i <= 5; i++) {
+    const gem = html.find(`.set-tier-btn[data-tier="${i}"]`);
+    if (data.knownTier && i <= data.trueTierLevel) {
+      gem.css({ opacity: 1, color: s.activeColor, textShadow: `0 0 10px ${s.activeColor}` });
+    } else {
+      gem.css({ opacity: 0.2, color: '#444', textShadow: 'none' });
+    }
+  }
+  if (data.knownTier) {
+    html.find('[data-ui="tier-btn-wrap"]').html(`<div class="litho-small litho-btn" style="border:none;">Structure Known</div>`);
+  }
 
-        async function doForecast(token, data) {
-          const roll = await new Roll(`${data.round}d4`).evaluate();
-          const costRoll = await new Roll("2d8").evaluate();
-          ChatMessage.create({ content: `<strong>Bio-Scrying:</strong> ${costRoll.total} HP was sacrificed to forecast stability decay.` });
-          data.nextDecayValue = roll.total;
+  // SHELL CARD
+  html.find('[data-ui="shell-icon"]').css({ color: data.knownShell ? (s.shellPct < 0.25 ? '#e74c3c' : '#888') : '#333' });
+  html.find('[data-ui="shell-gem-wrap"]').css({ animation: s.gemShake || 'none' });
+  html.find('[data-ui="shell-cracks"]').html(s.crackOverlay);
+  html.find('[data-ui="shell-hp"]').html(data.knownShell ? `${data.currentShellHP}/${data.trueShellMax}` : "?? / ??");
+  html.find('[data-ui="shell-desc"]').html(s.shellDesc).css({ color: s.shellDescColor });
+  if (data.knownShell) {
+    html.find('[data-ui="shell-quality-wrap"]').html(`
+      <div style="display:flex;flex-direction:column;align-items:center;font-size:0.55em;color:#aaa;font-family:'Cinzel',serif;font-weight:bold;height:100px;">
+        <div style="color:#2ecc71;margin-bottom:2px;"><i class="fas fa-smile" style="font-size:1.2em;"></i></div>
+        <input type="range" min="0" max="100" value="${s.sQual}" disabled style="-webkit-appearance:slider-vertical;appearance:slider-vertical;height:70px;width:8px;opacity:0.8;">
+        <div style="color:#e74c3c;margin-top:2px;"><i class="fas fa-angry" style="font-size:1.2em;"></i></div>
+      </div>`);
+    html.find('[data-ui="shell-btn-wrap"]').html(`
+      <div style="display:flex;gap:5px;height:30px;">
+        <button id="reroll-shell" class="litho-btn" style="flex:1;padding:2px;font-size:0.8em;line-height:1;" title="Re-roll Shell"><i class="fas fa-dice"></i></button>
+        <button id="edit-shell" class="litho-btn" style="flex:1;padding:2px;font-size:0.8em;line-height:1;" title="Edit HP"><i class="fas fa-edit"></i></button>
+      </div>`);
+    html.find('#reroll-shell').off('click').on('click', () => doScanShell(token, data));
+    html.find('#edit-shell').off('click').on('click', () => doEditShell(token, data));
+  } else {
+    html.find('[data-ui="shell-quality-wrap"]').html(`<div style="width:20px;"></div>`);
+    if (data.knownTier) {
+      html.find('[data-ui="shell-btn-wrap"]').html(`<button id="scan-shell" class="litho-btn">Inspect Shell</button>`);
+      html.find('#scan-shell').off('click').on('click', () => doScanShell(token, data));
+    } else {
+      html.find('[data-ui="shell-btn-wrap"]').html(`<button class="litho-btn" disabled>Awaiting Lattice</button>`);
+    }
+  }
+
+  // RESONANCE DIAL
+  const resDial = html.find('[data-ui="res-dial"]');
+  if (data.knownResonance) {
+    resDial.css({ background: `conic-gradient(transparent ${s.resRangeStart}deg, ${s.resColor} ${s.resRangeStart}deg ${s.resRangeEnd}deg, transparent ${s.resRangeEnd}deg)`, boxShadow: `0 0 10px ${s.resColor}`, animation: s.resShake || s.resPulse || 'none', borderColor: s.resShake ? '' : (s.resPulse ? '#9b59b6' : '#222') });
+  } else {
+    resDial.css({ background: '#111', boxShadow: '0 0 10px #000', animation: s.resPulse || 'none', borderColor: s.resPulse ? '#9b59b6' : '#222' });
+  }
+  html.find('[data-ui="res-sub"]').html(s.isResDetermined ? `<span class="litho-lock">LOCKED</span>` : `TUNING...`);
+  html.find('[data-ui="res-main"]').html(data.knownResonance ? (s.isResDetermined ? `<b>${data.resMin}</b>` : `${data.resMin}-${data.resMax}`) : `<span class="litho-q">?</span>`);
+  if (data.knownResonance) html.find('[data-ui="res-btn-wrap"]').html('');
+
+  // STABILITY DIAL
+  const stabDial = html.find('[data-ui="stab-dial"]');
+  if (data.knownStability) {
+    stabDial.css({ background: `conic-gradient(transparent ${s.stabRangeStart}deg, ${s.stabColor} ${s.stabRangeStart}deg ${s.stabRangeEnd}deg, transparent ${s.stabRangeEnd}deg)`, boxShadow: `0 0 15px ${s.stabColor}`, animation: s.stabShake || s.stabPulse || 'none', borderColor: s.stabShake ? '' : (s.stabPulse ? '#9b59b6' : '#222') });
+  } else {
+    stabDial.css({ background: '#111', boxShadow: '0 0 15px #000', animation: s.stabPulse || 'none', borderColor: s.stabPulse ? '#9b59b6' : '#222' });
+  }
+  html.find('[data-ui="stab-sub"]').html(s.isStabDetermined ? `<span class="litho-lock">LOCKED</span>` : `READING...`);
+  html.find('[data-ui="stab-main"]').html(data.knownStability ? (s.isStabDetermined ? `<b>${data.stabMin}</b>` : `${data.stabMin}-${data.stabMax}`) : `<span style="font-size:1.5em;color:#a29bfe;">?</span>`);
+  if (data.knownStability) html.find('[data-ui="stab-btn-wrap"]').html('');
+
+  // HARMONICS
+  html.find('[data-ui="wave-label"]').html(s.deltaLabel);
+  html.find('[data-ui="wave-bonus"]').html(s.bonusLabel);
+  html.find('[data-ui="wave-bars"]').find('.litho-bar').each(function(i) {
+    $(this).css({ background: s.waveColor, animationDuration: s.waveSpeed });
+  });
+
+  // BIO-RESONANCE
+  html.find('[data-ui="pc-fill"]').css({ height: s.pcPct + '%' });
+  html.find('[data-ui="npc-fill"]').css({ height: s.npcPct + '%' });
+  html.find('[data-ui="pc-total"]').text(data.bloodSacrificed || 0);
+  html.find('[data-ui="npc-total"]').text(data.npcBloodSacrificed || 0);
+
+  // ACTION CHARGE + DICE BUTTONS
+  html.find('[data-ui="charge-count"]').text(s.actionsLeft);
+  html.find('.dice-btn').each(function() {
+    const n = parseInt($(this).data('n'));
+    const act = $(this).data('act');
+    const isLocked = s.gaugesUnknown || (act === "res" && s.isResDetermined) || (act === "narrow" && s.isStabDetermined);
+    const disabled = (n > s.actionsLeft || isLocked);
+    $(this).prop('disabled', disabled).css({ opacity: disabled ? 0.2 : 1 });
+  });
+
+  html.find('#scan-type, #scan-freq, #scan-stab').prop('disabled', s.isRoundDone).css({ opacity: s.isRoundDone ? 0.5 : 1, cursor: s.isRoundDone ? 'not-allowed' : 'pointer' });
+
+  // ACTION PIPS
+  html.find('[data-ui="action-pips"]').html(
+    Array(4).fill(0).map((_,i) =>
+      `<i class="fas fa-dice-d20" style="font-size:2.8em;margin:0 5px;color:${i<data.actionsUsed?'#222':'#a29bfe'};text-shadow:${i<data.actionsUsed?'none':'0 0 8px #a29bfe'};"></i>`
+    ).join("")
+  );
+
+  // ROUND + DECAY
+  html.find('[data-ui="round-num"]').text(data.round);
+  const decayDisplay = data.nextDecayValue !== null
+    ? `<span class="litho-danger">-${data.nextDecayValue}</span>`
+    : `<span class="litho-muted">-${data.round}d4</span>`;
+  html.find('[data-ui="decay-display"]').html(decayDisplay);
+
+  // END ROUND BUTTON
+  const endBtn = html.find('#btn-end-round');
+  endBtn.prop('disabled', !s.isRoundDone);
+  if (s.isRoundDone) {
+    endBtn.css({ background: 'linear-gradient(#7a1f1a,#4a0f0c)', color: '#fff', cursor: 'pointer', opacity: 1, animation: 'litho-btnpulse 1.5s infinite', border: '1px solid #b84a3c' });
+  } else {
+    endBtn.css({ background: '#1c1c1e', color: '#555', cursor: 'not-allowed', opacity: 0.6, animation: 'none', border: '1px solid #333' });
+  }
+
+  // FORECAST BUTTON
+  if (data.nextDecayValue === null) {
+    html.find('[data-ui="forecast-wrap"]').html(`<button id="btn-est-decay" class="litho-btn" style="width:140px;border-color:#8e44ad;color:#a29bfe;margin:0;padding:6px 0;">Forecast (2d8)</button>`);
+    html.find('#btn-est-decay').off('click').on('click', () => doForecast(token, data));
+  } else {
+    html.find('[data-ui="forecast-wrap"]').html(`<div style="width:140px;text-align:center;font-size:0.7em;color:#2ecc71;font-weight:700;margin:0;padding:6px 0;">Forecast Locked</div>`);
+  }
+
+  html.find('#disp-pc').text(data.playerCount + ' PCs');
+  html.find('#disp-npc').text(data.npcCount + ' NPCs');
+}
+
+// ── ACTION HANDLERS ──────────────────────────────────────────
+
+async function doScanShell(token, data) {
+  const pBonus = data.playerCount || 4;
+  const baseFloors = [20, 25, 30, 38, 45];
+  const baseTierHP = baseFloors[data.trueTierLevel - 1] || 20;
+  const diceMap = ["3d6", "3d6", "4d6", "4d6", "5d6"];
+  const tierRoll = await new Roll(diceMap[data.trueTierLevel - 1] || "3d6").evaluate();
+  const startHP = baseTierHP + tierRoll.total;
+  const pRoll = await new Roll(`${pBonus}d2`).evaluate();
+  const hpAfterMiners = startHP - pRoll.total;
+  const roll = await new Roll("1d20").evaluate();
+  const d20 = roll.total;
+  let pct = 0, pctText = "";
+  if (d20 === 1) { pct = 40; pctText = "<span style='color:#e74c3c;'>+40% (CRIT FAIL)</span>"; }
+  else if (d20 === 20) { pct = 0; pctText = "<span style='color:#2ecc71;'>+0% (CRIT SUCCESS)</span>"; }
+  else { pct = (20 - d20) * 2; pctText = `+${pct}%`; }
+  const pctAddition = Math.round(startHP * (pct / 100));
+  const calculatedHP = hpAfterMiners + pctAddition;
+  data.trueShellMax = Math.max(calculatedHP, baseTierHP);
+  data.currentShellHP = data.trueShellMax;
+  data.knownShell = true;
+  const breakdown = `<div style="font-family:'Spectral',serif;font-size:0.95em;">
+    <div style="color:#a29bfe;font-family:'Cinzel',serif;font-weight:bold;margin-bottom:4px;border-bottom:1px solid #444;">Extraction Diagnostics:</div>
+    <div><b>1. Base Core:</b> ${baseTierHP} + [${tierRoll.total}] = <b>${startHP} HP</b></div>
+    <div><b>2. Miner Impact:</b> ${startHP} - [${pRoll.total}] = <b>${hpAfterMiners} HP</b></div>
+    <div><b>3. Scan Shift:</b> Rolled <b>${d20}</b> → <b>${pctText}</b> (+${pctAddition} HP)</div>
+    <div style="margin-top:4px;padding-top:4px;border-top:1px dashed #444;">
+    <b>4. Final Integrity:</b> ${hpAfterMiners} + ${pctAddition} = ${calculatedHP}<br>
+    (Floor limit: ${baseTierHP}) → <span style="font-size:1.2em;color:#00e5ff;font-weight:bold;">${data.trueShellMax} HP</span></div></div>`;
+  addChatMessage(breakdown);
+  await token.document.setFlag("world", "lithomancy", data);
+  await consumeActions(token, data, 0);
+}
+
+function doEditShell(token, data) {
+  new Dialog({
+    title: "Edit Shell HP",
+    content: `<div class="litho-popup-box">
+      <label style="color:#aaa;display:block;margin-bottom:4px;">Current HP:</label>
+      <input type="number" id="hp-cur" value="${data.currentShellHP}" style="width:100%;margin-bottom:10px;background:#111;color:#fff;border:1px solid #444;padding:5px;border-radius:4px;">
+      <label style="color:#aaa;display:block;margin-bottom:4px;">Max HP:</label>
+      <input type="number" id="hp-max" value="${data.trueShellMax}" style="width:100%;background:#111;color:#fff;border:1px solid #444;padding:5px;border-radius:4px;">
+    </div>`,
+    buttons: {
+      save: { label: "Save", callback: async (h) => {
+        data.currentShellHP = parseInt(h.find('#hp-cur').val());
+        data.trueShellMax = parseInt(h.find('#hp-max').val());
+        await token.document.setFlag("world", "lithomancy", data);
+        updateUI(token);
+      }}
+    }
+  }).render(true);
+}
+
+async function doForecast(token, data) {
+  const roll = await new Roll(`${data.round}d4`).evaluate();
+  const costRoll = await new Roll("2d8").evaluate();
+  addChatMessage(`<strong>Bio-Scrying:</strong> ${costRoll.total} HP sacrificed to forecast stability decay.`);
+  data.nextDecayValue = roll.total;
+  await token.document.setFlag("world", "lithomancy", data);
+  updateUI(token);
+}
+
+async function consumeActions(token, data, cost, shellDamage = 0) {
+  data.actionsUsed += cost;
+  if (data.knownStability) {
+    const range = Math.round((data.stabMax - data.stabMin) / 2);
+    data.stabMin = Math.max(0, data.currentStability - range);
+    data.stabMax = Math.min(20, data.currentStability + range);
+  }
+  if (data.currentShellHP <= 0) return triggerFinalImpact(token, data, shellDamage);
+  if (data.currentStability <= 0) return triggerDetonation(token, data);
+  await token.document.setFlag("world", "lithomancy", data);
+  updateUI(token);
+}
+
+async function showDamagePopup(amount) {
+  const d = new Dialog({
+    title: "IMPACT",
+    content: `<div class="litho-popup-box" style="text-align:center;border-color:#00e5ff;background:radial-gradient(circle at 50%,#001f3f,#000);">
+      <i class="fas fa-hammer" style="font-size:2.6em;margin-bottom:8px;color:#fff;"></i>
+      <div style="font-family:'Cinzel',serif;font-size:1.6em;font-weight:700;letter-spacing:1px;color:#00e5ff;">FRACTURE</div>
+      <div style="font-size:1.05em;color:#aaa;margin-top:4px;">Shell compromised by <b>${amount}</b> units.</div>
+    </div>`,
+    buttons: {}
+  });
+  d.render(true);
+  setTimeout(() => d.close(), 2500);
+}
+
+async function spinReel(title, options, target) {
+  return new Promise(resolve => {
+    let stripHtml = "";
+    for (let i = 0; i < 60; i++) stripHtml += `<div class="reel-item">${options[Math.floor(Math.random()*options.length)]}</div>`;
+    stripHtml += `<div class="reel-item" id="reel-target-item">${target}</div>`;
+    for (let i = 0; i < 5; i++) stripHtml += `<div class="reel-item">${options[0]}</div>`;
+
+    const dlg = new Dialog({
+      title,
+      content: `<div class="litho-popup-box">
+        <div style="font-family:'Cinzel',serif;color:#a29bfe;font-size:0.9em;margin-bottom:8px;text-align:center;">${title}</div>
+        <div class="reel-window"><div class="reel-strip" id="reel-strip-main">${stripHtml}</div><div class="reel-sigil"></div></div>
+      </div>`,
+      buttons: {}
+    });
+    dlg.render(true);
+
+    setTimeout(() => {
+      const strip = document.getElementById('reel-strip-main');
+      if (!strip) { resolve(); return; }
+      strip.style.transition = 'transform 8s cubic-bezier(0.1,0.9,0.2,1)';
+      strip.style.transform = 'translateY(-1725px)';
+      setTimeout(() => {
+        document.getElementById('reel-target-item')?.classList.add('reel-glow');
+        setTimeout(() => { dlg.close(); resolve(); }, 2000);
+      }, 8200);
+    }, 100);
+  });
+}
+
+function showHelpDialog(topic) {
+  const help = {
+    team: "Adjust the active number of PCs and NPCs in the extraction zone.",
+    class: "Identify the crystalline structure type (Combat, Arcane, etc.).",
+    tier: "Lattice complexity. Higher tiers are unstable but yield potent results.",
+    shell: `The outer node crust. Fracture to 0 to extract the core.<br><br><span style='color:#a29bfe;font-weight:bold;'>Logic:</span> Base + Tier Dice. Scan reduces by Players rolling d2s per person.<br>The d20 scan inversely ADDS to the HP by a percentage (e.g. 19 = +2%, 2 = +36%, 20 = +0%).<br>Nat 1: +40% Penalty. Floor clamped to Base HP.<br><br>
+    <table style='width:100%;text-align:center;border-collapse:collapse;font-size:0.8em;margin-top:8px;'><tr style='color:#00e5ff;border-bottom:1px solid #444;'><th>Tier</th><th>Base</th><th>Dice</th><th>Avg HP</th></tr>
+    <tr><td>T1</td><td>20</td><td>3d6</td><td>30.5</td></tr><tr><td>T2</td><td>25</td><td>3d6</td><td>35.5</td></tr><tr><td>T3</td><td>30</td><td>4d6</td><td>44</td></tr><tr><td>T4</td><td>38</td><td>4d6</td><td>52</td></tr><tr><td>T5</td><td>45</td><td>5d6</td><td>63</td></tr></table>`,
+    resonance: "The harmonic frequency of the crystal. Tune to match.",
+    stability: "Core volatility. If it drops to 0, the node detonates.",
+    blood: "Infusing vital essence allows manipulation of the core structure.",
+    instruments: "Gauges show estimated values. Locked gauges are exact.",
+    bench: "Tools cost actions. Spend 4 actions to cycle the round."
+  };
+  new Dialog({
+    title: topic.toUpperCase(),
+    content: `<div class="litho-popup-box">
+      <div style="font-family:'Cinzel',serif;font-weight:700;color:#00e5ff;letter-spacing:1px;margin-bottom:6px;">Manual</div>
+      <div>${help[topic] || `Info about ${topic}...`}</div>
+    </div>`,
+    buttons: { ok: { label: "Close" } }
+  }).render(true);
+}
+
+async function triggerRoundEnd(token, data) {
+  let loss = 0;
+  if (data.nextDecayValue !== null) { loss = data.nextDecayValue; data.nextDecayValue = null; }
+  else {
+    const roll = await new Roll(`${data.round}d4`).evaluate();
+    loss = roll.total;
+  }
+  data.stabMax = Math.max(0, data.stabMax - loss);
+  data.stabMin = Math.max(0, data.stabMin - loss);
+
+  let historyHtml = (data.cycleHistory && data.cycleHistory.length > 0)
+    ? data.cycleHistory.join("")
+    : `<div style="padding:6px;color:#777;font-style:italic;">No active operations detected.</div>`;
+
+  addChatMessage(`<div style="font-family:'Spectral',serif;"><div style="color:#e74c3c;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;margin-bottom:5px;">ROUND CYCLED (Escalation)</div>${historyHtml}<div style="margin-top:8px;font-size:1.1em;color:#ff3d00;">Volatility Penalty: <b>-${loss}</b></div></div>`);
+
+  new Dialog({
+    title: "ROUND CYCLED",
+    content: `<div class="litho-popup-box">
+      <h1 style="text-align:center;margin:0 0 5px 0;font-family:'Cinzel',serif;color:#e74c3c;font-size:2.2em;text-shadow:0 0 10px rgba(231,76,60,0.5);">-${loss} Stability</h1>
+      <div style="text-align:center;color:#aaa;font-size:0.95em;margin-bottom:15px;font-family:'Spectral',serif;font-style:italic;">Round ${data.round} complete. Core volatility increased.</div>
+      <div style="background:rgba(0,0,0,0.3);border:1px solid #444;border-radius:6px;padding:10px;max-height:160px;overflow-y:auto;text-align:left;">
+        <div style="color:#a29bfe;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #555;margin-bottom:5px;padding-bottom:4px;letter-spacing:1px;">Cycle Summary:</div>
+        ${historyHtml}
+      </div>
+    </div>`,
+    buttons: {
+      next: { label: "Continue", callback: async () => {
+        data.currentStability = Math.max(0, data.currentStability - loss);
+        data.round++;
+        data.actionsUsed = 0;
+        data.cycleHistory = [];
+        if (data.currentStability <= 0) triggerDetonation(token, data);
+        else {
           await token.document.setFlag("world", "lithomancy", data);
           updateUI(token);
         }
+      }}
+    }
+  }).render(true);
+}
 
-        async function consumeActions(token, data, cost, shellDamage = 0) {
-          data.actionsUsed += cost;
-          if (data.knownStability) {
-            const range = Math.round((data.stabMax - data.stabMin) / 2);
-            data.stabMin = Math.max(0, data.currentStability - range);
-            data.stabMax = Math.min(20, data.currentStability + range);
-          }
-          if (data.currentShellHP <= 0) return triggerFinalImpact(token, data, shellDamage);
-          if (data.currentStability <= 0) return triggerDetonation(token, data);
-          await token.document.setFlag("world", "lithomancy", data);
-          updateUI(token);
-        }
+function triggerFinalImpact(token, data, amount) {
+  _lithoDialog = null; _lithoHtml = null;
+  new Dialog({
+    title: "CRITICAL IMPACT",
+    content: `<div class="litho-popup-box" style="text-align:center;">
+      <i class="fas fa-hammer" style="font-size:3.5em;margin-bottom:8px;color:#fff;animation:litho-shake-hard 0.2s infinite;"></i>
+      <div style="font-family:'Cinzel',serif;font-size:2em;font-weight:900;letter-spacing:2px;color:#00e5ff;text-shadow:0 0 15px #00e5ff;">SHELL SHATTERED</div>
+      <div style="font-size:1.2em;color:#aaa;margin-top:8px;">Final blow: <b>${amount || "Massive"}</b> units.</div>
+    </div>`,
+    buttons: { ok: { label: "Hell yeah!!", callback: () => triggerSuccess(token, data) } }
+  }).render(true);
+}
 
-        async function showDamagePopup(amount) {
-          Object.values(ui.windows).forEach(w => { if (w.id?.includes("dmg-pop")) w.close(); });
-          const popupId = `dmg-pop-${Date.now()}`;
-          new Dialog({
-            title: "IMPACT",
-            content: `
-              <div class="litho-popup-box" style="text-align:center; border-color:#00e5ff; background:radial-gradient(circle at 50% 50%, #001f3f, #000);">
-                <i class="fas fa-hammer" style="font-size:2.6em; margin-bottom:8px; color:#fff;"></i>
-                <div style="font-family:'Cinzel',serif; font-size:1.6em; font-weight:700; letter-spacing:1px; color:#00e5ff;">FRACTURE</div>
-                <div style="font-size:1.05em; color:#aaa; margin-top:4px;">Shell compromised by <b>${amount}</b> units.</div>
-              </div>`,
-            buttons: {}
-          }, { classes: ["litho-window"], width: 320, id: popupId }).render(true);
-          setTimeout(() => { $(`#${popupId}`).css({ "z-index": 10000, "top": "50%", "left": "50%", "transform": "translate(-50%, -50%)" }); }, 10);
-          setTimeout(() => { Object.values(ui.windows).forEach(w => { if (w?.data?.title === "IMPACT") w.close(); }); }, 2500);
-        }
+function triggerSuccess(token, data) {
+  const activeColor = TIER_COLORS[data.trueTierLevel - 1] || "#fff";
+  new Dialog({
+    title: "HARVEST SECURED",
+    content: `<style>
+      @keyframes core-pulse { 0%{filter:drop-shadow(0 0 15px ${activeColor});transform:scale(1)}50%{filter:drop-shadow(0 0 35px ${activeColor}) brightness(1.3);transform:scale(1.1)}100%{filter:drop-shadow(0 0 15px ${activeColor});transform:scale(1)} }
+    </style>
+    <div class="litho-popup-box" style="text-align:center;padding:25px;background:radial-gradient(circle at center,#1a1a24,#050508);border:2px solid #d4af37;">
+      <div style="font-family:'Cinzel',serif;color:#ffd700;font-size:2.6em;font-weight:900;text-shadow:0 0 20px #ffd700,0 0 10px #ff8c00;letter-spacing:3px;margin-bottom:5px;">HARVEST SECURED</div>
+      <div style="font-size:1.1em;color:#aaa;font-style:italic;">The outer crust shatters completely, revealing the resonant core...</div>
+      <div style="margin:25px 0;animation:core-pulse 2.5s infinite ease-in-out;display:flex;justify-content:center;"><i class="fas fa-gem" style="font-size:6em;color:${activeColor};"></i></div>
+      <div style="background:rgba(0,0,0,0.7);border:1px solid #444;padding:15px;border-radius:8px;">
+        <div style="color:#a29bfe;font-family:'Cinzel',serif;font-weight:bold;font-size:1.6em;text-shadow:0 0 10px #a29bfe;">${data.trueType}</div>
+        <div style="color:${activeColor};font-family:'Cinzel',serif;font-weight:bold;font-size:1.3em;margin-top:5px;text-shadow:0 0 10px ${activeColor};">${data.trueTier}</div>
+      </div>
+    </div>`,
+    buttons: { claim: { label: "Claim & Reset", callback: async () => {
+      await token.document.unsetFlag("world", "lithomancy");
+      await initializeNode(token);
+      openLithomancyMonitor(token, null);
+    }}}
+  }).render(true);
+}
 
-        async function spinReel(title, options, target) {
-          Object.values(ui.windows).forEach(w => { if (w.id?.includes("reel")) w.close(); });
-          return new Promise(resolve => {
-            let stripHtml = "";
-            for (let i = 0; i < 60; i++) stripHtml += `<div class="reel-item">${options[Math.floor(Math.random() * options.length)]}</div>`;
-            stripHtml += `<div class="reel-item" id="reel-target">${target}</div>`;
-            for (let i = 0; i < 5; i++) stripHtml += `<div class="reel-item">${options[0]}</div>`;
-            const dId = `reel-${Date.now()}`;
-            new Dialog({
-              title, content: `
-              <style>
-                .reel-frame{ border:1px solid #333; border-radius:6px; background: radial-gradient(circle, #252528, #18181a); padding: 10px; color:#dcdcdc; }
-                .reel-window{ height:180px; overflow:hidden; position:relative; border:1px solid #444; background:#111; border-radius:4px; box-shadow:0 0 10px #000 inset; }
-                .reel-strip{ position:absolute; top:0; width:100%; transition: transform 8s cubic-bezier(0.1,0.9,0.2,1); }
-                .reel-item{ height:30px; display:flex; align-items:center; justify-content:center; font-family:'Spectral', serif; font-size:0.9em; font-weight:700; border-bottom:1px dashed #333; letter-spacing:0.5px; color: #777; }
-                .reel-sigil{ position:absolute; top:50%; left:0; right:0; height:2px; background:#a29bfe; transform:translateY(-50%); box-shadow: 0 0 8px #a29bfe; pointer-events:none; z-index: 10; }
-                .reel-glow{ text-shadow:0 0 10px #a29bfe; color:#fff; font-size:1.1em; }
-              </style>
-              <div class="litho-popup-box">
-                <div style="font-family:'Cinzel',serif; color:#a29bfe; font-size:0.9em; margin-bottom:8px; text-align:center;">${title}</div>
-                <div class="reel-window"><div class="reel-strip" id="strip-${dId}">${stripHtml}</div><div class="reel-sigil"></div></div>
-              </div>`, buttons: {}
-            }, { classes: ["litho-window"], id: dId }).render(true);
-            setTimeout(() => { $(`#${dId}`).css('z-index', 10005); }, 50);
-            setTimeout(() => {
-              const strip = $(`#strip-${dId}`);
-              if (!strip.length) { resolve(); return; }
-              strip.css("transform", `translateY(-1725px)`);
-              setTimeout(() => {
-                strip.find("#reel-target").addClass("reel-glow");
-                setTimeout(() => { Object.values(ui.windows).forEach(w => { if (w.id === dId) w.close(); }); resolve(); }, 2000);
-              }, 8200);
-            }, 100);
-          });
-        }
+function triggerDetonation(token, data) {
+  _lithoDialog = null; _lithoHtml = null;
+  const tier = data.trueTierLevel || 1;
+  const dmgMap = { 1:"2d6", 2:"3d6", 3:"4d6", 4:"6d6", 5:"8d6" };
+  new Dialog({
+    title: "CATASTROPHIC FAILURE",
+    content: `<style>
+      @keyframes rupture-pulse { 0%{box-shadow:0 0 20px #ff0000,0 0 10px #ff0000 inset;border-color:#ff0000}50%{box-shadow:0 0 60px #ff0000,0 0 30px #ff0000 inset;border-color:#fff}100%{box-shadow:0 0 20px #ff0000,0 0 10px #ff0000 inset;border-color:#ff0000} }
+    </style>
+    <div class="litho-popup-box" style="padding:5px;">
+      <div style="background:radial-gradient(circle at 50%,#2a0000,#0a0000);border:3px solid #ff0000;padding:40px;text-align:center;animation:rupture-pulse 1.5s infinite;border-radius:8px;margin:10px;">
+        <div style="font-family:'Cinzel',serif;font-size:3em;font-weight:900;color:#ff4d4d;text-shadow:0 0 10px #000,0 0 20px #ff0000;letter-spacing:2px;">THE CORE HAS EXPLODED</div>
+        <div style="font-family:'Spectral',serif;font-size:2em;color:#fff;margin-top:10px;">${dmgMap[tier] || "2d6"} Force Damage</div>
+      </div>
+    </div>`,
+    buttons: { ok: { label: "Close", callback: async () => {
+      await token.document.unsetFlag("world", "lithomancy");
+      await initializeNode(token);
+      openLithomancyMonitor(token, null);
+    }}}
+  }).render(true);
+}
 
-        async function openEditDialog(token, data, key, label) {
-          return new Promise(resolve => {
-            new Dialog({
-              title: `Edit ${label}`,
-              content: `<div class="litho-popup-box"><input type="text" id="edit-val" value="${data[key]}" style="width:100%; padding:8px; border-radius:4px; background:#222; color:#fff; border:1px solid #444;"></div>`,
-              buttons: {
-                save: {
-                  label: "Update", callback: async (html) => {
-                    let val = html.find("#edit-val").val();
-                    if (typeof data[key] === 'number' && !isNaN(val)) val = Number(val);
-                    data[key] = val;
-                    await token.document.setFlag("world", "lithomancy", data);
-                    updateUI(token);
-                    resolve();
-                  }
-                }
-              }
-            }, { classes: ["litho-window"] }).render(true);
-          });
-        }
+async function applyBlood(token, data, amount, power, type, isCrit, source) {
+  const critText = isCrit ? " (PERFECT CONDUCTIVITY!)" : "";
+  const srcLabel = source === 'npc' ? 'NPC' : 'Player';
+  addChatMessage(`<strong>Bio-Infusion (${srcLabel}):</strong> ${amount}hp infused for ${power} charge${critText}.`);
+  if (source === 'npc') data.npcBloodSacrificed = (data.npcBloodSacrificed || 0) + amount;
+  else data.bloodSacrificed = (data.bloodSacrificed || 0) + amount;
+  if (!data.cycleHistory) data.cycleHistory = [];
+  const actNum = data.cycleHistory.filter(h=>h.includes("<b>Action")).length + 1;
+  data.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap;width:140px;"><b>Action ${actNum}</b> (<span style="color:#2ecc71;">Bio-Infusion</span>)</div><div>Infused ${amount} ${srcLabel} HP for ${power} charge.</div></div>`);
+  if (type === "shell") { data.currentShellHP = Math.max(0, data.currentShellHP - power); showDamagePopup(power); }
+  else if (type === "heal") data.currentStability = Math.min(20, data.currentStability + power);
+  else if (type === "res") narrowRange(data, "res", power);
+  else if (type === "stab") narrowRange(data, "stab", power);
+  await consumeActions(token, data, 0, type === "shell" ? power : 0);
+}
 
-        function triggerFinalImpact(token, data, amount) {
-          Object.values(ui.windows).forEach(w => { if (w.id?.includes("lithomancy-monitor") || w.id?.includes("dmg-pop")) w.close(); });
-          _lithoDialog = null; _lithoHtml = null;
-          disengageAtmosphere();
-          try { AudioHelper.play({ src: SOUNDS.FRACTURE }, false); } catch (e) { }
-          new Dialog({
-            title: "CRITICAL IMPACT",
-            content: `
-              <div class="litho-popup-box" style="text-align:center;">
-                <i class="fas fa-hammer" style="font-size:3.5em; margin-bottom:8px; color:#fff; animation: litho-shake-hard 0.2s infinite;"></i>
-                <div style="font-family:'Cinzel',serif; font-size:2em; font-weight:900; letter-spacing:2px; color:#00e5ff; text-shadow: 0 0 15px #00e5ff;">SHELL SHATTERED</div>
-                <div style="font-size:1.2em; color:#aaa; margin-top:8px;">Final blow: <b>${amount || "Massive"}</b> units.</div>
-              </div>`,
-            buttons: { ok: { label: "Hell yea!!", callback: () => triggerSuccess(token, data) } }
-          }, { classes: ["litho-window"], width: 480, resizable: false }).render(true);
-        }
+// ── MAIN RENDER ───────────────────────────────────────────────
 
-        async function triggerRoundEnd(token, data) {
-          let loss = 0;
-          if (data.nextDecayValue !== null) { loss = data.nextDecayValue; data.nextDecayValue = null; }
-          else {
-            const roll = await new Roll(`${data.round}d4`).evaluate();
-            loss = roll.total;
-          }
-          data.stabMax = Math.max(0, data.stabMax - loss);
-          data.stabMin = Math.max(0, data.stabMin - loss);
+function openLithomancyMonitor(token, miner) {
+  const data = token.document.getFlag("world", "lithomancy");
+  if (!data) return;
 
-          let historyHtml = (data.cycleHistory && data.cycleHistory.length > 0)
-            ? data.cycleHistory.join("")
-            : `<div style="padding:6px; color:#777; font-style:italic;">No active operations detected.</div>`;
+  const btnGroup = (action, color, icon) => {
+    const opts = [1,2,3,4];
+    return `<div class="litho-toolrow">
+      <div class="litho-toolname"><i class="fas ${icon}"></i> ${actionLabel(action)}</div>
+      <div class="litho-dicebar">
+        ${opts.map(n => `<button class="dice-btn litho-dice" data-act="${action}" data-n="${n}" style="border-color:${color};color:${color};">${n}</button>`).join("")}
+      </div>
+    </div>`;
+  };
 
-          ChatMessage.create({
-            content: `<div style="font-family:'Spectral',serif;"><div style="color:#e74c3c; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #444; margin-bottom:5px;">ROUND CYCLED (Escalation)</div>${historyHtml}<div style="margin-top:8px; font-size:1.1em; color:#ff3d00;">Volatility Penalty: <b>-${loss}</b></div></div>`
-          });
+  let gemsHtml = "";
+  for (let i = 1; i <= 5; i++) {
+    gemsHtml += `<i class="fas fa-gem set-tier-btn" data-tier="${i}" style="opacity:0.2;color:#444;font-size:1.4em;margin:0 2px;cursor:pointer;" title="Set Tier ${i}"></i>`;
+  }
 
-          const dId = `round-pop-${Date.now()}`;
-          new Dialog({
-            title: "ROUND CYCLED",
-            content: `<div class="litho-popup-box">
-              <h1 style="text-align:center; margin:0 0 5px 0; font-family:'Cinzel',serif; color:#e74c3c; font-size:2.2em; text-shadow:0 0 10px rgba(231,76,60,0.5);">-${loss} Stability</h1>
-              <div style="text-align:center; color:#aaa; font-size:0.95em; margin-bottom:15px; font-family:'Spectral',serif; font-style:italic;">Round ${data.round} complete. Core volatility increased.</div>
-              <div style="background:rgba(0,0,0,0.3); border:1px solid #444; border-radius:6px; padding:10px; max-height:160px; overflow-y:auto; text-align:left;">
-                <div style="color:#a29bfe; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #555; margin-bottom:5px; padding-bottom:4px; letter-spacing:1px;">Cycle Summary:</div>
-                ${historyHtml}
+  const content = `<div class="litho-alchemy">
+    <div class="litho-header">
+      <div class="litho-title">
+        <i class="fas fa-gem"></i> LITHOMANCY MONITOR
+        <small>Node Survey & Extraction — Standalone Mode</small>
+      </div>
+      <div class="litho-controls" style="display:flex;gap:6px;">
+        <button id="btn-sim-success" class="ok" title="Simulate Success"><i class="fas fa-check"></i></button>
+        <button id="btn-sim-fail" class="bad" title="Simulate Failure"><i class="fas fa-times"></i></button>
+        <button id="btn-reset" title="Reset Node"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </div>
+    <div class="litho-panel">
+      <div class="litho-subgrid">
+        <div class="litho-card">
+          <div class="help-header litho-cap" data-topic="team">Local Team</div>
+          <div style="display:flex;justify-content:space-evenly;align-items:flex-end;height:110px;width:100%;margin-top:5px;">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <input type="range" class="team-slider v-slider" data-target="playerCount" min="1" max="6" value="${data.playerCount}" style="height:70px;">
+              <span id="disp-pc" style="font-size:0.8em;color:#a29bfe;margin-top:8px;font-weight:bold;">${data.playerCount} PCs</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <input type="range" class="team-slider v-slider" data-target="npcCount" min="0" max="10" value="${data.npcCount}" style="height:70px;">
+              <span id="disp-npc" style="font-size:0.8em;color:#ff3d00;margin-top:8px;font-weight:bold;">${data.npcCount} NPCs</span>
+            </div>
+          </div>
+        </div>
+        <div class="litho-card">
+          <div class="help-header litho-cap" data-topic="class">Resonance Type</div>
+          <div>
+            <div class="litho-icon"><i data-ui="type-icon" class="fas fa-question" style="color:#333;"></i></div>
+            <div data-ui="type-label" class="litho-value">Unknown Resonance</div>
+          </div>
+          <div data-ui="type-btn-wrap"><button id="scan-type" class="litho-btn">Identify Class</button></div>
+        </div>
+        <div class="litho-card">
+          <div class="help-header litho-cap" data-topic="tier">Crystal Lattice</div>
+          <div>
+            <div style="margin:8px 0 6px 0;height:34px;display:flex;align-items:center;justify-content:center;">${gemsHtml}</div>
+            <div data-ui="tier-label" class="litho-value">Unknown Structure</div>
+          </div>
+          <div data-ui="tier-btn-wrap"><button id="scan-tier" class="litho-btn">Survey Structure</button></div>
+        </div>
+        <div class="litho-card">
+          <div class="help-header litho-cap" data-topic="shell">Node Shell</div>
+          <div style="display:flex;justify-content:center;align-items:center;gap:15px;width:100%;">
+            <div style="flex:1;">
+              <div data-ui="shell-gem-wrap" style="width:100px;height:82px;margin:0 auto;position:relative;display:flex;align-items:center;justify-content:center;">
+                <i data-ui="shell-icon" class="fas fa-mountain" style="font-size:3.5em;color:#333;transition:color 0.5s;"></i>
+                <svg width="100" height="100" style="position:absolute;top:0;left:0;pointer-events:none;opacity:0.95;"><g data-ui="shell-cracks"></g></svg>
               </div>
-            </div>`,
-            buttons: {
-              next: {
-                label: "Continue", callback: async () => {
-                  data.currentStability = Math.max(0, data.currentStability - loss);
-                  data.round++;
-                  data.actionsUsed = 0;
-                  data.cycleHistory = [];
-                  if (data.currentStability <= 0) triggerDetonation(token, data);
-                  else {
-                    await token.document.setFlag("world", "lithomancy", data);
-                    updateUI(token);
-                  }
-                }
-              }
-            }
-          }, { classes: ["litho-window"], id: dId, width: 500, resizable: false }).render(true);
-          setTimeout(() => { $(`#${dId}`).css('z-index', 10006); }, 50);
-        }
-
-        function triggerSuccess(token, data) {
-          try { AudioHelper.play({ src: SOUNDS.SUCCESS }, true); } catch (e) { }
-          const activeColor = TIER_COLORS[data.trueTierLevel - 1] || "#fff";
-          new Dialog({
-            title: "HARVEST SECURED",
-            content: `
-              <style>
-                @keyframes core-pulse { 0% { filter: drop-shadow(0 0 15px ${activeColor}); transform: scale(1); } 50% { filter: drop-shadow(0 0 35px ${activeColor}) brightness(1.3); transform: scale(1.1); } 100% { filter: drop-shadow(0 0 15px ${activeColor}); transform: scale(1); } }
-                .success-box { text-align:center; padding:25px; background: radial-gradient(circle at center, #1a1a24, #050508); border: 2px solid #d4af37; border-radius: 12px; box-shadow: 0 0 40px #d4af37 inset, 0 0 20px #000; }
-                .success-title { font-family:'Cinzel',serif; color:#ffd700; font-size:2.6em; font-weight:900; text-shadow:0 0 20px #ffd700, 0 0 10px #ff8c00; letter-spacing:3px; margin-bottom:5px; }
-                .core-display { margin: 25px 0; animation: core-pulse 2.5s infinite ease-in-out; display:flex; justify-content:center; }
-              </style>
-              <div class="litho-popup-box success-box">
-                <div class="success-title">HARVEST SECURED</div>
-                <div style="font-size:1.1em; color:#aaa; font-style:italic;">The outer crust shatters completely, revealing the resonant core...</div>
-                <div class="core-display"><i class="fas fa-gem" style="font-size:6em; color:${activeColor};"></i></div>
-                <div style="background:rgba(0,0,0,0.7); border:1px solid #444; padding:15px; border-radius:8px;">
-                  <div style="color:#a29bfe; font-family:'Cinzel',serif; font-weight:bold; font-size:1.6em; text-shadow:0 0 10px #a29bfe;">${data.trueType}</div>
-                  <div style="color:${activeColor}; font-family:'Cinzel',serif; font-weight:bold; font-size:1.3em; margin-top:5px; text-shadow:0 0 10px ${activeColor};">${data.trueTier}</div>
-                </div>
-              </div>`,
-            buttons: { claim: { label: "Claim & Reset", callback: async () => { await token.document.unsetFlag("world", "lithomancy"); } } }
-          }, { classes: ["litho-window"], width: 520, resizable: false }).render(true);
-        }
-
-        function triggerDetonation(token, data) {
-          Object.values(ui.windows).forEach(w => { if (w.id?.includes("lithomancy-monitor")) w.close(); });
-          _lithoDialog = null; _lithoHtml = null;
-          disengageAtmosphere();
-          try { AudioHelper.play({ src: SOUNDS.FAIL }, true); } catch (e) { }
-          try { if (game.modules.get("sequencer")?.active && game.modules.get("JB2A_DnD5e")?.active) new Sequence().effect().file("jb2a.fireball.explosion.orange").at(token).scale(2).play(); } catch (e) { }
-          const tier = data.trueTierLevel || 1;
-          const dmgMap = { 1: "2d6", 2: "3d6", 3: "4d6", 4: "6d6", 5: "8d6" };
-          new Dialog({
-            title: "CATASTROPHIC FAILURE",
-            content: `
-              <style>
-                @keyframes rupture-pulse { 0% { box-shadow: 0 0 20px #ff0000, 0 0 10px #ff0000 inset; border-color:#ff0000; } 50% { box-shadow: 0 0 60px #ff0000, 0 0 30px #ff0000 inset; border-color:#fff; } 100% { box-shadow: 0 0 20px #ff0000, 0 0 10px #ff0000 inset; border-color:#ff0000; } }
-                .rupture-box { background: radial-gradient(circle at 50% 50%, #2a0000, #0a0000); border: 3px solid #ff0000; padding: 40px; text-align: center; animation: rupture-pulse 1.5s infinite; border-radius: 8px; margin:10px; }
-                .rupture-text { font-family: 'Cinzel', serif; font-size: 3em; font-weight: 900; color: #ff4d4d; text-shadow: 0 0 10px #000, 0 0 20px #ff0000; letter-spacing: 2px; }
-              </style>
-              <div class="litho-popup-box" style="padding:5px;">
-                <div class="rupture-box">
-                  <div class="rupture-text">THE CORE HAS EXPLODED</div>
-                  <div style="font-family:'Spectral',serif; font-size:2em; color:#fff; margin-top:10px;">${dmgMap[tier] || "2d6"} Force Damage</div>
-                </div>
-              </div>`,
-            buttons: { ok: { label: "Close", callback: async () => { await token.document.unsetFlag("world", "lithomancy"); } } }
-          }, { classes: ["litho-window"], width: 520, resizable: false }).render(true);
-        }
-
-        async function applyBlood(token, data, amount, power, type, isCrit, source) {
-          const critText = isCrit ? " (PERFECT CONDUCTIVITY!)" : "";
-          const srcLabel = source === 'npc' ? 'NPC' : 'Player';
-          ChatMessage.create({ content: `<strong>Bio-Infusion (${srcLabel}):</strong> ${amount}hp infused for ${power} charge${critText}.` });
-          if (source === 'npc') data.npcBloodSacrificed = (data.npcBloodSacrificed || 0) + amount;
-          else data.bloodSacrificed = (data.bloodSacrificed || 0) + amount;
-          if (!data.cycleHistory) data.cycleHistory = [];
-          const actNum = data.cycleHistory.filter(h => h.includes("<b>Action")).length + 1;
-          data.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap; width:140px;"><b>Action ${actNum}</b> (<span style="color:#2ecc71;">Bio-Infusion</span>)</div><div>Infused ${amount} ${srcLabel} HP for ${power} charge.</div></div>`);
-          if (type === "shell") { data.currentShellHP = Math.max(0, data.currentShellHP - power); showDamagePopup(power); }
-          else if (type === "heal") data.currentStability = Math.min(20, data.currentStability + power);
-          else if (type === "res") narrowRange(data, "res", power);
-          else if (type === "stab") narrowRange(data, "stab", power);
-          await consumeActions(token, data, 0, type === "shell" ? power : 0);
-        }
-
-        function showHelpDialog(topic) {
-          const help = {
-            team: "Adjust the active number of PCs and NPCs in the extraction zone.",
-            class: "Identify the crystalline structure type (Combat, Arcane, etc.).",
-            tier: "Lattice complexity. Higher tiers are unstable but yield potent results.",
-            shell: "The outer node crust. Fracture to 0 to extract the core.<br><br><span style='color:#a29bfe;font-weight:bold;'>Logic:</span> Base + Tier Dice. Scan reduces by Players rolling d2s per person.<br>The d20 scan inversely ADDS to the HP by a percentage (e.g. 19 = +2%, 2 = +36%, 20 = +0%).<br>Nat 1: +40% Penalty. Floor clamped to Base HP.<br><br><table style='width:100%; text-align:center; border-collapse:collapse; font-size:0.8em; margin-top:8px;'><tr style='color:#00e5ff; border-bottom:1px solid #444;'><th>Tier</th><th>Base (Floor)</th><th>Dice</th><th>Avg Start HP</th></tr><tr><td>T1</td><td>20</td><td>3d6</td><td>30.5</td></tr><tr><td>T2</td><td>25</td><td>3d6</td><td>35.5</td></tr><tr><td>T3</td><td>30</td><td>4d6</td><td>44</td></tr><tr><td>T4</td><td>38</td><td>4d6</td><td>52</td></tr><tr><td>T5</td><td>45</td><td>5d6</td><td>63</td></tr></table>",
-            resonance: "The harmonic frequency of the crystal. Tune to match.",
-            stability: "Core volatility. If it drops to 0, the node detonates.",
-            blood: "Infusing vital essence allows manipulation of the core structure.",
-            instruments: "Gauges show estimated values. Locked gauges are exact.",
-            bench: "Tools cost actions. Spend 4 actions to cycle the round."
-          };
-          new Dialog({
-            title: topic.toUpperCase(),
-            content: `<div class="litho-popup-box">
-              <div style="font-family:'Cinzel',serif; font-weight:700; color:#00e5ff; letter-spacing:1px; margin-bottom:6px;">Manual</div>
-              <div>${help[topic] || `Info about ${topic}...`}</div>
-            </div>`,
-            buttons: { ok: { label: "Close" } }
-          }, { classes: ["litho-window"] }).render(true);
-        }
-
-        /* ==================================================
-         * THE MONITOR UI — RENDERS ONCE, NEVER AGAIN
-         * ================================================== */
-        function openLithomancyMonitor(token, miner) {
-          const data = token.document.getFlag("world", "lithomancy");
-          if (!data) return;
-
-          // Build initial HTML with data-ui markers for targeted updates
-          // EDIT BUTTON REMOVED
-          const editIcon = (key, label) => "";
-
-          const btnGroup = (action, color, icon) => {
-            // PATCH: Sequential Fracture - Always show 1-4 for user choice
-            const opts = [1, 2, 3, 4];
-            return `
-            <div class="litho-toolrow">
-              <div class="litho-toolname"><i class="fas ${icon}"></i> ${actionLabel(action)}</div>
-              <div class="litho-dicebar">
-                ${opts.map(n => `<button class="dice-btn litho-dice" data-act="${action}" data-n="${n}" style="border-color:${color}; color:${color};">${n}</button>`).join("")}
-              </div>
-            </div>`;
-          };
-
-          // Initial gems (will be patched by updateUI)
-          let gemsHtml = "";
-          for (let i = 1; i <= 5; i++) {
-            gemsHtml += `<i class="fas fa-gem set-tier-btn" data-tier="${i}" style="opacity:0.2; color:#444; font-size:1.4em; margin:0 2px; cursor:pointer;" title="Set Tier ${i}"></i>`;
-          }
-
-          const content = `
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Spectral:wght@400;700&display=swap');
-            .litho-window .window-resizable-handle { display: none !important; }
-            .litho-alchemy { min-width: 1080px; min-height: 820px; }
-            .litho-window.window-app { background: transparent !important; box-shadow: none !important; border: none !important; }
-            .litho-window .window-content { background: transparent !important; padding: 0 !important; overflow: visible !important; }
-            .litho-window .window-header { display: none !important; }
-            .litho-window .dialog-buttons { display: flex; gap: 10px; margin-top: 10px; }
-            .litho-window .dialog-button { flex: 1; background: #1c1c1e; color: #dcdcdc; border: 1px solid #444; border-radius: 4px; padding: 8px; cursor: pointer; font-family: "Cinzel", serif; font-weight: 700; transition: 0.2s; }
-            .litho-window .dialog-button:hover { background: #2a2a2e; color: #fff; border-color: #a29bfe; box-shadow: 0 0 10px rgba(162,155,254,0.3); }
-            .v-slider { -webkit-appearance: slider-vertical; appearance: slider-vertical; width: 12px; margin: 0 auto; outline: none; background: transparent; cursor: pointer; }
-            .v-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #a29bfe; border: 2px solid #222; }
-            .cycle-row { display: grid; grid-template-columns: auto 1fr; gap: 8px; padding: 4px 0; border-bottom: 1px dashed #333; color: #dcdcdc; font-size: 0.95em; align-items: start; text-align: left; }
-            .cycle-row:last-child { border-bottom: none; }
-            .litho-alchemy, .litho-popup-box {
-              --stone-dark: #121212; --text-main: #dcdcdc; --text-muted: #777; --accent: #a29bfe; --gold: #d4af37; --edge: #3a3a3c; --bio-glow: #00e5ff; --bio-deep: #0077c2;
-              font-family: "Spectral", serif; color: var(--text-main);
-              background: radial-gradient(circle at 50% 0%, #2a2a2e, #121212);
-              border: 3px solid var(--edge); border-radius: 8px; padding: 16px;
-              box-shadow: 0 0 40px #000, 0 0 10px #000 inset; position: relative;
-            }
-            .litho-drag-handle { position: absolute; top: 0; left: 0; right: 0; height: 40px; cursor: grab; z-index: 10; }
-            @keyframes litho-shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, 1px); } }
-            @keyframes litho-shake-hard { 0% { transform: translate(2px, 2px); } 25% { transform: translate(-2px, -2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, 2px); } 100% { transform: translate(2px, 2px); } }
-            @keyframes litho-pop { 0% { opacity: 0; transform: scale(0.7); } 100% { opacity: 1; transform: scale(1); } }
-            @keyframes litho-glow { 0% { filter: drop-shadow(0 0 2px var(--accent)); opacity:0.8; } 50% { filter: drop-shadow(0 0 8px var(--accent)); opacity:1; } 100% { filter: drop-shadow(0 0 2px var(--accent)); opacity:0.8; } }
-            @keyframes litho-pulse { 0% { box-shadow: 0 0 6px rgba(162,155,254,0.3); } 50% { box-shadow: 0 0 15px rgba(162,155,254,0.6); } 100% { box-shadow: 0 0 6px rgba(162,155,254,0.3); } }
-            @keyframes litho-btnpulse { 0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.6); } 70% { box-shadow: 0 0 0 10px rgba(231,76,60,0); } 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); } }
-            @keyframes litho-wave { 0% { height: 20%; } 50% { height: 100%; } 100% { height: 20%; } }
-            @keyframes bio-sparkle { 0% { opacity:0.8; } 50% { opacity:1; filter:brightness(1.2); } 100% { opacity:0.8; } }
-            .litho-header{ display:flex; align-items:center; justify-content:space-between; padding: 10px 12px; background: rgba(0,0,0,0.4); border-bottom: 2px solid var(--edge); margin-bottom: 12px; border-radius: 4px; position:relative; z-index:20; }
-            .litho-title{ display:flex; align-items:center; gap:10px; font-family:"Cinzel", serif; letter-spacing:1px; font-weight:800; font-size: 1.5em; color: var(--gold); text-shadow: 0 0 10px rgba(212,175,55,0.3); pointer-events:none; }
-            .litho-title small{ display:block; font-weight:600; font-size:0.5em; color: var(--text-muted); letter-spacing: 0.5px; margin-top:2px; font-family:"Spectral", serif; text-shadow:none; }
-            .litho-controls button{ background: transparent; border: 1px solid var(--edge); color: var(--text-muted); border-radius: 4px; width: 30px; height: 30px; cursor:pointer; transition: 0.2s; pointer-events:all; }
-            .litho-controls button:hover{ border-color: var(--accent); color: #fff; }
-            .litho-controls .ok{ color:#2ecc71; border-color: rgba(46,204,113,0.3); }
-            .litho-controls .bad{ color:#e74c3c; border-color: rgba(231,76,60,0.3); }
-            .litho-grid{ display:grid; grid-template-columns: 1.1fr 1.4fr; gap: 12px; }
-            .litho-panel{ background: rgba(0,0,0,0.2); border: 1px solid var(--edge); border-radius: 6px; padding: 12px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-            .litho-subgrid{ display:grid; grid-template-columns: 0.7fr 1fr 1fr 1fr; gap: 10px; }
-            .litho-cap{ font-family:"Cinzel", serif; font-weight:700; font-size: 0.8em; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px; cursor:pointer; }
-            .litho-card{ background: linear-gradient(180deg, #252528, #18181a); border: 1px solid #3a3a3c; border-radius: 4px; padding: 10px; text-align:center; position:relative; overflow:hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: space-between; align-items: center; min-height: 170px; }
-            .litho-card > div { width: 100%; }
-            .litho-icon{ font-size: 2.4em; margin: 8px 0 6px 0; color: var(--text-muted); }
-            .litho-value{ font-weight:700; font-size: 1em; color: #fff; font-family: "Cinzel", serif; }
-            .litho-small{ font-size:0.8em; color: var(--text-muted); margin-top: 4px; font-style:italic; }
-            .litho-btn{ width:100%; margin-top: auto; background: rgba(255,255,255,0.05); border: 1px solid var(--edge); color: var(--text-main); border-radius: 4px; padding: 6px 8px; cursor:pointer; transition: 0.2s; font-family:"Cinzel", serif; font-weight:700; font-size:0.8em; }
-            .litho-btn:hover{ background: rgba(255,255,255,0.1); color: #fff; border-color: var(--accent); }
-            .litho-btn:disabled{ cursor:not-allowed; opacity:0.3; }
-            .litho-dial { width: 112px !important; height: 112px !important; min-width: 112px; min-height: 112px; border-radius: 50%; border: 4px solid #222; position:relative; display:flex; align-items:center; justify-content:center; background: #111; box-shadow: 0 0 10px #000 inset; margin: 0 auto; flex-shrink: 0; aspect-ratio: 1 / 1; }
-            .litho-dial .ticks{ position:absolute; inset:4px; border-radius:50%; background: repeating-conic-gradient(#333 0 1deg, transparent 1deg 15deg); pointer-events:none; }
-            .litho-dial .center{ position:relative; text-align:center; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.8); border: 1px solid #333; min-width: 72px; }
-            .litho-dial .sub{ font-size:0.6em; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; }
-            .litho-dial .main{ font-size:1.3em; font-weight:700; font-family: "Cinzel", serif; }
-            .litho-q{ animation: litho-glow 2s infinite ease-in-out; font-weight:700; color: var(--accent); font-size: 1.4em; }
-            .litho-lock{ color:#2ecc71; font-weight:700; letter-spacing:1px; font-family:"Cinzel", serif; font-size:0.7em;}
-            .litho-danger{ color:#ff3d00; font-size:1.45em; font-weight:900; text-shadow:0 0 10px rgba(255,61,0,0.4); }
-            .litho-muted{ color: var(--text-muted); font-size:1.2em; }
-            .litho-bars{ height:52px; display:flex; align-items:flex-end; justify-content:center; gap:4px; padding: 6px 0; }
-            .litho-bar{ width: 6px; border-radius: 2px; background:#333; }
-            .litho-cap-wrap{ display:flex; gap:10px; align-items:center; justify-content:center; margin-top: 6px; }
-            .litho-input{ width: 72px; text-align:center; padding: 6px 8px; background: #111; border: 1px solid #444; color: #fff; border-radius: 4px; font-family:"Spectral", serif; font-weight:700; }
-            .litho-offer{ width: 92px; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--bio-glow); background: rgba(0,229,255,0.15); color: #fff; font-family:"Cinzel", serif; font-weight:700; cursor:pointer; }
-            .litho-offer:hover { background: rgba(0,229,255,0.3); box-shadow: 0 0 12px var(--bio-glow); }
-            .litho-toolrow{ display:grid; grid-template-columns: 1.15fr 1.85fr; gap:10px; align-items:center; padding: 6px 0; border-top: 1px dashed #333; }
-            .litho-toolrow:first-child{ border-top:none; }
-            .litho-toolname{ color: var(--text-muted); font-size:0.9em; text-align:right; display:flex; gap:8px; align-items:center; justify-content:flex-end; font-family:"Spectral", serif; font-weight:600;}
-            .litho-dicebar{ display:flex; gap:6px; }
-            .litho-dice{ flex:1; height: 32px; border-radius: 2px; background: #1c1c1e; border: 1px solid #333; cursor:pointer; font-family:"Cinzel", serif; font-weight:700; transition: 0.2s; }
-            .litho-dice:hover{ transform: translateY(-1px); filter: brightness(1.2); }
-            .litho-dice:disabled{ cursor:not-allowed; opacity:0.2 !important; }
-            .litho-footer{ display:flex; gap:10px; align-items:center; margin-top: 12px; }
-            .litho-round{ flex:1; background: #111; border: 1px solid #333; border-radius: 4px; padding: 8px 12px; display:flex; justify-content:space-between; align-items:center; }
-            .litho-round b{ font-family:"Cinzel", serif; color: var(--accent); }
-            .litho-decay{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; color: var(--text-muted); }
-            .litho-mini{ background: #222; border: 1px solid #444; border-radius: 4px; color: #aaa; font-size: 0.6em; padding: 2px 6px; cursor:pointer; font-family:"Cinzel", serif; margin-top: 2px; }
-            .litho-mini:hover{ border-color: var(--accent); color: #fff; }
-            .help-header{ user-select:none; }
-          </style>
-          <div class="litho-alchemy">
-            <div class="litho-drag-handle"></div>
-            <div class="litho-header">
-              <div class="litho-title">
-                <i class="fas fa-gem"></i> LITHOMANCY MONITOR
-                <small>Node Survey & Extraction</small>
-              </div>
-              <div class="litho-controls" style="display:flex; gap:6px;">
-                <button id="btn-sim-success" class="ok" title="Simulate Success"><i class="fas fa-check"></i></button>
-                <button id="btn-sim-fail" class="bad" title="Simulate Failure"><i class="fas fa-times"></i></button>
-                <button id="btn-reset" title="Reset Node"><i class="fas fa-sync-alt"></i></button>
+              <div data-ui="shell-hp" class="litho-value" style="margin-top:2px;">?? / ??</div>
+              <div data-ui="shell-desc" class="litho-small" style="font-weight:700;">UNKNOWN</div>
+            </div>
+            <div data-ui="shell-quality-wrap"><div style="width:20px;"></div></div>
+          </div>
+          <div data-ui="shell-btn-wrap"><button class="litho-btn" disabled>Awaiting Lattice</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="litho-grid">
+      <div class="litho-panel">
+        <div class="litho-cap help-header" data-topic="instruments" style="margin-bottom:10px;">Harmonic Gauges</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="litho-card">
+            <div class="help-header litho-cap" data-topic="resonance">Harmony</div>
+            <div data-ui="res-dial" class="litho-dial">
+              <div class="ticks"></div>
+              <div class="center">
+                <div data-ui="res-sub" class="sub">TUNING...</div>
+                <div data-ui="res-main" class="main"><span class="litho-q">?</span></div>
               </div>
             </div>
-            <div class="litho-panel">
-              <div class="litho-subgrid">
-                <div class="litho-card">
-                  <div class="help-header litho-cap" data-topic="team">Local Team</div>
-                  <div style="display:flex; justify-content:space-evenly; align-items:flex-end; height:110px; width:100%; margin-top:5px;">
-                    <div style="display:flex; flex-direction:column; align-items:center;">
-                      <input type="range" class="team-slider v-slider" data-target="playerCount" min="1" max="6" value="${data.playerCount}" style="height:70px;">
-                      <span id="disp-pc" style="font-size:0.8em; color:#a29bfe; margin-top:8px; font-weight:bold;">${data.playerCount} PCs</span>
-                    </div>
-                    <div style="display:flex; flex-direction:column; align-items:center;">
-                      <input type="range" class="team-slider v-slider" data-target="npcCount" min="0" max="10" value="${data.npcCount}" style="height:70px;">
-                      <span id="disp-npc" style="font-size:0.8em; color:#ff3d00; margin-top:8px; font-weight:bold;">${data.npcCount} NPCs</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="litho-card">
-                  <div class="help-header litho-cap" data-topic="class">Resonance Type ${editIcon('trueType', 'Classification')}</div>
-                  <div>
-                    <div class="litho-icon"><i data-ui="type-icon" class="fas fa-question" style="color:#333;"></i></div>
-                    <div data-ui="type-label" class="litho-value">Unknown Resonance</div>
-                  </div>
-                  <div data-ui="type-btn-wrap"><button id="scan-type" class="litho-btn">Identify Class</button></div>
-                </div>
-                <div class="litho-card">
-                  <div class="help-header litho-cap" data-topic="tier">Crystal Lattice ${editIcon('trueTier', 'Rarity')}</div>
-                  <div>
-                    <div style="margin:8px 0 6px 0; height:34px; display:flex; align-items:center; justify-content:center;">${gemsHtml}</div>
-                    <div data-ui="tier-label" class="litho-value">Unknown Structure</div>
-                  </div>
-                  <div data-ui="tier-btn-wrap"><button id="scan-tier" class="litho-btn">Survey Structure</button></div>
-                </div>
-                <div class="litho-card">
-                  <div class="help-header litho-cap" data-topic="shell">Node Shell ${editIcon('currentShellHP', 'HP')}</div>
-                  <div style="display:flex; justify-content:center; align-items:center; gap:15px; width:100%;">
-                    <div style="flex:1;">
-                      <div data-ui="shell-gem-wrap" style="width:100px; height:82px; margin:0 auto; position:relative; display:flex; align-items:center; justify-content:center;">
-                        <i data-ui="shell-icon" class="fas fa-mountain" style="font-size:3.5em; color:#333; transition: color 0.5s;"></i>
-                        <svg width="100" height="100" style="position:absolute; top:0; left:0; pointer-events:none; opacity:0.95;"><g data-ui="shell-cracks"></g></svg>
-                      </div>
-                      <div data-ui="shell-hp" class="litho-value" style="margin-top:2px;">?? / ??</div>
-                      <div data-ui="shell-desc" class="litho-small" style="font-weight:700;">UNKNOWN</div>
-                    </div>
-                    <div data-ui="shell-quality-wrap"><div style="width:20px;"></div></div>
-                  </div>
-                  <div data-ui="shell-btn-wrap"><button class="litho-btn" disabled>Awaiting Lattice</button></div>
-                </div>
+            <div data-ui="res-btn-wrap"><button id="scan-freq" class="litho-btn" style="margin-top:10px;">Calibrate</button></div>
+          </div>
+          <div class="litho-card">
+            <div class="help-header litho-cap" data-topic="stability">Volatility</div>
+            <div data-ui="stab-dial" class="litho-dial">
+              <div class="ticks" style="background:repeating-conic-gradient(#333 0 1deg,transparent 1deg 20deg);"></div>
+              <div class="center">
+                <div data-ui="stab-sub" class="sub">READING...</div>
+                <div data-ui="stab-main" class="main" style="font-size:1.35em;"><span style="font-size:1.5em;color:#a29bfe;">?</span></div>
               </div>
             </div>
-            <div class="litho-grid">
-              <div class="litho-panel">
-                <div class="litho-cap help-header" data-topic="instruments" style="margin-bottom:10px;">Harmonic Gauges</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                  <div class="litho-card">
-                    <div class="help-header litho-cap" data-topic="resonance">Harmony ${editIcon('resMin', 'Res Min')}</div>
-                    <div data-ui="res-dial" class="litho-dial" style="background:#111; box-shadow:0 0 10px #000;">
-                      <div class="ticks"></div>
-                      <div class="center">
-                        <div data-ui="res-sub" class="sub">TUNING...</div>
-                        <div data-ui="res-main" class="main"><span class="litho-q">?</span></div>
-                      </div>
-                    </div>
-                    <div data-ui="res-btn-wrap"><button id="scan-freq" class="litho-btn" style="margin-top:10px;">Calibrate</button></div>
-                  </div>
-                  <div class="litho-card">
-                    <div class="help-header litho-cap" data-topic="stability">Volatility ${editIcon('stabMin', 'Stab Min')}</div>
-                    <div data-ui="stab-dial" class="litho-dial" style="background:#111; box-shadow:0 0 15px #000;">
-                      <div class="ticks" style="background: repeating-conic-gradient(#333 0 1deg, transparent 1deg 20deg);"></div>
-                      <div class="center">
-                        <div data-ui="stab-sub" class="sub">READING...</div>
-                        <div data-ui="stab-main" class="main" style="font-size:1.35em;"><span style="font-size:1.5em; color:#a29bfe;">?</span></div>
-                      </div>
-                    </div>
-                    <div data-ui="stab-btn-wrap"><button id="scan-stab" class="litho-btn" style="margin-top:10px;">Estimate</button></div>
-                  </div>
+            <div data-ui="stab-btn-wrap"><button id="scan-stab" class="litho-btn" style="margin-top:10px;">Estimate</button></div>
+          </div>
+        </div>
+        <div class="litho-card" style="margin-top:10px;">
+          <div class="litho-cap" style="cursor:default;justify-content:center;">Harmonic Alignment</div>
+          <div data-ui="wave-bars" class="litho-bars">
+            ${[1,2,3,4,5].map(i=>`<div class="litho-bar" style="height:${Math.random()*80+20}%;animation:litho-wave 0s infinite ease-in-out;animation-delay:${i*0.1}s;"></div>`).join("")}
+          </div>
+          <div data-ui="wave-label" class="litho-value" style="font-family:'Cinzel',serif;letter-spacing:1px;font-size:0.8em;">UNKNOWN</div>
+          <div data-ui="wave-bonus" class="litho-small" style="margin-top:4px;"><span style="font-size:2em;color:#a29bfe;animation:litho-glow 2s infinite;">?</span></div>
+        </div>
+      </div>
+      <div class="litho-panel">
+        <div class="litho-cap help-header" data-topic="bench" style="margin-bottom:10px;">Lapidary Station</div>
+        <div style="display:grid;grid-template-columns:215px 1fr;gap:12px;align-items:stretch;">
+          <div class="litho-card">
+            <div class="help-header litho-cap" data-topic="blood">Bio-Resonance</div>
+            <div style="display:flex;gap:10px;align-items:flex-end;justify-content:center;margin-top:6px;">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:16px;height:100px;background:#111;border:1px solid #444;border-radius:8px;position:relative;overflow:hidden;">
+                  <div data-ui="pc-fill" style="position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(to top,#00e5ff,#0077c2);box-shadow:0 0 10px #00e5ff;transition:height 0.5s;"></div>
                 </div>
-                <div class="litho-card" style="margin-top:10px;">
-                  <div class="litho-cap" style="cursor:default; justify-content:center;">Harmonic Alignment</div>
-                  <div data-ui="wave-bars" class="litho-bars">
-                    ${[1, 2, 3, 4, 5].map(i => `<div class="litho-bar" style="height:${Math.random() * 100}%; animation: litho-wave 0s infinite ease-in-out; animation-delay:${i * 0.1}s;"></div>`).join("")}
-                  </div>
-                  <div data-ui="wave-label" class="litho-value" style="font-family:'Cinzel',serif; letter-spacing:1px; font-size:0.8em;">UNKNOWN</div>
-                  <div data-ui="wave-bonus" class="litho-small" style="margin-top:4px;"><span style="font-size:2em; color:#a29bfe; animation: litho-glow 2s infinite;">?</span></div>
-                </div>
+                <div style="font-size:0.65em;color:#a29bfe;font-weight:bold;">PCs</div>
               </div>
-              <div class="litho-panel">
-                <div class="litho-cap help-header" data-topic="bench" style="margin-bottom:10px;">Lapidary Station</div>
-                <div style="display:grid; grid-template-columns: 215px 1fr; gap:12px; align-items:stretch;">
-                  <div class="litho-card">
-                    <div class="help-header litho-cap" data-topic="blood">Bio-Resonance</div>
-                    <div style="display:flex; gap:10px; align-items:flex-end; justify-content:center; margin-top:6px;">
-                      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <div style="width:16px; height:100px; background:#111; border:1px solid #444; border-radius:8px; position:relative; overflow:hidden;">
-                          <div data-ui="pc-fill" style="position:absolute; bottom:0; left:0; right:0; height:0%; background:linear-gradient(to top, #00e5ff, #0077c2); box-shadow:0 0 10px #00e5ff; transition: height 0.5s;"></div>
-                        </div>
-                        <div style="font-size:0.65em; color:#a29bfe; font-weight:bold;">PCs</div>
-                      </div>
-                      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                        <div style="width:16px; height:100px; background:#111; border:1px solid #444; border-radius:8px; position:relative; overflow:hidden;">
-                          <div data-ui="npc-fill" style="position:absolute; bottom:0; left:0; right:0; height:0%; background:linear-gradient(to top, #ff3d00, #ff8c00); box-shadow:0 0 10px #ff3d00; transition: height 0.5s;"></div>
-                        </div>
-                        <div style="font-size:0.65em; color:#ff3d00; font-weight:bold;">NPCs</div>
-                      </div>
-                      <div style="display:flex; flex-direction:column; gap:6px; align-items:center; margin-left:5px;">
-                        <select id="inp-blood-src" style="width:92px; background:#111; color:#dcdcdc; border:1px solid #555; border-radius:4px; font-family:'Spectral',serif; padding:4px; font-size:0.85em; outline:none;">
-                          <option value="pc">Players</option>
-                          <option value="npc">NPCs</option>
-                        </select>
-                        <input type="number" id="inp-blood" placeholder="HP" class="litho-input" style="width:92px;">
-                        <button id="btn-blood" class="litho-offer">INFUSE</button>
-                      </div>
-                    </div>
-                    <div class="litho-small" style="margin-top:8px; display:flex; justify-content:space-around;">
-                      <span>PCs: <span data-ui="pc-total" style="color:var(--bio-glow); font-weight:700;">0</span>/250</span>
-                      <span>NPCs: <span data-ui="npc-total" style="color:#ff3d00; font-weight:700;">0</span>/250</span>
-                    </div>
-                  </div>
-                  <div class="litho-card" style="text-align:left; align-items: stretch;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <div class="litho-cap" style="cursor:default; margin:0;">Charge: <span data-ui="charge-count" style="color:var(--accent);">4</span></div>
-                      <div style="color:var(--text-muted); font-size:0.8em;">1–4 Actions</div>
-                    </div>
-                    ${btnGroup("shell", "#e0e0e0", "fa-hammer")}
-                    ${btnGroup("heal", "#2ecc71", "fa-shield-alt")}
-                    ${btnGroup("res", "#00e5ff", "fa-wave-square")}
-                    ${btnGroup("narrow", "#f0a35e", "fa-compress-arrows-alt")}
-                  </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                <div style="width:16px;height:100px;background:#111;border:1px solid #444;border-radius:8px;position:relative;overflow:hidden;">
+                  <div data-ui="npc-fill" style="position:absolute;bottom:0;left:0;right:0;height:0%;background:linear-gradient(to top,#ff3d00,#ff8c00);box-shadow:0 0 10px #ff3d00;transition:height 0.5s;"></div>
                 </div>
-                <div class="litho-footer">
-                  <div class="litho-round">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                      <b>ROUND <span data-ui="round-num">1</span></b>
-                      <div data-ui="action-pips" style="display:flex; gap:4px;"></div>
-                    </div>
-                    <div class="litho-decay">
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <i class="fas fa-radiation" style="color:#e74c3c; opacity:0.85; font-size:3em;"></i>
-                        <span data-ui="decay-display"></span>
-                      </div>
-                    </div>
-                  </div>
-                  <div style="display:flex; flex-direction:column; gap:6px;">
-                    <button id="btn-end-round" disabled style="width:140px; padding:10px; border-radius:4px; background:#1c1c1e; color:#555; cursor:not-allowed; opacity:0.6; border:1px solid #333; font-family:'Cinzel',serif; font-weight:700; margin:0;">NEXT CYCLE</button>
-                    <div data-ui="forecast-wrap"></div>
-                  </div>
-                </div>
+                <div style="font-size:0.65em;color:#ff3d00;font-weight:bold;">NPCs</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:center;margin-left:5px;">
+                <select id="inp-blood-src" style="width:92px;background:#111;color:#dcdcdc;border:1px solid #555;border-radius:4px;font-family:'Spectral',serif;padding:4px;font-size:0.85em;outline:none;">
+                  <option value="pc">Players</option>
+                  <option value="npc">NPCs</option>
+                </select>
+                <input type="number" id="inp-blood" placeholder="HP" class="litho-input" style="width:92px;">
+                <button id="btn-blood" class="litho-offer">INFUSE</button>
               </div>
             </div>
-          </div>`;
+            <div class="litho-small" style="margin-top:8px;display:flex;justify-content:space-around;">
+              <span>PCs: <span data-ui="pc-total" style="color:var(--bio-glow);font-weight:700;">0</span>/250</span>
+              <span>NPCs: <span data-ui="npc-total" style="color:#ff3d00;font-weight:700;">0</span>/250</span>
+            </div>
+          </div>
+          <div class="litho-card" style="text-align:left;align-items:stretch;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div class="litho-cap" style="cursor:default;margin:0;">Charge: <span data-ui="charge-count" style="color:var(--accent);">4</span></div>
+              <div style="color:var(--text-muted);font-size:0.8em;">1–4 Actions</div>
+            </div>
+            ${btnGroup("shell", "#e0e0e0", "fa-hammer")}
+            ${btnGroup("heal", "#2ecc71", "fa-shield-alt")}
+            ${btnGroup("res", "#00e5ff", "fa-wave-square")}
+            ${btnGroup("narrow", "#f0a35e", "fa-compress-arrows-alt")}
+          </div>
+        </div>
+        <div class="litho-footer">
+          <div class="litho-round">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <b>ROUND <span data-ui="round-num">1</span></b>
+              <div data-ui="action-pips" style="display:flex;gap:4px;"></div>
+            </div>
+            <div class="litho-decay">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-radiation" style="color:#e74c3c;opacity:0.85;font-size:3em;"></i>
+                <span data-ui="decay-display"></span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button id="btn-end-round" disabled style="width:140px;padding:10px;border-radius:4px;background:#1c1c1e;color:#555;cursor:not-allowed;opacity:0.6;border:1px solid #333;font-family:'Cinzel',serif;font-weight:700;margin:0;">NEXT CYCLE</button>
+            <div data-ui="forecast-wrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
 
-          _lithoDialog = new Dialog({
-            title: "Lithomancy Monitor v73",
-            content,
-            buttons: {},
-            render: (html) => {
-              _lithoHtml = html;
+  // Mount into page
+  const mount = document.getElementById('litho-mount');
+  mount.innerHTML = content;
+  const html = $(mount);
+  _lithoHtml = html;
 
-              // ====== BIND ALL EVENTS ONCE ======
-              html.find('.help-header').on('click', function () { showHelpDialog($(this).data('topic')); });
+  // ── BIND EVENTS ─────────────────────────────────────────────
 
-              html.find('.team-slider').on('change', async (e) => {
-                const tgt = $(e.currentTarget).data('target');
-                const d = token.document.getFlag("world", "lithomancy");
-                d[tgt] = parseInt($(e.currentTarget).val());
-                await token.document.setFlag("world", "lithomancy", d);
-              });
-              html.find('.team-slider').on('input', (e) => {
-                const tgt = $(e.currentTarget).data('target');
-                const val = $(e.currentTarget).val();
-                if (tgt === 'playerCount') html.find('#disp-pc').text(val + ' PCs');
-                if (tgt === 'npcCount') html.find('#disp-npc').text(val + ' NPCs');
-              });
+  html.find('.help-header').on('click', function() { showHelpDialog($(this).data('topic')); });
 
-              html.find('#btn-sim-success').on('click', () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                triggerSuccess(token, d);
-              });
-              html.find('#btn-sim-fail').on('click', () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                triggerDetonation(token, d);
-              });
+  html.find('.team-slider').on('change', async (e) => {
+    const tgt = $(e.currentTarget).data('target');
+    const d = token.document.getFlag("world", "lithomancy");
+    d[tgt] = parseInt($(e.currentTarget).val());
+    await token.document.setFlag("world", "lithomancy", d);
+  });
+  html.find('.team-slider').on('input', (e) => {
+    const tgt = $(e.currentTarget).data('target');
+    const val = $(e.currentTarget).val();
+    if (tgt === 'playerCount') html.find('#disp-pc').text(val + ' PCs');
+    if (tgt === 'npcCount') html.find('#disp-npc').text(val + ' NPCs');
+  });
 
-              html.find('.edit-btn').on('click', async function (e) {
-                e.stopPropagation();
-                const key = $(this).data('key');
-                const label = $(this).data('label');
-                const d = token.document.getFlag("world", "lithomancy");
-                await openEditDialog(token, d, key, label);
-              });
+  html.find('#btn-sim-success').on('click', () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    triggerSuccess(token, d);
+  });
+  html.find('#btn-sim-fail').on('click', () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    triggerDetonation(token, d);
+  });
 
-              html.find('.set-tier-btn').on('click', async (e) => {
-                const t = parseInt($(e.currentTarget).data('tier'));
-                const d = token.document.getFlag("world", "lithomancy");
-                d.trueTierLevel = t;
-                d.trueTier = TIERS[t - 1];
-                d.knownTier = true;
-                await token.document.setFlag("world", "lithomancy", d);
-                updateUI(token);
-              });
+  html.find('.set-tier-btn').on('click', async (e) => {
+    const t = parseInt($(e.currentTarget).data('tier'));
+    const d = token.document.getFlag("world", "lithomancy");
+    d.trueTierLevel = t; d.trueTier = TIERS[t-1]; d.knownTier = true;
+    await token.document.setFlag("world", "lithomancy", d);
+    updateUI(token);
+  });
 
-              html.find('#btn-reset').on('click', async () => {
-                await token.document.unsetFlag("world", "lithomancy");
-                await initializeNode(token);
-                updateUI(token);
-              });
+  html.find('#btn-reset').on('click', async () => {
+    await token.document.unsetFlag("world", "lithomancy");
+    await initializeNode(token);
+    openLithomancyMonitor(token, null);
+  });
 
-              html.find('#btn-end-round').on('click', async () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                triggerRoundEnd(token, d);
-              });
+  html.find('#btn-end-round').on('click', async () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    triggerRoundEnd(token, d);
+  });
 
-              // SCAN BUTTONS
-              html.find('#scan-type').on('click', async () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                if (d.actionsUsed >= 4) return;
-                await spinReel("Investigating Resonance…", TYPES, d.trueType);
-                d.knownType = true;
-                await token.document.setFlag("world", "lithomancy", d);
-                await consumeActions(token, d, 0);
-              });
+  // SCAN BUTTONS
+  html.find('#scan-type').on('click', async () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    if (d.actionsUsed >= 4) return;
+    await spinReel("Investigating Resonance…", TYPES, d.trueType);
+    d.knownType = true;
+    await token.document.setFlag("world", "lithomancy", d);
+    await consumeActions(token, d, 0);
+  });
 
-              html.find('#scan-tier').on('click', async () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                const totalDice = d.playerCount || 4;
-                // PATCH: 1d2 per player
-                const bonusRoll = await new Roll(`${totalDice}d2`).evaluate();
-                const bonus = bonusRoll.total;
-                const roll = await new Roll(`1d20 + ${bonus}`).evaluate();
-                const tIdx = roll.total >= 28 ? 4 : roll.total >= 27 ? 3 : roll.total >= 25 ? 2 : roll.total >= 20 ? 1 : 0;
-                d.trueTier = TIERS[tIdx];
-                d.trueTierLevel = tIdx + 1;
-                d.knownTier = true;
-                const tierListHtml = TIERS.map((t, i) => i === tIdx ? `<span style="color:#2ecc71; font-weight:bold;">&raquo; ${t} &laquo;</span>` : `<span style="color:#777;">${t}</span>`).join("<br>");
-                await roll.toMessage({ flavor: `<div style="font-family:'Spectral',serif;"><div style="color:#a29bfe; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #444;">STRUCTURAL SURVEY</div><div>Rolled <b>${roll.total}</b></div><div style="margin-top:6px; font-size:0.9em; line-height:1.2;">${tierListHtml}</div></div>` });
-                await spinReel("ANALYZING STRUCTURE…", TIERS, d.trueTier);
-                await token.document.setFlag("world", "lithomancy", d);
-                await consumeActions(token, d, 0);
-              });
+  html.find('#scan-tier').on('click', async () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    const totalDice = d.playerCount || 4;
+    const bonusRoll = await new Roll(`${totalDice}d2`).evaluate();
+    const bonus = bonusRoll.total;
+    const roll = await new Roll(`1d20 + ${bonus}`).evaluate();
+    const tIdx = roll.total >= 28 ? 4 : roll.total >= 27 ? 3 : roll.total >= 25 ? 2 : roll.total >= 20 ? 1 : 0;
+    d.trueTier = TIERS[tIdx]; d.trueTierLevel = tIdx + 1; d.knownTier = true;
+    const tierListHtml = TIERS.map((t,i) => i===tIdx ? `<span style="color:#2ecc71;font-weight:bold;">» ${t} «</span>` : `<span style="color:#777;">${t}</span>`).join("<br>");
+    addChatMessage(`<div style="font-family:'Spectral',serif;"><div style="color:#a29bfe;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">STRUCTURAL SURVEY</div><div>Rolled <b>${roll.total}</b></div><div style="margin-top:6px;font-size:0.9em;line-height:1.2;">${tierListHtml}</div></div>`);
+    await spinReel("ANALYZING STRUCTURE…", TIERS, d.trueTier);
+    await token.document.setFlag("world", "lithomancy", d);
+    await consumeActions(token, d, 0);
+  });
 
-              html.find('#scan-freq').on('click', async () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                if (d.actionsUsed >= 4) return;
-                playToolSound("res");
-                const pBonus = d.playerCount || 4;
-                const roll = await new Roll(`1d20 + ${pBonus}`).evaluate();
-                const d20 = roll.terms[0].results[0].result;
-                const total = roll.total;
-                let pctText = "";
-                if (d20 === 20) {
-                  pctText = "<span style='color:#2ecc71;'>PERFECT READ (NAT 20)</span>";
-                  d.resMin = d.trueResonance; d.resMax = d.trueResonance;
-                  new Dialog({ title: "OPTIMAL CALIBRATION", content: `<div class="litho-popup-box" style="text-align:center;color:#2ecc71;padding:20px;font-weight:bold;">FREQUENCY LOCKED (NAT 20).</div>` }, { classes: ["litho-window"] }).render(true);
-                } else if (d20 === 1) {
-                  pctText = "<span style='color:#e74c3c;'>WIDENED SPREAD (NAT 1)</span>";
-                  d.resMin = Math.max(5, d.trueResonance - 12);
-                  d.resMax = Math.min(20, d.trueResonance + 12);
-                } else {
-                  const range = total >= 20 ? 4 : 8;
-                  pctText = `&plusmn;${range} Variance`;
-                  d.resMin = Math.max(5, d.trueResonance - range);
-                  d.resMax = Math.min(20, d.trueResonance + range);
-                }
-                d.knownResonance = true;
-                await roll.toMessage({ flavor: `<div style="font-family:'Spectral', serif; font-size: 0.95em;"><div style="color:#00e5ff; font-family:'Cinzel', serif; font-weight:bold; margin-bottom:4px; border-bottom: 1px solid #444;">Frequency Diagnostics:</div><div><b>1. Base Scan:</b> [1d20] Rolled <b>${d20}</b></div><div><b>2. Miner Bonus:</b> +${pBonus} = <b>${total}</b></div><div><b>3. Instrument Shift:</b> <b>${pctText}</b></div><div style="margin-top:4px; padding-top:4px; border-top: 1px dashed #444;"><b>4. Frequency Est:</b> <span style="font-size: 1.2em; color: #00e5ff; font-weight: bold;">${d.resMin} - ${d.resMax}</span></div></div>` });
-                await token.document.setFlag("world", "lithomancy", d);
-                await consumeActions(token, d, 0);
-              });
+  html.find('#scan-freq').on('click', async () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    if (d.actionsUsed >= 4) return;
+    const pBonus = d.playerCount || 4;
+    const roll = await new Roll(`1d20 + ${pBonus}`).evaluate();
+    const d20 = roll.terms[0].results[0].result;
+    const total = roll.total;
+    let pctText = "";
+    if (d20 === 20) {
+      pctText = "<span style='color:#2ecc71;'>PERFECT READ (NAT 20)</span>";
+      d.resMin = d.trueResonance; d.resMax = d.trueResonance;
+    } else if (d20 === 1) {
+      pctText = "<span style='color:#e74c3c;'>WIDENED SPREAD (NAT 1)</span>";
+      d.resMin = Math.max(5, d.trueResonance - 12); d.resMax = Math.min(20, d.trueResonance + 12);
+    } else {
+      const range = total >= 20 ? 4 : 8;
+      pctText = `±${range} Variance`;
+      d.resMin = Math.max(5, d.trueResonance - range); d.resMax = Math.min(20, d.trueResonance + range);
+    }
+    d.knownResonance = true;
+    addChatMessage(`<div style="font-family:'Spectral',serif;"><div style="color:#00e5ff;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">Frequency Diagnostics</div><div>Rolled <b>${d20}</b> + ${pBonus} = <b>${total}</b> → ${pctText}</div><div style="margin-top:4px;">Est: <b style="color:#00e5ff;">${d.resMin} – ${d.resMax}</b></div></div>`);
+    await token.document.setFlag("world", "lithomancy", d);
+    await consumeActions(token, d, 0);
+  });
 
-              html.find('#scan-stab').on('click', async () => {
-                const d = token.document.getFlag("world", "lithomancy");
-                if (d.actionsUsed >= 4) return;
-                playToolSound("stab");
-                const pBonus = d.playerCount || 4;
-                const roll = await new Roll(`1d20 + ${pBonus}`).evaluate();
-                const d20 = roll.terms[0].results[0].result;
-                const total = roll.total;
-                let pctText = "";
-                if (d20 === 20) {
-                  pctText = "<span style='color:#2ecc71;'>PERFECT READ (NAT 20)</span>";
-                  d.stabMin = d.trueStability; d.stabMax = d.trueStability;
-                  new Dialog({ title: "OPTIMAL SCAN", content: `<div class="litho-popup-box" style="text-align:center;color:#2ecc71;padding:20px;font-weight:bold;">PERFECT READ (NAT 20).</div>` }, { classes: ["litho-window"] }).render(true);
-                } else if (d20 === 1) {
-                  pctText = "<span style='color:#e74c3c;'>WIDENED SPREAD (NAT 1)</span>";
-                  d.stabMin = Math.max(0, d.trueStability - 12);
-                  d.stabMax = Math.min(20, d.trueStability + 12);
-                } else {
-                  const range = total >= 20 ? 4 : 8;
-                  pctText = `&plusmn;${range} Variance`;
-                  d.stabMin = Math.max(0, d.trueStability - range);
-                  d.stabMax = Math.min(20, d.trueStability + range);
-                }
-                d.knownStability = true;
-                await roll.toMessage({ flavor: `<div style="font-family:'Spectral', serif; font-size: 0.95em;"><div style="color:#f39c12; font-family:'Cinzel', serif; font-weight:bold; margin-bottom:4px; border-bottom: 1px solid #444;">Volatility Diagnostics:</div><div><b>1. Base Scan:</b> [1d20] Rolled <b>${d20}</b></div><div><b>2. Miner Bonus:</b> +${pBonus} = <b>${total}</b></div><div><b>3. Instrument Shift:</b> <b>${pctText}</b></div><div style="margin-top:4px; padding-top:4px; border-top: 1px dashed #444;"><b>4. Volatility Est:</b> <span style="font-size: 1.2em; color: #f39c12; font-weight: bold;">${d.stabMin} - ${d.stabMax}</span></div></div>` });
-                await token.document.setFlag("world", "lithomancy", d);
-                await consumeActions(token, d, 0);
-              });
+  html.find('#scan-stab').on('click', async () => {
+    const d = token.document.getFlag("world", "lithomancy");
+    if (d.actionsUsed >= 4) return;
+    const pBonus = d.playerCount || 4;
+    const roll = await new Roll(`1d20 + ${pBonus}`).evaluate();
+    const d20 = roll.terms[0].results[0].result;
+    const total = roll.total;
+    let pctText = "";
+    if (d20 === 20) {
+      pctText = "<span style='color:#2ecc71;'>PERFECT READ (NAT 20)</span>";
+      d.stabMin = d.trueStability; d.stabMax = d.trueStability;
+    } else if (d20 === 1) {
+      pctText = "<span style='color:#e74c3c;'>WIDENED SPREAD (NAT 1)</span>";
+      d.stabMin = Math.max(0, d.trueStability - 12); d.stabMax = Math.min(20, d.trueStability + 12);
+    } else {
+      const range = total >= 20 ? 4 : 8;
+      pctText = `±${range} Variance`;
+      d.stabMin = Math.max(0, d.trueStability - range); d.stabMax = Math.min(20, d.trueStability + range);
+    }
+    d.knownStability = true;
+    addChatMessage(`<div style="font-family:'Spectral',serif;"><div style="color:#f39c12;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">Volatility Diagnostics</div><div>Rolled <b>${d20}</b> + ${pBonus} = <b>${total}</b> → ${pctText}</div><div style="margin-top:4px;">Est: <b style="color:#f39c12;">${d.stabMin} – ${d.stabMax}</b></div></div>`);
+    await token.document.setFlag("world", "lithomancy", d);
+    await consumeActions(token, d, 0);
+  });
 
-              // DICE BUTTONS (PATCHED FOR SEQUENTIAL FRACTURE)
-              html.find('.dice-btn').on('click', async function () {
-                const action = $(this).data('act');
-                playToolSound(action);
-                const count = parseInt($(this).data('n'));
-                const d = token.document.getFlag("world", "lithomancy");
-                
-                // --- SEQUENTIAL FRACTURE LOGIC (PATCHED) ---
-                if (action === "shell") {
-                    let totalDmg = 0;
-                    let totalStabLoss = 0;
-                    let breakdown = [];
-                    
-                    // Loop through "X" hits sequentially
-                    for (let i = 0; i < count; i++) {
-                        let dType = "d4", bonus = 0, sLoss = 0;
-                        
-                        // 1. RE-CALCULATE STATE based on the *current* stability 
-                        if (d.knownResonance && d.knownStability) {
-                            const delta = Math.abs(d.trueResonance - d.currentStability);
-                            if (delta === 0) { dType = "d8"; sLoss = 0; bonus = 2; }
-                            else if (delta <= 3) { bonus = 2; sLoss = 1; }
-                            else if (delta <= 9) { bonus = 1; sLoss = 1; } // PATCH: Fixed 1
-                            else { bonus = -1; sLoss = 1; } // PATCH: Fixed 1
-                        } else {
-                             sLoss = 1; // Blind fire default
-                        }
-                        
-                        // 2. Roll Damage
-                        const roll = await new Roll(`1${dType} + ${bonus}`).evaluate();
-                        const dmg = Math.max(0, roll.total);
-                        
-                        // 3. APPLY UPDATE IMMEDIATELY
-                        d.currentShellHP = Math.max(0, d.currentShellHP - dmg);
-                        d.currentStability = Math.max(0, d.currentStability - sLoss);
-                        
-                        totalDmg += dmg;
-                        totalStabLoss += sLoss;
-                        
-                        // PATCH: Detailed Report Format
-                        const dieBase = roll.total - bonus;
-                        breakdown.push(`<div style="margin-bottom:4px; padding-bottom:4px; border-bottom:1px dashed #444;">
-                          <div style="font-weight:bold; color:#dcdcdc;">Hit ${i+1}</div>
-                          <div style="display:grid; grid-template-columns: 1fr auto; font-size:0.9em; color:#aaa; padding-left:6px;">
-                            <span>Roll Result:</span> <span style="color:#fff;">${dieBase}</span>
-                            <span>Bonus Coherence:</span> <span style="color:#a29bfe;">${bonus}</span>
-                            <span style="font-weight:bold; color:#ddd;">Total Damage:</span> <span style="font-weight:bold; color:#2ecc71;">${dmg}</span>
-                          </div>
-                        </div>`);
-                        
-                        // VERBOSE BREAK: Stop if exploded/broken
-                        if (d.currentStability <= 0) {
-                            breakdown.push(`<div style="color:#e74c3c; font-weight:bold; text-align:center; margin-top:4px; border-top:1px solid #444; padding-top:4px;">⛔ CORE DESTABILIZED - SEQUENCE HALTED ⛔</div>`);
-                            break;
-                        }
-                        if (d.currentShellHP <= 0) {
-                            breakdown.push(`<div style="color:#2ecc71; font-weight:bold; text-align:center; margin-top:4px; border-top:1px solid #444; padding-top:4px;">💎 SHELL FRACTURED - HARVEST READY 💎</div>`);
-                            break;
-                        }
-                    }
-                    
-                    // 4. Report
-                    const chatFlavor = `<div style="font-family:'Spectral',serif;">
-                        <div style="color:#00e5ff; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #444;">FRACTURE SEQUENCE (x${count})</div>
-                        <div style="margin-top:4px; line-height:1.4;">${breakdown.join("")}</div>
-                        <div style="border-top:1px dashed #444; margin-top:4px; padding-top:4px;"><strong>Total:</strong> ${totalDmg} DMG / -${totalStabLoss} Stability</div>
-                    </div>`;
-                    
-                    await ChatMessage.create({ content: chatFlavor });
-                    showDamagePopup(totalDmg);
-                    
-                    if (!d.cycleHistory) d.cycleHistory = [];
-                    const actNum = d.cycleHistory.filter(h => h.includes("<b>Action")).length + 1;
-                    d.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap; width:140px;"><b>Action ${actNum}</b> (<span style="color:#a29bfe;">Fracture x${count}</span>)</div><div>-${totalDmg} HP / -${totalStabLoss} Stab</div></div>`);
-                    
-                    await consumeActions(token, d, count, totalDmg);
-                    return; 
-                }
+  // DICE BUTTONS
+  html.find('.dice-btn').on('click', async function() {
+    const action = $(this).data('act');
+    const count = parseInt($(this).data('n'));
+    const d = token.document.getFlag("world", "lithomancy");
 
-                // --- STANDARD BATCH LOGIC (Heal/Res/Narrow) ---
-                let dType = "d4", bonus = 0;
-                const rollStr = `${count}d4`;
-                const roll = await new Roll(rollStr).evaluate();
-                
-                let actionDesc = "", chatFlavor = "";
-                
-                if (action === "heal") {
-                  d.currentStability = Math.min(20, d.currentStability + roll.total);
-                  actionDesc = `Increased stability by ${roll.total}.`;
-                  chatFlavor = `<div style="font-family:'Spectral',serif;"><div style="color:#2ecc71; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #444;">STABILIZE CORE</div><div>Rolled <b>${roll.total}</b> (${rollStr})</div><div style="margin-top:4px;">${actionDesc}</div></div>`;
-                } else if (action === "res") {
-                  const oldMin = d.resMin, oldMax = d.resMax;
-                  narrowRange(d, "res", roll.total);
-                  actionDesc = `Narrowed harmony from [${oldMin}-${oldMax}] to [${d.resMin}-${d.resMax}].`;
-                  chatFlavor = `<div style="font-family:'Spectral',serif;"><div style="color:#00e5ff; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #444;">TUNE HARMONY</div><div>Rolled <b>${roll.total}</b> (${rollStr})</div><div style="margin-top:4px;">${actionDesc}</div></div>`;
-                } else if (action === "narrow") {
-                  const oldMin = d.stabMin, oldMax = d.stabMax;
-                  narrowRange(d, "stab", roll.total);
-                  actionDesc = `Narrowed volatility from [${oldMin}-${oldMax}] to [${d.stabMin}-${d.stabMax}].`;
-                  chatFlavor = `<div style="font-family:'Spectral',serif;"><div style="color:#f39c12; font-family:'Cinzel',serif; font-weight:bold; border-bottom:1px solid #444;">TUNE VOLATILITY</div><div>Rolled <b>${roll.total}</b> (${rollStr})</div><div style="margin-top:4px;">${actionDesc}</div></div>`;
-                }
-                
-                await roll.toMessage({ flavor: chatFlavor });
-                if (!d.cycleHistory) d.cycleHistory = [];
-                const actNum = d.cycleHistory.filter(h => h.includes("<b>Action")).length + 1;
-                d.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap; width:140px;"><b>Action ${actNum}</b> (<span style="color:#a29bfe;">${actionLabel(action)}</span>)</div><div>${actionDesc}</div></div>`);
-                await consumeActions(token, d, count, 0);
-              });
+    if (action === "shell") {
+      let totalDmg = 0, totalStabLoss = 0;
+      let breakdown = [];
+      for (let i = 0; i < count; i++) {
+        let dType = "d4", bonus = 0, sLoss = 0;
+        if (d.knownResonance && d.knownStability) {
+          const delta = Math.abs(d.trueResonance - d.currentStability);
+          if (delta === 0) { dType = "d8"; sLoss = 0; bonus = 2; }
+          else if (delta <= 3) { bonus = 2; sLoss = 1; }
+          else if (delta <= 9) { bonus = 1; sLoss = 1; }
+          else { bonus = -1; sLoss = 1; }
+        } else { sLoss = 1; }
+        const roll = await new Roll(`1${dType} + ${bonus}`).evaluate();
+        const dmg = Math.max(0, roll.total);
+        d.currentShellHP = Math.max(0, d.currentShellHP - dmg);
+        d.currentStability = Math.max(0, d.currentStability - sLoss);
+        totalDmg += dmg; totalStabLoss += sLoss;
+        breakdown.push(`<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px dashed #444;">
+          <div style="font-weight:bold;color:#dcdcdc;">Hit ${i+1}</div>
+          <div style="display:grid;grid-template-columns:1fr auto;font-size:0.9em;color:#aaa;padding-left:6px;">
+            <span>Roll:</span><span style="color:#fff;">${roll.total - bonus}</span>
+            <span>Coherence Bonus:</span><span style="color:#a29bfe;">${bonus}</span>
+            <span style="font-weight:bold;color:#ddd;">Total DMG:</span><span style="font-weight:bold;color:#2ecc71;">${dmg}</span>
+          </div></div>`);
+        if (d.currentStability <= 0) { breakdown.push(`<div style="color:#e74c3c;font-weight:bold;text-align:center;margin-top:4px;">⛔ CORE DESTABILIZED — SEQUENCE HALTED ⛔</div>`); break; }
+        if (d.currentShellHP <= 0) { breakdown.push(`<div style="color:#2ecc71;font-weight:bold;text-align:center;margin-top:4px;">💎 SHELL FRACTURED — HARVEST READY 💎</div>`); break; }
+      }
+      addChatMessage(`<div style="font-family:'Spectral',serif;"><div style="color:#00e5ff;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">FRACTURE SEQUENCE (x${count})</div><div style="margin-top:4px;">${breakdown.join("")}</div><div style="border-top:1px dashed #444;margin-top:4px;padding-top:4px;"><strong>Total:</strong> ${totalDmg} DMG / -${totalStabLoss} Stability</div></div>`);
+      showDamagePopup(totalDmg);
+      if (!d.cycleHistory) d.cycleHistory = [];
+      const actNum = d.cycleHistory.filter(h=>h.includes("<b>Action")).length + 1;
+      d.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap;width:140px;"><b>Action ${actNum}</b> (<span style="color:#a29bfe;">Fracture x${count}</span>)</div><div>-${totalDmg} HP / -${totalStabLoss} Stab</div></div>`);
+      await consumeActions(token, d, count, totalDmg);
+      return;
+    }
 
-              // BLOOD INFUSE
-              html.find('#btn-blood').on('click', async () => {
-                const amount = parseInt(html.find('#inp-blood').val());
-                const source = html.find('#inp-blood-src').val();
-                if (!amount || amount < 10) return ui.notifications.warn("Infusion must be at least 10 HP.");
-                const d = token.document.getFlag("world", "lithomancy");
-                const s = computeDerivedState(d);
-                let power = Math.floor(amount / 10);
-                let critMsg = "";
-                if (s.isHarmonized) { power *= 2; critMsg = " <span style='color:#2ed573; font-weight:bold;'>(PERFECT CONDUCTIVITY!)</span>"; }
-                Object.values(ui.windows).forEach(w => { if (w.id?.includes("litho-pop") || w.id?.includes("litho-blood")) w.close(); });
-                new Dialog({
-                  title: `Bio-Infusion (+${power})`,
-                  content: `<div class="litho-popup-box">
-                    <div style="font-family:'Cinzel',serif; font-weight:700; color:#00e5ff; letter-spacing:1px; margin-bottom:6px;">Vital Essence Transfer</div>
-                    <p style="margin:0;">You infuse <strong>${amount} HP</strong> to generate <strong>${power}</strong> charge${critMsg}.</p>
-                    <p style="margin:8px 0 0 0; color:#777; font-size:0.9em;">Select target system.</p>
-                  </div>`,
-                  buttons: {
-                    shell: { label: `Fracture Shell`, callback: () => applyBlood(token, d, amount, power, "shell", s.isHarmonized, source) },
-                    heal: { label: `Reinforce Core`, callback: () => applyBlood(token, d, amount, power, "heal", s.isHarmonized, source) },
-                    res: { label: `Tune Harmony`, callback: () => applyBlood(token, d, amount, power, "res", s.isHarmonized, source) },
-                    stab: { label: `Tune Volatility`, callback: () => applyBlood(token, d, amount, power, "stab", s.isHarmonized, source) }
-                  }
-                }, { classes: ["litho-window"], id: "litho-blood-popup" }).render(true);
-                setTimeout(() => { $('#litho-blood-popup').css('z-index', 10000); }, 50);
-              });
+    // Standard actions
+    const rollStr = `${count}d4`;
+    const roll = await new Roll(rollStr).evaluate();
+    let actionDesc = "", chatFlavor = "";
 
-              // Run initial UI update to set all values
-              updateUI(token);
-            },
-            close: () => {
-              _lithoDialog = null;
-              _lithoHtml = null;
-              if (!game.lithoRef) disengageAtmosphere();
-            }
-          }, {
-            classes: ["litho-window"],
-            width: "auto",
-            height: "auto",
-            resizable: false,
-            id: `lithomancy-monitor-${token.id}`
-          });
+    if (action === "heal") {
+      d.currentStability = Math.min(20, d.currentStability + roll.total);
+      actionDesc = `Increased stability by ${roll.total}.`;
+      chatFlavor = `<div style="font-family:'Spectral',serif;"><div style="color:#2ecc71;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">STABILIZE CORE</div><div>Rolled <b>${roll.total}</b> (${rollStr})</div><div>${actionDesc}</div></div>`;
+    } else if (action === "res") {
+      const oldMin = d.resMin, oldMax = d.resMax;
+      narrowRange(d, "res", roll.total);
+      actionDesc = `Narrowed harmony from [${oldMin}-${oldMax}] to [${d.resMin}-${d.resMax}].`;
+      chatFlavor = `<div style="font-family:'Spectral',serif;"><div style="color:#00e5ff;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">TUNE HARMONY</div><div>Rolled <b>${roll.total}</b> (${rollStr})</div><div>${actionDesc}</div></div>`;
+    } else if (action === "narrow") {
+      const oldMin = d.stabMin, oldMax = d.stabMax;
+      narrowRange(d, "stab", roll.total);
+      actionDesc = `Narrowed volatility from [${oldMin}-${oldMax}] to [${d.stabMin}-${d.stabMax}].`;
+      chatFlavor = `<div style="font-family:'Spectral',serif;"><div style="color:#f39c12;font-family:'Cinzel',serif;font-weight:bold;border-bottom:1px solid #444;">TUNE VOLATILITY</div><div>Rolled <b>${roll.total}</b> (${rollStr})</div><div>${actionDesc}</div></div>`;
+    }
 
-          _lithoDialog.render(true);
+    addChatMessage(chatFlavor);
+    if (!d.cycleHistory) d.cycleHistory = [];
+    const actNum = d.cycleHistory.filter(h=>h.includes("<b>Action")).length + 1;
+    d.cycleHistory.push(`<div class="cycle-row"><div style="white-space:nowrap;width:140px;"><b>Action ${actNum}</b> (<span style="color:#a29bfe;">${actionLabel(action)}</span>)</div><div>${actionDesc}</div></div>`);
+    await consumeActions(token, d, count, 0);
+  });
 
-          // PATCH_LOCK_SIZE: Lock window after Foundry renders it
-          Hooks.once("renderDialog", (app) => {
-            if (app.id && app.id.includes("lithomancy-monitor")) {
-              const el = app.element;
-              if (el && el.length) {
-                el.css({ width: "1120px", height: "900px" });
-              }
-              app.setPosition = function(pos = {}) {
-                return { left: parseInt(el.css("left")), top: parseInt(el.css("top")), width: 1120, height: 900 };
-              };
-            }
-          });
-        }
-    </script>
+  // BLOOD INFUSE
+  html.find('#btn-blood').on('click', async () => {
+    const amount = parseInt(html.find('#inp-blood').val());
+    const source = html.find('#inp-blood-src').val();
+    if (!amount || amount < 10) return showNotif("Infusion must be at least 10 HP.", 'error');
+    const d = token.document.getFlag("world", "lithomancy");
+    const s = computeDerivedState(d);
+    let power = Math.floor(amount / 10);
+    let critMsg = "";
+    if (s.isHarmonized) { power *= 2; critMsg = " <span style='color:#2ed573;font-weight:bold;'>(PERFECT CONDUCTIVITY!)</span>"; }
+    new Dialog({
+      title: `Bio-Infusion (+${power})`,
+      content: `<div class="litho-popup-box">
+        <div style="font-family:'Cinzel',serif;font-weight:700;color:#00e5ff;letter-spacing:1px;margin-bottom:6px;">Vital Essence Transfer</div>
+        <p style="margin:0;">Infuse <strong>${amount} HP</strong> → generate <strong>${power}</strong> charge${critMsg}.</p>
+        <p style="margin:8px 0 0 0;color:#777;font-size:0.9em;">Select target system.</p>
+      </div>`,
+      buttons: {
+        shell: { label: "Fracture Shell", callback: () => applyBlood(token, d, amount, power, "shell", s.isHarmonized, source) },
+        heal:  { label: "Reinforce Core", callback: () => applyBlood(token, d, amount, power, "heal",  s.isHarmonized, source) },
+        res:   { label: "Tune Harmony",   callback: () => applyBlood(token, d, amount, power, "res",   s.isHarmonized, source) },
+        stab:  { label: "Tune Volatility",callback: () => applyBlood(token, d, amount, power, "stab",  s.isHarmonized, source) }
+      }
+    }).render(true);
+  });
+
+  updateUI(token);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
+(async () => {
+  if (!nodeToken.document.getFlag("world", "lithomancy")) {
+    await initializeNode(nodeToken);
+  }
+  openLithomancyMonitor(nodeToken, null);
+})();
+</script>
 </body>
 </html>
