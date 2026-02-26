@@ -662,6 +662,16 @@ function submitAnswer(){
   }
 }
 
+// Auto-advance when correct answer is typed (no Enter needed)
+document.getElementById('answerInput').addEventListener('input',function(){
+  if(answerLocked) return;
+  var val=parseInt(this.value,10);
+  if(isNaN(val)) return;
+  var ab=problems[qIdx];
+  if(val===ab[0]*ab[1]) submitAnswer();
+});
+
+// Enter key triggers wrong-answer check
 document.getElementById('answerInput').addEventListener('keydown',function(e){
   if(e.key==='Enter'){
     e.preventDefault();
