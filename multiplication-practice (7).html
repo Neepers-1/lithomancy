@@ -212,6 +212,30 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .badge-red   { background: rgba(239,71,111,0.2);  color: #ef476f; }
 .empty { text-align: center; padding: 28px; color: #7a8fb5; font-weight: 600; }
 
+/* ── PROGRESS GRAPH ── */
+.graph-screen { display: none; }
+.graph-screen.active { display: block; }
+.fact-selector-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 16px;
+}
+.fact-sel-btn {
+  background: #0f3460; border: 2px solid transparent; border-radius: 8px; padding: 8px 4px;
+  font-family: inherit; font-size: 0.8rem; font-weight: 800; color: #7a8fb5;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.fact-sel-btn:hover { border-color: #ffd166; color: #e8f0fe; }
+.fact-sel-btn.active { border-color: #ffd166; background: rgba(255,209,102,0.12); color: #ffd166; }
+.fact-sel-btn.has-data { color: #e8f0fe; }
+.fact-sel-btn.no-data  { opacity: 0.4; }
+.graph-wrap { background: #0f3460; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.graph-title { font-size: 0.8rem; font-weight: 800; color: #7a8fb5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.graph-svg { width: 100%; display: block; }
+.graph-empty { text-align:center; padding: 40px 0; color: #7a8fb5; font-weight: 600; font-size: 0.9rem; }
+.graph-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.graph-stat { background: #16213e; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; font-weight: 700; }
+.graph-stat span { display: block; font-size: 1.1rem; font-weight: 900; color: #ffd166; margin-bottom: 2px; }
+.graph-stat label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7a8fb5; }
+
 .confetti-piece { position: fixed; width: 9px; height: 9px; border-radius: 2px; pointer-events: none; z-index: 9999; animation: cfall 2.5s ease forwards; }
 @keyframes cfall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1;} 100%{transform:translateY(105vh) rotate(720deg);opacity:0;} }
 </style>
@@ -344,6 +368,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <button class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</button>
       <button class="tab"        id="tab-factmap"  onclick="switchTab('factmap')">Fact Map</button>
       <button class="tab"        id="tab-top10"    onclick="switchTab('top10')">Top 10</button>
+      <button class="tab"        id="tab-graphs"   onclick="switchTab('graphs')">Graphs</button>
       <button class="tab"        id="tab-history"  onclick="switchTab('history')">History</button>
     </div>
     <div class="tab-panel active" id="panel-overview">
@@ -354,6 +379,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div class="info-section">
         <div class="info-section-title">&#x1F3AF; Keep Practicing (slowest avg)</div>
         <div class="tag-grid" id="weakFacts"></div>
+        <button class="btn btn-purple btn-small" id="practiceWorst4Btn" style="display:none;margin-top:10px;">&#x1F3AF; Practice My Worst 4 Facts</button>
       </div>
       <div class="info-section">
         <div class="info-section-title">&#x274C; Most Frequently Wrong</div>
@@ -371,6 +397,11 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div class="tab-panel" id="panel-top10">
       <p style="font-size:0.8rem;color:#7a8fb5;margin-bottom:12px;font-weight:600;">Your 10 best (fastest correct) times ever recorded for each fact.</p>
       <div id="top10Content"></div>
+    </div>
+    <div class="tab-panel" id="panel-graphs">
+      <p style="font-size:0.8rem;color:#7a8fb5;margin-bottom:12px;font-weight:600;">Choose any fact to see a graph of how your speed has improved over time.</p>
+      <div class="fact-selector-grid" id="graphFactGrid"></div>
+      <div id="graphDisplay"></div>
     </div>
     <div class="tab-panel" id="panel-history">
       <div id="histTableContent"></div>
@@ -398,13 +429,18 @@ function initUser(name){
   saveData(d); return d[k];
 }
 
-// facts[key] = { totalMs, count, wrongCount, best10:[] sorted asc }
+// facts[key] = { totalMs, count, wrongCount, best10:[] sorted asc, history:[{t,ms}] }
 function recordFact(d, ukey, fk, ms, isWrong){
-  if(!d[ukey].facts[fk]) d[ukey].facts[fk]={ totalMs:0, count:0, wrongCount:0, best10:[] };
+  if(!d[ukey].facts[fk]) d[ukey].facts[fk]={ totalMs:0, count:0, wrongCount:0, best10:[], history:[] };
   var f=d[ukey].facts[fk];
+  if(!f.history) f.history=[];
   f.totalMs+=ms; f.count++;
-  if(isWrong){ f.wrongCount=(f.wrongCount||0)+1; }
-  else {
+  if(isWrong){
+    f.wrongCount=(f.wrongCount||0)+1;
+  } else {
+    // Store correct attempt in history (cap at 200 entries per fact)
+    f.history.push({ t:Date.now(), ms:ms });
+    if(f.history.length>200) f.history=f.history.slice(-200);
     f.best10.push(ms);
     f.best10.sort(function(a,b){return a-b;});
     if(f.best10.length>10) f.best10=f.best10.slice(0,10);
@@ -795,9 +831,29 @@ function switchTab(name){
   if(name==='overview') renderOverview();
   if(name==='factmap')  renderFactMap();
   if(name==='top10')    renderTop10();
+  if(name==='graphs')   renderGraphs(null);
   if(name==='history')  renderHistory();
 }
 window.switchTab=switchTab;
+
+// ── Practice Worst 4 from My Info ───────
+document.getElementById('practiceWorst4Btn').addEventListener('click', function(){
+  if(!window._worst4Facts || !window._worst4Facts.length) return;
+  // Set wsip to the worst 4 facts and navigate to mode screen
+  window._wsipFacts = window._worst4Facts;
+  prevScreen = 'modeScreen';
+  show('modeScreen');
+  renderHistMini();
+  // Manually populate the wsip box
+  var d=getData(), ud=d[userKey];
+  var box=document.getElementById('wsipBox');
+  box.style.display='block';
+  document.getElementById('wsipFacts').innerHTML=window._worst4Facts.map(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud&&ud.facts?ud.facts[k]:null;
+    var avg=f&&f.count>0?(f.totalMs/f.count):0;
+    return '<div class="wsip-tag">'+ab[0]+'\u00D7'+ab[1]+(avg?'<span>avg '+fmtMsShort(avg)+'</span>':'')+'</div>';
+  }).join('');
+});
 
 // ── Overview ────────────────────────────
 function renderOverview(){
@@ -827,6 +883,14 @@ function renderOverview(){
   wrongEl.innerHTML=mostWrong.length
     ? mostWrong.map(function(e){ return '<div class="slow-tag">'+flabel(e.k)+'<span>'+e.wrongCount+' wrong</span></div>'; }).join('')
     : '<span style="color:#7a8fb5;font-size:0.85rem;">No wrong answers recorded yet \u2014 nice!</span>';
+
+  // Store worst 4 for the Practice button, and show/hide it
+  var worst4=weak.slice(0,4).map(function(e){
+    var parts=e.k.split('x'); return [parseInt(parts[0],10), parseInt(parts[1],10)];
+  });
+  window._worst4Facts=worst4;
+  var pw4btn=document.getElementById('practiceWorst4Btn');
+  pw4btn.style.display=worst4.length?'':'none';
 
   var sessions=ud.sessions||[];
   var ta=sessions.reduce(function(t,s){ return t+s.total; },0);
@@ -942,6 +1006,131 @@ function renderHistory(){
       '<td>'+(s.avgMs>0?fmtMs(s.avgMs):'--')+'</td></tr>';
   }).join('');
   el.innerHTML='<table><thead><tr><th>Date</th><th>Mode</th><th>Score</th><th>Accuracy</th><th>Avg Speed</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ── Graphs ────────────────────────────
+var selectedGraphFact=null;
+
+function renderGraphs(initFact){
+  var d=getData(), ud=d[userKey];
+  var facts=ud&&ud.facts?ud.facts:{};
+  var grid=document.getElementById('graphFactGrid');
+
+  // Build 8×8 grid of fact buttons
+  var html='';
+  for(var a=2;a<=9;a++){
+    for(var b=2;b<=9;b++){
+      var k=fkey(a,b), f=facts[k];
+      var hasData=f&&f.history&&f.history.length>0;
+      var cls='fact-sel-btn '+(hasData?'has-data':'no-data');
+      if(selectedGraphFact===k) cls+=' active';
+      html+='<button class="'+cls+'" onclick="selectGraphFact(\''+k+'\')" '+(hasData?'':'title="No data yet"')+'>'+
+        a+'\u00D7'+b+'</button>';
+    }
+  }
+  grid.innerHTML=html;
+
+  // Auto-select initFact, or keep current, or pick first fact with data
+  if(initFact){ selectedGraphFact=initFact; }
+  if(!selectedGraphFact || !facts[selectedGraphFact] || !facts[selectedGraphFact].history || !facts[selectedGraphFact].history.length){
+    var first=ALL_FACTS.find(function(ab){ var f=facts[fkey(ab[0],ab[1])]; return f&&f.history&&f.history.length>1; });
+    selectedGraphFact=first?fkey(first[0],first[1]):null;
+  }
+  drawGraph(selectedGraphFact);
+}
+
+window.selectGraphFact=function(k){
+  selectedGraphFact=k;
+  // Update active button
+  document.querySelectorAll('.fact-sel-btn').forEach(function(b){ b.classList.remove('active'); });
+  var btns=document.querySelectorAll('.fact-sel-btn');
+  var parts=k.split('x'); var a=parseInt(parts[0]), b2=parseInt(parts[1]);
+  var idx=(a-2)*8+(b2-2);
+  if(btns[idx]) btns[idx].classList.add('active');
+  drawGraph(k);
+};
+
+function drawGraph(k){
+  var container=document.getElementById('graphDisplay');
+  if(!k){ container.innerHTML='<div class="graph-empty">Select a fact above to see your progress graph.</div>'; return; }
+  var d=getData(), ud=d[userKey];
+  var f=ud&&ud.facts?ud.facts[k]:null;
+  if(!f||!f.history||f.history.length<2){
+    var parts=k.split('x');
+    container.innerHTML='<div class="graph-empty">Not enough data for '+parts[0]+'\u00D7'+parts[1]+' yet.<br>Answer it a few more times!</div>';
+    return;
+  }
+
+  var parts=k.split('x'); var a=parseInt(parts[0]), b2=parseInt(parts[1]);
+  var ans=a*b2;
+  var label=a+' \u00D7 '+b2+' = '+ans;
+  var history=f.history; // [{t, ms}]
+
+  // Compute rolling 5-attempt average for trend line
+  var pts=history.map(function(h,i){
+    var window5=history.slice(Math.max(0,i-4),i+1);
+    var avg=window5.reduce(function(s,x){return s+x.ms;},0)/window5.length;
+    return { i:i+1, raw:h.ms, avg:avg };
+  });
+
+  var W=520, H=200, PL=44, PR=12, PT=12, PB=28;
+  var innerW=W-PL-PR, innerH=H-PT-PB;
+  var maxMs=Math.max.apply(null, pts.map(function(p){return p.raw;}))*1.1;
+  var minMs=Math.max(0, Math.min.apply(null, pts.map(function(p){return p.raw;}))*0.85);
+  var n=pts.length;
+
+  function cx(i){ return PL + ((i-1)/(Math.max(n-1,1)))*innerW; }
+  function cy(ms){ return PT + (1-(ms-minMs)/(maxMs-minMs))*innerH; }
+
+  // Y-axis labels (4 gridlines)
+  var yTicks=4;
+  var gridLines='', yLabels='';
+  for(var t=0;t<=yTicks;t++){
+    var ms=minMs+(maxMs-minMs)*(t/yTicks);
+    var y=PT+(1-(t/yTicks))*innerH;
+    gridLines+='<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
+    yLabels+='<text x="'+(PL-4)+'" y="'+(y+4)+'" text-anchor="end" fill="#7a8fb5" font-size="9">'+(ms/1000).toFixed(1)+'s</text>';
+  }
+
+  // Raw dots
+  var dots=pts.map(function(p){
+    var col=p.raw<2000?'#06d6a0':p.raw<3500?'#ffd166':'#ef476f';
+    return '<circle cx="'+cx(p.i)+'" cy="'+cy(p.raw)+'" r="3" fill="'+col+'" opacity="0.7"/>';
+  }).join('');
+
+  // Trend line (rolling avg)
+  var trendPath=pts.map(function(p,i){ return (i===0?'M':'L')+cx(p.i)+','+cy(p.avg); }).join(' ');
+
+  // First/last avg annotation
+  var firstAvg=pts[0].avg, lastAvg=pts[pts.length-1].avg;
+  var improved=lastAvg<firstAvg;
+  var trendColor=improved?'#06d6a0':'#ef476f';
+
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" class="graph-svg" xmlns="http://www.w3.org/2000/svg">'+
+    gridLines+yLabels+
+    '<path d="'+trendPath+'" fill="none" stroke="'+trendColor+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
+    dots+
+    '</svg>';
+
+  // Stats strip
+  var allRaw=pts.map(function(p){return p.raw;});
+  var avgAll=allRaw.reduce(function(s,v){return s+v;},0)/allRaw.length;
+  var bestMs=Math.min.apply(null,allRaw);
+  var recentAvg=pts.slice(-5).reduce(function(s,p){return s+p.raw;},0)/Math.min(5,pts.length);
+  var impPct=firstAvg>0?Math.round((firstAvg-lastAvg)/firstAvg*100):0;
+
+  var statsHtml='<div class="graph-stats">'+
+    '<div class="graph-stat"><span>'+fmtMs(bestMs)+'</span><label>Best Ever</label></div>'+
+    '<div class="graph-stat"><span>'+fmtMs(recentAvg)+'</span><label>Recent Avg (5)</label></div>'+
+    '<div class="graph-stat"><span>'+fmtMs(avgAll)+'</span><label>All-Time Avg</label></div>'+
+    '<div class="graph-stat"><span style="color:'+(impPct>0?'#06d6a0':'#ef476f')+';">'+(impPct>0?'-':'')+impPct+'%</span><label>Improvement</label></div>'+
+    '</div>';
+
+  container.innerHTML='<div class="graph-wrap">'+
+    '<div class="graph-title">'+label+' &mdash; Speed Over Time ('+n+' attempts)</div>'+
+    svg+
+    '<div style="font-size:0.72rem;color:#7a8fb5;margin-top:6px;">Dots = each answer &nbsp;&bull;&nbsp; Line = rolling 5-answer average</div>'+
+    '</div>'+statsHtml;
 }
 
 // ══════════════════════════════════════════
