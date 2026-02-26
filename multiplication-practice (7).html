@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Times Tables Practice</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #1a1a2e;
+  color: #e8f0fe;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px 16px 60px;
+}
+#app { width: 100%; max-width: 600px; margin-top: 24px; }
+.screen { display: none; }
+.screen.active { display: block; }
+.card { background: #16213e; border-radius: 18px; padding: 30px 26px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+
+h1 { font-size: 2rem; font-weight: 900; text-align: center; color: #ffd166; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #7a8fb5; font-size: 0.9rem; font-weight: 600; margin-bottom: 24px; }
+
+label { display: block; font-weight: 700; color: #7a8fb5; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+
+input[type="text"], input[type="number"] {
+  width: 100%; background: #0f3460; border: 2px solid #0f3460; border-radius: 10px;
+  padding: 12px 15px; font-size: 1.05rem; font-family: inherit; color: #e8f0fe;
+  outline: none; transition: border-color 0.2s; font-weight: 700;
+}
+input:focus { border-color: #ffd166; }
+
+.btn {
+  display: block; width: 100%; padding: 13px; border-radius: 10px;
+  font-family: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+  border: none; transition: transform 0.1s, filter 0.15s; margin-top: 12px; text-align: center;
+}
+.btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-yellow { background: #ffd166; color: #1a1a2e; }
+.btn-red    { background: #ef476f; color: #fff; }
+.btn-teal   { background: #06d6a0; color: #1a1a2e; }
+.btn-blue   { background: #118ab2; color: #fff; }
+.btn-gray   { background: #0f3460; color: #e8f0fe; }
+.btn-purple { background: #7b5ea7; color: #fff; }
+.btn-small  { padding: 9px; font-size: 0.85rem; margin-top: 10px; }
+.btn:disabled { opacity: 0.38; pointer-events: none; }
+
+.welcome-box { background: #0f3460; border: 1px solid #06d6a0; border-radius: 10px; padding: 12px 15px; margin-bottom: 18px; display: none; }
+.welcome-box.show { display: block; }
+.welcome-name { font-weight: 800; color: #06d6a0; font-size: 0.98rem; }
+.welcome-stats { color: #7a8fb5; font-size: 0.82rem; margin-top: 3px; }
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.mode-btn {
+  background: #0f3460; border: 2px solid transparent; border-radius: 12px; padding: 16px 10px;
+  cursor: pointer; text-align: center; color: #e8f0fe; transition: border-color 0.2s, transform 0.1s; font-family: inherit;
+}
+.mode-btn:hover { border-color: #ffd166; transform: translateY(-1px); }
+.mode-btn.selected { border-color: #ffd166; background: rgba(255,209,102,0.1); }
+.mode-time  { font-size: 1.6rem; font-weight: 900; color: #ffd166; }
+.mode-label { font-size: 0.82rem; color: #7a8fb5; font-weight: 700; margin-top: 3px; }
+.mode-count { font-size: 0.75rem; color: #7a8fb5; margin-top: 2px; }
+
+.link-row { display: flex; justify-content: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+.link-btn { background: none; border: none; color: #7a8fb5; font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; padding: 4px; transition: color 0.2s; }
+.link-btn:hover { color: #e8f0fe; }
+
+.section-box { background: #0f3460; border-radius: 10px; padding: 13px 15px; margin-top: 14px; }
+.section-box h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #7a8fb5; margin-bottom: 9px; font-weight: 700; }
+.hist-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.86rem; }
+.hist-row:last-child { border-bottom: none; }
+.hist-score { font-weight: 800; color: #06d6a0; }
+.hist-date  { color: #7a8fb5; font-size: 0.76rem; }
+
+/* ── WHAT SHOULD I PRACTICE box ── */
+.wsip-box {
+  background: linear-gradient(135deg, rgba(123,94,167,0.2), rgba(17,138,178,0.15));
+  border: 1px solid rgba(123,94,167,0.4);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 14px;
+}
+.wsip-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #b89fd4; font-weight: 800; margin-bottom: 10px; }
+.wsip-facts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.wsip-tag {
+  background: rgba(239,71,111,0.2); border: 1px solid rgba(239,71,111,0.4);
+  border-radius: 8px; padding: 6px 12px; font-weight: 900; font-size: 0.95rem; color: #ef476f;
+}
+.wsip-tag span { font-size: 0.75rem; color: #7a8fb5; font-weight: 600; margin-left: 4px; }
+.wsip-prompt { font-size: 0.88rem; color: #b89fd4; font-weight: 600; margin-bottom: 10px; }
+.wsip-modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.wsip-mode-btn {
+  background: rgba(123,94,167,0.25); border: 1px solid rgba(123,94,167,0.4);
+  border-radius: 8px; padding: 8px 4px; text-align: center; cursor: pointer;
+  font-family: inherit; color: #e8f0fe; transition: background 0.2s, transform 0.1s;
+}
+.wsip-mode-btn:hover { background: rgba(123,94,167,0.5); transform: translateY(-1px); }
+.wsip-mode-time  { font-size: 1rem; font-weight: 900; color: #ffd166; }
+.wsip-mode-label { font-size: 0.65rem; color: #7a8fb5; font-weight: 700; margin-top: 2px; }
+
+/* ── QUIZ ── */
+.quiz-header { display: flex; justify-content: space-between; gap: 7px; margin-bottom: 14px; }
+.stat-box { flex: 1; background: #0f3460; border-radius: 10px; padding: 9px 5px; text-align: center; }
+.stat-val { font-size: 1.2rem; font-weight: 900; color: #ffd166; line-height: 1.1; }
+.stat-lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.4px; color: #7a8fb5; font-weight: 700; margin-top: 1px; }
+
+.timer-bar-wrap { width: 100%; height: 7px; background: #0f3460; border-radius: 4px; margin-bottom: 16px; overflow: hidden; }
+.timer-bar { height: 100%; background: #06d6a0; border-radius: 4px; transition: width 0.9s linear, background 0.5s; }
+.timer-bar.warn   { background: #ffd166; }
+.timer-bar.danger { background: #ef476f; }
+
+.focus-badge { background: rgba(123,94,167,0.3); border: 1px solid rgba(123,94,167,0.5); border-radius: 8px; padding: 6px 12px; font-size: 0.78rem; font-weight: 700; color: #b89fd4; text-align: center; margin-bottom: 12px; display: none; }
+.focus-badge.show { display: block; }
+
+.progress-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 14px; justify-content: center; min-height: 12px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #0f3460; transition: background 0.2s; }
+.dot.c   { background: #06d6a0; }
+.dot.cur { background: #ffd166; animation: dpulse 0.7s ease infinite; }
+@keyframes dpulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.6);} }
+
+.problem-display { text-align: center; font-size: 3.8rem; font-weight: 900; letter-spacing: 3px; margin: 8px 0 20px; color: #e8f0fe; }
+.problem-display .op { color: #118ab2; }
+.problem-display .eq { color: #7a8fb5; }
+
+#answerInput { font-size: 1.9rem; font-weight: 900; text-align: center; padding: 13px; border-radius: 12px; border-width: 3px; }
+#answerInput.correct { border-color: #06d6a0; background: rgba(6,214,160,0.1); }
+#answerInput.wrong   { border-color: #ef476f; background: rgba(239,71,111,0.1); animation: shake 0.3s; }
+@keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+
+/* ── RESULTS ── */
+.result-hero { text-align: center; margin-bottom: 20px; }
+.result-emoji { font-size: 3rem; display: block; margin-bottom: 5px; }
+.result-title { font-size: 1.9rem; font-weight: 900; color: #ffd166; }
+.result-sub   { color: #7a8fb5; font-size: 0.9rem; font-weight: 600; margin-top: 3px; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 16px; }
+.stat-card { background: #0f3460; border-radius: 10px; padding: 13px 7px; text-align: center; }
+.sc-val { font-size: 1.4rem; font-weight: 900; color: #ffd166; }
+.sc-lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.4px; color: #7a8fb5; font-weight: 700; margin-top: 2px; }
+
+.slow-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #7a8fb5; font-weight: 700; margin: 14px 0 6px; }
+.tag-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.slow-tag { background: rgba(239,71,111,0.15); border: 1px solid rgba(239,71,111,0.35); border-radius: 7px; padding: 5px 10px; font-weight: 800; font-size: 0.85rem; color: #ef476f; }
+.slow-tag span { font-size: 0.72rem; color: #7a8fb5; font-weight: 600; margin-left: 3px; }
+.good-tag { background: rgba(6,214,160,0.12); border: 1px solid rgba(6,214,160,0.3); border-radius: 7px; padding: 5px 10px; font-weight: 800; font-size: 0.85rem; color: #06d6a0; }
+.good-tag span { font-size: 0.72rem; color: #7a8fb5; font-weight: 600; margin-left: 3px; }
+
+.btn-row { display: flex; gap: 8px; margin-top: 14px; }
+.btn-row .btn { margin-top: 0; }
+
+/* ── INFO SCREEN ── */
+.back-link { background: none; border: none; color: #7a8fb5; font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; padding: 0 0 14px; display: block; transition: color 0.2s; }
+.back-link:hover { color: #e8f0fe; }
+.screen-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 3px; }
+.screen-sub   { color: #7a8fb5; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
+
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  flex: 1; min-width: 60px; padding: 8px 4px; background: #0f3460; border: 2px solid transparent;
+  border-radius: 9px; font-family: inherit; font-size: 0.75rem; font-weight: 800; color: #7a8fb5;
+  cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.tab:hover { color: #e8f0fe; }
+.tab.active { border-color: #ffd166; color: #ffd166; background: rgba(255,209,102,0.08); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.info-section { margin-bottom: 20px; }
+.info-section-title { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #7a8fb5; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+
+.summary-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; }
+.pill-gold   { background: rgba(255,209,102,0.15); color: #ffd166; border: 1px solid rgba(255,209,102,0.3); }
+.pill-teal   { background: rgba(6,214,160,0.12);   color: #06d6a0; border: 1px solid rgba(6,214,160,0.25); }
+
+/* ── FACT MAP: simple list layout ── */
+.fact-list { display: flex; flex-direction: column; gap: 4px; }
+.fact-row {
+  display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+  border-radius: 8px; background: #0f3460;
+}
+.fact-row-label { font-weight: 900; font-size: 0.88rem; min-width: 60px; color: #e8f0fe; }
+.fact-row-bar-wrap { flex: 1; height: 8px; background: #1a1a2e; border-radius: 4px; overflow: hidden; }
+.fact-row-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.fact-row-time { font-size: 0.8rem; font-weight: 800; min-width: 42px; text-align: right; }
+.fact-row-count { font-size: 0.7rem; color: #7a8fb5; min-width: 28px; text-align: right; }
+.fact-row.unseen .fact-row-label { color: #3a4f6b; }
+.fact-row.unseen .fact-row-time  { color: #3a4f6b; }
+
+/* ── TOP 10 ── */
+.fact-top10-block { margin-bottom: 14px; background: #0f3460; border-radius: 10px; padding: 10px 12px; }
+.fact-top10-title { font-size: 0.82rem; font-weight: 900; color: #e8f0fe; margin-bottom: 8px; }
+.t10-row { display: flex; align-items: center; gap: 7px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.82rem; }
+.t10-row:last-child { border-bottom: none; }
+.t10-rank { min-width: 22px; font-size: 0.7rem; color: #7a8fb5; font-weight: 700; }
+.t10-bar-wrap { flex: 1; height: 5px; background: #1a1a2e; border-radius: 3px; overflow: hidden; }
+.t10-bar { height: 100%; border-radius: 3px; }
+.t10-time { font-size: 0.78rem; font-weight: 800; min-width: 38px; text-align: right; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { text-align: left; color: #7a8fb5; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; padding: 5px 9px; font-weight: 700; }
+td { padding: 8px 9px; border-top: 1px solid rgba(255,255,255,0.05); font-weight: 600; }
+tr:hover td { background: rgba(255,255,255,0.03); }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 0.72rem; font-weight: 800; }
+.badge-gold  { background: rgba(255,209,102,0.2); color: #ffd166; }
+.badge-green { background: rgba(6,214,160,0.2);  color: #06d6a0; }
+.badge-red   { background: rgba(239,71,111,0.2);  color: #ef476f; }
+.empty { text-align: center; padding: 28px; color: #7a8fb5; font-weight: 600; }
+
+.confetti-piece { position: fixed; width: 9px; height: 9px; border-radius: 2px; pointer-events: none; z-index: 9999; animation: cfall 2.5s ease forwards; }
+@keyframes cfall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1;} 100%{transform:translateY(105vh) rotate(720deg);opacity:0;} }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen" class="screen active">
+  <div class="card">
+    <h1>&#11088; Times Tables</h1>
+    <p class="subtitle">Multiplication Practice &middot; Grade 4</p>
+    <div id="welcomeBox" class="welcome-box">
+      <div class="welcome-name"  id="wbName"></div>
+      <div class="welcome-stats" id="wbStats"></div>
+    </div>
+    <label for="nameInput">What's your name?</label>
+    <input type="text" id="nameInput" placeholder="Type your name here..." maxlength="30" autocomplete="off">
+    <button class="btn btn-yellow" id="loginBtn">Let's Go! &#x1F680;</button>
+  </div>
+</div>
+
+<!-- ══ MODE SELECT ══ -->
+<div id="modeScreen" class="screen">
+  <div class="card">
+    <h1 style="font-size:1.4rem;text-align:left;margin-bottom:2px;" id="modeGreeting">Hi!</h1>
+    <p class="subtitle" style="text-align:left;margin-bottom:14px;">Choose how long to practice:</p>
+    <div class="mode-grid">
+      <button class="mode-btn" id="mode-30">
+        <div class="mode-time">0:30</div><div class="mode-label">Quick Burst</div><div class="mode-count">~10 problems</div>
+      </button>
+      <button class="mode-btn" id="mode-60">
+        <div class="mode-time">1:00</div><div class="mode-label">Speed Round</div><div class="mode-count">~20 problems</div>
+      </button>
+      <button class="mode-btn" id="mode-120">
+        <div class="mode-time">2:00</div><div class="mode-label">Challenge</div><div class="mode-count">~40 problems</div>
+      </button>
+      <button class="mode-btn" id="mode-300">
+        <div class="mode-time">5:00</div><div class="mode-label">Full Test</div><div class="mode-count">100 problems</div>
+      </button>
+    </div>
+    <button class="btn btn-yellow" id="startBtn" disabled>Start Practice &#x26A1;</button>
+    <div id="histMini"></div>
+    <!-- What Should I Practice -->
+    <div id="wsipBox" class="wsip-box" style="display:none;">
+      <div class="wsip-title">&#x1F3AF; What Should I Practice?</div>
+      <div class="wsip-facts" id="wsipFacts"></div>
+      <div class="wsip-prompt">Practice just these facts &mdash; pick a time:</div>
+      <div class="wsip-modes">
+        <button class="wsip-mode-btn" id="wsip-30">
+          <div class="wsip-mode-time">0:30</div><div class="wsip-mode-label">Quick</div>
+        </button>
+        <button class="wsip-mode-btn" id="wsip-60">
+          <div class="wsip-mode-time">1:00</div><div class="wsip-mode-label">Speed</div>
+        </button>
+        <button class="wsip-mode-btn" id="wsip-120">
+          <div class="wsip-mode-time">2:00</div><div class="wsip-mode-label">Challenge</div>
+        </button>
+        <button class="wsip-mode-btn" id="wsip-300">
+          <div class="wsip-mode-time">5:00</div><div class="wsip-mode-label">Full</div>
+        </button>
+      </div>
+    </div>
+    <div class="link-row">
+      <button class="link-btn" id="switchPlayerBtn">&larr; Switch Player</button>
+      <button class="link-btn" id="myInfoBtnMode">&#x1F4CA; My Info</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="quizScreen" class="screen">
+  <div class="card">
+    <div class="quiz-header">
+      <div class="stat-box"><div class="stat-val" id="timerDisp">5:00</div><div class="stat-lbl">Time</div></div>
+      <div class="stat-box"><div class="stat-val" id="scoreDisp">0</div><div class="stat-lbl">Correct</div></div>
+      <div class="stat-box"><div class="stat-val" id="totalDisp">0</div><div class="stat-lbl">Done</div></div>
+      <div class="stat-box"><div class="stat-val" id="streakDisp">0&#x1F525;</div><div class="stat-lbl">Streak</div></div>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%;"></div></div>
+    <div class="focus-badge" id="focusBadge"></div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="problem-display">
+      <span id="numA">6</span><span class="op"> &times; </span><span id="numB">7</span><span class="eq"> = </span>
+    </div>
+    <input type="number" id="answerInput" placeholder="?" min="0" max="999" autocomplete="off">
+    <button class="btn btn-red btn-small" id="endEarlyBtn">&#9209; End Test Early</button>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div id="resultsScreen" class="screen">
+  <div class="card">
+    <div class="result-hero">
+      <span class="result-emoji" id="resEmoji">&#x1F389;</span>
+      <div class="result-title" id="resTitle">Amazing!</div>
+      <div class="result-sub"   id="resSub"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sc-val" id="resScore">0</div><div class="sc-lbl">Correct</div></div>
+      <div class="stat-card"><div class="sc-val" id="resAcc">0%</div><div class="sc-lbl">Accuracy</div></div>
+      <div class="stat-card"><div class="sc-val" id="resAvg">--</div><div class="sc-lbl">Avg Speed</div></div>
+    </div>
+    <div id="slowSection" style="display:none;">
+      <div class="slow-title">&#x1F422; Needs Work (slowest this session)</div>
+      <div class="tag-grid" id="slowGrid"></div>
+    </div>
+    <div id="wrongSection" style="display:none;margin-top:4px;">
+      <div class="slow-title">&#x274C; Most Wrong This Session</div>
+      <div class="tag-grid" id="wrongGrid"></div>
+    </div>
+    <div id="fastSection" style="display:none;margin-top:4px;">
+      <div class="slow-title">&#x26A1; Fastest This Session</div>
+      <div class="tag-grid" id="fastGrid"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-gray"   id="resMyInfoBtn">&#x1F4CA; My Info</button>
+      <button class="btn btn-yellow" id="resPlayAgainBtn">Play Again &#x1F680;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MY INFO ══ -->
+<div id="infoScreen" class="screen">
+  <div class="card">
+    <button class="back-link" id="infoBackBtn">&larr; Back</button>
+    <div class="screen-title" id="infoTitle">My Info</div>
+    <div class="screen-sub"   id="infoSub"></div>
+    <div class="tabs">
+      <button class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</button>
+      <button class="tab"        id="tab-factmap"  onclick="switchTab('factmap')">Fact Map</button>
+      <button class="tab"        id="tab-top10"    onclick="switchTab('top10')">Top 10</button>
+      <button class="tab"        id="tab-history"  onclick="switchTab('history')">History</button>
+    </div>
+    <div class="tab-panel active" id="panel-overview">
+      <div class="info-section">
+        <div class="info-section-title">&#x1F3C6; You're Great At</div>
+        <div class="tag-grid" id="bestFacts"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">&#x1F3AF; Keep Practicing (slowest avg)</div>
+        <div class="tag-grid" id="weakFacts"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">&#x274C; Most Frequently Wrong</div>
+        <div class="tag-grid" id="wrongFacts"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">&#x1F4CA; Overall Stats</div>
+        <div class="summary-pills" id="overallStats"></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-factmap">
+      <p style="font-size:0.8rem;color:#7a8fb5;margin-bottom:12px;font-weight:600;">Every fact with your average time. Sorted slowest first so you can see what to work on.</p>
+      <div id="factMapContent"></div>
+    </div>
+    <div class="tab-panel" id="panel-top10">
+      <p style="font-size:0.8rem;color:#7a8fb5;margin-bottom:12px;font-weight:600;">Your 10 best (fastest correct) times ever recorded for each fact.</p>
+      <div id="top10Content"></div>
+    </div>
+    <div class="tab-panel" id="panel-history">
+      <div id="histTableContent"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+<script>
+(function(){
+'use strict';
+
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+function getData(){ try{ return JSON.parse(localStorage.getItem('tt_v3')||'{}'); }catch(e){ return {}; } }
+function saveData(d){ localStorage.setItem('tt_v3', JSON.stringify(d)); }
+
+function getUser(name){ return getData()[name.trim().toLowerCase()]||null; }
+
+function initUser(name){
+  var d=getData(), k=name.trim().toLowerCase();
+  if(!d[k]) d[k]={ displayName:name.trim(), sessions:[], facts:{} };
+  else{ d[k].displayName=name.trim(); if(!d[k].facts) d[k].facts={}; }
+  saveData(d); return d[k];
+}
+
+// facts[key] = { totalMs, count, wrongCount, best10:[] sorted asc }
+function recordFact(d, ukey, fk, ms, isWrong){
+  if(!d[ukey].facts[fk]) d[ukey].facts[fk]={ totalMs:0, count:0, wrongCount:0, best10:[] };
+  var f=d[ukey].facts[fk];
+  f.totalMs+=ms; f.count++;
+  if(isWrong){ f.wrongCount=(f.wrongCount||0)+1; }
+  else {
+    f.best10.push(ms);
+    f.best10.sort(function(a,b){return a-b;});
+    if(f.best10.length>10) f.best10=f.best10.slice(0,10);
+  }
+}
+
+function saveSession(ukey, session){
+  var d=getData();
+  if(!d[ukey]) return;
+  // store slim session (no times array — facts already updated)
+  d[ukey].sessions.push({ date:session.date, dur:session.dur, correct:session.correct, total:session.total, avgMs:session.avgMs });
+  // update per-fact records from every answered question
+  session.times.forEach(function(t){ recordFact(d, ukey, t.p, t.ms, !t.ok); });
+  saveData(d);
+}
+
+function fmtMs(ms){
+  if(ms===undefined||ms===null) return '--';
+  return (ms/1000).toFixed(2)+'s';
+}
+function fmtMsShort(ms){ return (ms/1000).toFixed(1)+'s'; }
+function fmtTime(s){ if(s>=300) return '5 min'; if(s>=120) return '2 min'; if(s>=60) return '1 min'; return '30 sec'; }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fkey(a,b){ return a+'x'+b; }
+function flabel(k){ return k.replace('x','\u00D7'); }
+
+// All 64 facts 2-9
+var ALL_FACTS=(function(){
+  var r=[];
+  for(var a=2;a<=9;a++) for(var b=2;b<=9;b++) r.push([a,b]);
+  return r;
+})();
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+var user=null, userKey=null, selMode=null;
+var focusFacts=null; // null = all facts, array of [a,b] = focus mode
+var problems=[], qIdx=0, qCorrect=0, qTotal=0, qStreak=0;
+var timeLeft=0, totalTime=0, timer=null;
+var qTimes=[], qStart=0;
+var prevScreen='modeScreen';
+var currentTab='overview';
+
+// ══════════════════════════════════════════
+// SCREEN HELPER
+// ══════════════════════════════════════════
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════
+var nameInput=document.getElementById('nameInput');
+
+nameInput.addEventListener('input',function(){
+  var n=this.value.trim(), wb=document.getElementById('welcomeBox');
+  if(n.length>1){
+    var ud=getUser(n);
+    if(ud&&ud.sessions&&ud.sessions.length>0){
+      wb.classList.add('show');
+      document.getElementById('wbName').textContent='Welcome back, '+ud.displayName+'!';
+      var last=ud.sessions[ud.sessions.length-1];
+      var best=ud.sessions.reduce(function(b,s){ return s.correct>(b?b.correct:-1)?s:b; },null);
+      document.getElementById('wbStats').textContent=
+        ud.sessions.length+' sessions \u00b7 Last: '+last.correct+'/'+last.total+' \u00b7 Best: '+best.correct+'/'+best.total;
+    } else wb.classList.remove('show');
+  } else wb.classList.remove('show');
+});
+nameInput.addEventListener('keydown',function(e){ if(e.key==='Enter') handleLogin(); });
+document.getElementById('loginBtn').addEventListener('click', handleLogin);
+
+function handleLogin(){
+  var name=nameInput.value.trim();
+  if(!name){ nameInput.focus(); nameInput.style.borderColor='#ef476f'; setTimeout(function(){ nameInput.style.borderColor=''; },1000); return; }
+  userKey=name.toLowerCase();
+  user=initUser(name);
+  document.getElementById('modeGreeting').textContent='Hi, '+user.displayName+'! \uD83D\uDC4B';
+  selMode=null; focusFacts=null;
+  document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.remove('selected'); });
+  document.getElementById('startBtn').disabled=true;
+  renderModeScreen();
+  show('modeScreen');
+}
+
+// ══════════════════════════════════════════
+// MODE SCREEN
+// ══════════════════════════════════════════
+[30,60,120,300].forEach(function(s){
+  document.getElementById('mode-'+s).addEventListener('click',function(){ selectMode(s); });
+});
+document.getElementById('startBtn').addEventListener('click',function(){ startQuiz(false); });
+document.getElementById('switchPlayerBtn').addEventListener('click',function(){ show('loginScreen'); });
+document.getElementById('myInfoBtnMode').addEventListener('click',function(){ showInfo('overview'); });
+
+// WSIP mode buttons
+[30,60,120,300].forEach(function(s){
+  document.getElementById('wsip-'+s).addEventListener('click',function(){ startQuiz(true, s); });
+});
+
+function selectMode(s){
+  selMode=s;
+  document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.remove('selected'); });
+  document.getElementById('mode-'+s).classList.add('selected');
+  document.getElementById('startBtn').disabled=false;
+}
+
+function renderModeScreen(){
+  renderHistMini();
+  renderWSIP();
+}
+
+function renderHistMini(){
+  var d=getData(), ud=d[userKey], hm=document.getElementById('histMini');
+  if(!ud||!ud.sessions||!ud.sessions.length){ hm.innerHTML=''; return; }
+  var recent=ud.sessions.slice().reverse().slice(0,4);
+  hm.innerHTML='<div class="section-box"><h3>Recent Sessions</h3>'+
+    recent.map(function(s){
+      var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+      return '<div class="hist-row"><span>'+fmtTime(s.dur)+'</span><span class="hist-score">'+s.correct+'/'+s.total+' ('+acc+'%)</span><span class="hist-date">'+fmtDate(s.date)+'</span></div>';
+    }).join('')+'</div>';
+}
+
+function renderWSIP(){
+  var d=getData(), ud=d[userKey], box=document.getElementById('wsipBox');
+  if(!ud||!ud.facts){ box.style.display='none'; return; }
+  // Find top 4 slowest facts with at least 2 attempts
+  var entries=ALL_FACTS
+    .map(function(ab){
+      var k=fkey(ab[0],ab[1]), f=ud.facts[k];
+      return f&&f.count>=2 ? { ab:ab, avg:f.totalMs/f.count } : null;
+    })
+    .filter(Boolean)
+    .sort(function(a,b){ return b.avg-a.avg; })
+    .slice(0,4);
+  if(!entries.length){ box.style.display='none'; return; }
+  box.style.display='block';
+  document.getElementById('wsipFacts').innerHTML=entries.map(function(e){
+    return '<div class="wsip-tag">'+e.ab[0]+'\u00D7'+e.ab[1]+'<span>avg '+fmtMsShort(e.avg)+'</span></div>';
+  }).join('');
+  // store for use when launching
+  window._wsipFacts=entries.map(function(e){ return e.ab; });
+}
+
+// ══════════════════════════════════════════
+// PROBLEM GENERATION
+// ══════════════════════════════════════════
+function genProblems(n, restrictFacts){
+  var source = restrictFacts || ALL_FACTS;
+  var d=getData(), ud=d[userKey], facts=ud&&ud.facts?ud.facts:{};
+  var pool=[];
+  source.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k];
+    var w=1;
+    if(f&&f.count>0){
+      var avg=f.totalMs/f.count;
+      if(avg>6000) w=5; else if(avg>4000) w=4; else if(avg>3000) w=3; else if(avg>2000) w=2;
+    } else w=2;
+    for(var i=0;i<w;i++) pool.push(ab);
+  });
+  pool.sort(function(){ return Math.random()-0.5; });
+  var result=[];
+  for(var j=0;j<n;j++) result.push(pool[j%pool.length]);
+  return result;
+}
+
+// ══════════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════════
+function startQuiz(isFocus, forceDur){
+  var dur = isFocus ? forceDur : selMode;
+  if(!dur) return;
+  var restrict = isFocus ? window._wsipFacts : null;
+  var n = dur===300 ? 100 : Math.max(10, Math.floor(dur/3));
+  focusFacts = restrict;
+  problems=genProblems(n, restrict);
+  qIdx=0; qCorrect=0; qTotal=0; qStreak=0; qTimes=[];
+  timeLeft=dur; totalTime=dur;
+
+  // Focus badge
+  var fb=document.getElementById('focusBadge');
+  if(restrict&&restrict.length){
+    fb.textContent='\uD83C\uDFAF Focus mode: '+restrict.map(function(ab){ return ab[0]+'\u00D7'+ab[1]; }).join(', ');
+    fb.classList.add('show');
+  } else { fb.classList.remove('show'); }
+
+  // Dots
+  var dots=document.getElementById('progressDots'); dots.innerHTML='';
+  var showN=Math.min(n,50);
+  for(var i=0;i<showN;i++){
+    var dot=document.createElement('div');
+    dot.className='dot'+(i===0?' cur':'');
+    dot.id='dot'+i; dots.appendChild(dot);
+  }
+
+  updateStats(); updateTimerDisplay(); showProblem();
+  show('quizScreen');
+  var inp=document.getElementById('answerInput');
+  inp.value=''; inp.className='';
+  setTimeout(function(){ inp.focus(); },100);
+
+  clearInterval(timer);
+  timer=setInterval(function(){ timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz(); },1000);
+}
+
+function showProblem(){
+  if(qIdx>=problems.length){ endQuiz(); return; }
+  answerLocked=false;
+  var ab=problems[qIdx];
+  document.getElementById('numA').textContent=ab[0];
+  document.getElementById('numB').textContent=ab[1];
+  qStart=Date.now();
+  var inp=document.getElementById('answerInput');
+  inp.value=''; inp.className='';
+}
+
+var answerLocked=false;
+
+function submitAnswer(){
+  if(answerLocked) return;
+  var inp=document.getElementById('answerInput');
+  var raw=inp.value.trim();
+  var val=parseInt(raw,10);
+  if(isNaN(val)) return;
+  var ab=problems[qIdx];
+  var ms=Date.now()-qStart;
+
+  if(val===ab[0]*ab[1]){
+    qTimes.push({ p:fkey(ab[0],ab[1]), ms:ms, ok:true });
+    inp.className='correct';
+    qCorrect++; qTotal++; qStreak++;
+    updateStats();
+    var pd=document.getElementById('dot'+qIdx); if(pd) pd.className='dot c';
+    qIdx++;
+    var nd=document.getElementById('dot'+qIdx); if(nd) nd.className='dot cur';
+    setTimeout(function(){ showProblem(); inp.focus(); },200);
+  } else {
+    qTimes.push({ p:fkey(ab[0],ab[1]), ms:ms, ok:false });
+    qStreak=0;
+    updateStats();
+    answerLocked=true;
+    // Force re-trigger shake by removing then re-adding class
+    inp.className='';
+    void inp.offsetWidth; // reflow
+    inp.className='wrong';
+    setTimeout(function(){
+      inp.value='';
+      inp.className='';
+      answerLocked=false;
+      inp.focus();
+      qStart=Date.now();
+    },500);
+  }
+}
+
+document.getElementById('answerInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    submitAnswer();
+  }
+});
+
+document.getElementById('endEarlyBtn').addEventListener('click',function(){
+  if(confirm('Are you sure you want to end the test early?')) endQuiz();
+  else document.getElementById('answerInput').focus();
+});
+
+function updateStats(){
+  document.getElementById('scoreDisp').textContent=qCorrect;
+  document.getElementById('totalDisp').textContent=qTotal;
+  document.getElementById('streakDisp').textContent=qStreak+'\uD83D\uDD25';
+}
+function updateTimerDisplay(){
+  var m=Math.floor(timeLeft/60), s=timeLeft%60;
+  document.getElementById('timerDisp').textContent=m+':'+(s<10?'0':'')+s;
+  var pct=(timeLeft/totalTime)*100;
+  var bar=document.getElementById('timerBar');
+  bar.style.width=pct+'%';
+  bar.className='timer-bar'+(pct<15?' danger':pct<30?' warn':'');
+}
+function endQuiz(){
+  clearInterval(timer);
+  var avgMs=qTimes.length>0?Math.round(qTimes.reduce(function(t,q){ return t+q.ms; },0)/qTimes.length):0;
+  var session={ date:new Date().toISOString(), dur:totalTime, correct:qCorrect, total:qTotal, avgMs:avgMs, times:qTimes };
+  saveSession(userKey, session);
+  showResults(session);
+}
+
+// ══════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════
+document.getElementById('resMyInfoBtn').addEventListener('click',function(){ showInfo('overview'); });
+document.getElementById('resPlayAgainBtn').addEventListener('click',function(){ renderModeScreen(); show('modeScreen'); });
+
+function showResults(s){
+  show('resultsScreen');
+  var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+  var emoji,title;
+  if(acc>=95){ emoji='\uD83C\uDFC6'; title='Superstar!'; doConfetti(); }
+  else if(acc>=85){ emoji='\uD83C\uDF1F'; title='Awesome!'; }
+  else if(acc>=70){ emoji='\uD83D\uDC4D'; title='Good Job!'; }
+  else{ emoji='\uD83D\uDCAA'; title='Keep Going!'; }
+  document.getElementById('resEmoji').textContent=emoji;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resSub').textContent=s.correct+' correct out of '+s.total+' answered';
+  document.getElementById('resScore').textContent=s.correct+'/'+s.total;
+  document.getElementById('resAcc').textContent=acc+'%';
+  document.getElementById('resAvg').textContent=s.avgMs>0?fmtMs(s.avgMs):'--';
+
+  // Build per-fact summary for this session
+  var factMap={};
+  s.times.forEach(function(t){
+    if(!factMap[t.p]) factMap[t.p]={ slowest:0, fastest:Infinity, wrongCount:0 };
+    if(t.ms>factMap[t.p].slowest) factMap[t.p].slowest=t.ms;
+    if(t.ms<factMap[t.p].fastest) factMap[t.p].fastest=t.ms;
+    if(!t.ok) factMap[t.p].wrongCount++;
+  });
+
+  var slowEntries=Object.keys(factMap).filter(function(k){ return factMap[k].slowest>4000; })
+    .sort(function(a,b){ return factMap[b].slowest-factMap[a].slowest; }).slice(0,8);
+  var slowSec=document.getElementById('slowSection');
+  if(slowEntries.length){
+    slowSec.style.display='';
+    document.getElementById('slowGrid').innerHTML=slowEntries.map(function(k){
+      return '<div class="slow-tag">'+flabel(k)+'<span>'+fmtMsShort(factMap[k].slowest)+'</span></div>';
+    }).join('');
+  } else slowSec.style.display='none';
+
+  // Wrong answers this session
+  var wrongEntries=Object.keys(factMap).filter(function(k){ return factMap[k].wrongCount>0; })
+    .sort(function(a,b){ return factMap[b].wrongCount-factMap[a].wrongCount; }).slice(0,8);
+  var wrongSec=document.getElementById('wrongSection');
+  if(wrongEntries.length){
+    wrongSec.style.display='';
+    document.getElementById('wrongGrid').innerHTML=wrongEntries.map(function(k){
+      return '<div class="slow-tag">'+flabel(k)+'<span>'+factMap[k].wrongCount+' wrong</span></div>';
+    }).join('');
+  } else wrongSec.style.display='none';
+
+  var fastEntries=Object.keys(factMap).filter(function(k){ return factMap[k].fastest<2000; })
+    .sort(function(a,b){ return factMap[a].fastest-factMap[b].fastest; }).slice(0,6);
+  var fastSec=document.getElementById('fastSection');
+  if(fastEntries.length){
+    fastSec.style.display='';
+    document.getElementById('fastGrid').innerHTML=fastEntries.map(function(k){
+      return '<div class="good-tag">'+flabel(k)+'<span>'+fmtMsShort(factMap[k].fastest)+'</span></div>';
+    }).join('');
+  } else fastSec.style.display='none';
+}
+
+// ══════════════════════════════════════════
+// MY INFO SCREEN
+// ══════════════════════════════════════════
+function showInfo(tabName){
+  prevScreen=document.querySelector('.screen.active')?document.querySelector('.screen.active').id:'modeScreen';
+  show('infoScreen');
+  var d=getData(), ud=d[userKey];
+  document.getElementById('infoTitle').textContent=(ud?ud.displayName:'')+'\u2019s Info';
+  var ns=ud&&ud.sessions?ud.sessions.length:0;
+  var na=ud&&ud.sessions?ud.sessions.reduce(function(t,s){ return t+s.total; },0):0;
+  document.getElementById('infoSub').textContent=ns+' sessions \u00b7 '+na+' problems answered';
+  switchTab(tabName||'overview');
+}
+
+document.getElementById('infoBackBtn').addEventListener('click',function(){
+  show(prevScreen||'modeScreen');
+  if(prevScreen==='modeScreen') renderModeScreen();
+});
+
+function switchTab(name){
+  currentTab=name;
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='overview') renderOverview();
+  if(name==='factmap')  renderFactMap();
+  if(name==='top10')    renderTop10();
+  if(name==='history')  renderHistory();
+}
+window.switchTab=switchTab;
+
+// ── Overview ────────────────────────────
+function renderOverview(){
+  var d=getData(), ud=d[userKey];
+  if(!ud){ return; }
+  var facts=ud.facts||{};
+  var practiced=ALL_FACTS
+    .map(function(ab){ var k=fkey(ab[0],ab[1]),f=facts[k]; return f&&f.count>=2?{ k:k, avg:f.totalMs/f.count, wrongCount:f.wrongCount||0 }:null; })
+    .filter(Boolean);
+  practiced.sort(function(a,b){ return a.avg-b.avg; });
+  var best=practiced.slice(0,8), weak=practiced.slice().reverse().slice(0,8);
+
+  // Most wrong: sort by wrongCount desc, min 1 wrong
+  var mostWrong=ALL_FACTS
+    .map(function(ab){ var k=fkey(ab[0],ab[1]),f=facts[k]; return f&&(f.wrongCount||0)>=1?{ k:k, wrongCount:f.wrongCount||0, count:f.count }:null; })
+    .filter(Boolean)
+    .sort(function(a,b){ return b.wrongCount-a.wrongCount; })
+    .slice(0,8);
+
+  var bestEl=document.getElementById('bestFacts'), weakEl=document.getElementById('weakFacts'), wrongEl=document.getElementById('wrongFacts');
+  bestEl.innerHTML=best.length
+    ? best.map(function(e){ return '<div class="good-tag">'+flabel(e.k)+'<span>'+fmtMsShort(e.avg)+' avg</span></div>'; }).join('')
+    : '<span style="color:#7a8fb5;font-size:0.85rem;">Not enough data yet \u2014 keep playing!</span>';
+  weakEl.innerHTML=weak.length
+    ? weak.map(function(e){ return '<div class="slow-tag">'+flabel(e.k)+'<span>'+fmtMsShort(e.avg)+' avg</span></div>'; }).join('')
+    : '<span style="color:#7a8fb5;font-size:0.85rem;">Not enough data yet \u2014 keep playing!</span>';
+  wrongEl.innerHTML=mostWrong.length
+    ? mostWrong.map(function(e){ return '<div class="slow-tag">'+flabel(e.k)+'<span>'+e.wrongCount+' wrong</span></div>'; }).join('')
+    : '<span style="color:#7a8fb5;font-size:0.85rem;">No wrong answers recorded yet \u2014 nice!</span>';
+
+  var sessions=ud.sessions||[];
+  var ta=sessions.reduce(function(t,s){ return t+s.total; },0);
+  var tc=sessions.reduce(function(t,s){ return t+s.correct; },0);
+  var acc=ta>0?Math.round(tc/ta*100):0;
+  var pCount=Object.keys(facts).filter(function(k){ return facts[k].count>0; }).length;
+  var allBest=[];
+  Object.keys(facts).forEach(function(k){ if(facts[k].best10&&facts[k].best10.length) allBest.push(facts[k].best10[0]); });
+  var overallBest=allBest.length>0?Math.min.apply(null,allBest):0;
+  document.getElementById('overallStats').innerHTML=
+    '<span class="pill pill-gold">\uD83D\uDCDD '+sessions.length+' sessions</span>'+
+    '<span class="pill pill-teal">\u2705 '+acc+'% accuracy</span>'+
+    '<span class="pill pill-gold">\uD83D\uDD22 '+pCount+'/64 facts practiced</span>'+
+    (overallBest>0?'<span class="pill pill-teal">\u26A1 Best ever: '+fmtMs(overallBest)+'</span>':'');
+}
+
+// ── Fact Map ────────────────────────────
+function renderFactMap(){
+  var d=getData(), ud=d[userKey];
+  var facts=ud&&ud.facts?ud.facts:{};
+  var container=document.getElementById('factMapContent');
+
+  // Build list of all 64 facts with their avg time
+  var rows=ALL_FACTS.map(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k];
+    var avg=f&&f.count>0 ? f.totalMs/f.count : null;
+    var count=f?f.count:0;
+    return { ab:ab, k:k, avg:avg, count:count };
+  });
+
+  // Sort: practiced facts slowest first, then unseen
+  var seen=rows.filter(function(r){ return r.avg!==null; }).sort(function(a,b){ return b.avg-a.avg; });
+  var unseen=rows.filter(function(r){ return r.avg===null; });
+  var sorted=seen.concat(unseen);
+
+  // Max avg for bar scaling
+  var maxAvg=seen.length>0?seen[0].avg:1;
+
+  var html='<div class="fact-list">';
+  sorted.forEach(function(r){
+    var label=r.ab[0]+' \u00D7 '+r.ab[1]+' = '+r.ab[0]*r.ab[1];
+    if(r.avg===null){
+      html+='<div class="fact-row unseen">'+
+        '<span class="fact-row-label">'+label+'</span>'+
+        '<div class="fact-row-bar-wrap"><div class="fact-row-bar" style="width:0%;background:#3a4f6b;"></div></div>'+
+        '<span class="fact-row-time" style="color:#3a4f6b;">not yet</span>'+
+        '<span class="fact-row-count"></span>'+
+        '</div>';
+    } else {
+      var pct=Math.max(4, Math.round((r.avg/maxAvg)*100));
+      var color= r.avg<2000?'#06d6a0': r.avg<3000?'#118ab2': r.avg<5000?'#ffd166':'#ef476f';
+      html+='<div class="fact-row">'+
+        '<span class="fact-row-label">'+label+'</span>'+
+        '<div class="fact-row-bar-wrap"><div class="fact-row-bar" style="width:'+pct+'%;background:'+color+';"></div></div>'+
+        '<span class="fact-row-time" style="color:'+color+';">'+fmtMs(r.avg)+'</span>'+
+        '<span class="fact-row-count">'+r.count+'x</span>'+
+        '</div>';
+    }
+  });
+  html+='</div>';
+  container.innerHTML=html;
+}
+
+// ── Top 10 ────────────────────────────
+function renderTop10(){
+  var d=getData(), ud=d[userKey];
+  var facts=ud&&ud.facts?ud.facts:{};
+  var container=document.getElementById('top10Content');
+
+  // Only show facts that have at least one recorded time
+  var entries=ALL_FACTS
+    .map(function(ab){
+      var k=fkey(ab[0],ab[1]), f=facts[k];
+      return f&&f.best10&&f.best10.length ? { ab:ab, k:k, best10:f.best10 } : null;
+    })
+    .filter(Boolean)
+    .sort(function(a,b){ return a.best10[0]-b.best10[0]; }); // sort by personal best
+
+  if(!entries.length){ container.innerHTML='<div class="empty">No data yet \u2014 play some games first!</div>'; return; }
+
+  // Global fastest across all facts (for bar scaling)
+  var globalFastest=entries[0].best10[0];
+
+  var html='';
+  entries.forEach(function(e){
+    var label=e.ab[0]+' \u00D7 '+e.ab[1]+' = '+e.ab[0]*e.ab[1];
+    html+='<div class="fact-top10-block"><div class="fact-top10-title">'+label+'</div>';
+    e.best10.forEach(function(ms, i){
+      // Bar width: fastest time gets 100%, others proportionally shorter
+      var barPct=Math.max(5, Math.round((globalFastest/ms)*100));
+      var color= i===0?'#ffd166': i<3?'#06d6a0':'#118ab2';
+      var rankStr= i===0?'\uD83E\uDD47': i===1?'\uD83E\uDD48': i===2?'\uD83E\uDD49': '#'+(i+1);
+      html+='<div class="t10-row">'+
+        '<span class="t10-rank">'+rankStr+'</span>'+
+        '<div class="t10-bar-wrap"><div class="t10-bar" style="width:'+barPct+'%;background:'+color+';"></div></div>'+
+        '<span class="t10-time" style="color:'+color+';">'+fmtMs(ms)+'</span>'+
+        '</div>';
+    });
+    html+='</div>';
+  });
+  container.innerHTML=html;
+}
+
+// ── History ────────────────────────────
+function renderHistory(){
+  var d=getData(), ud=d[userKey], el=document.getElementById('histTableContent');
+  if(!ud||!ud.sessions||!ud.sessions.length){ el.innerHTML='<div class="empty">No sessions yet \u2014 play a game first!</div>'; return; }
+  var rows=ud.sessions.slice().reverse().map(function(s){
+    var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+    var bc=acc>=90?'badge-gold':acc>=75?'badge-green':'badge-red';
+    return '<tr><td>'+fmtDate(s.date)+'</td><td>'+fmtTime(s.dur)+'</td><td>'+s.correct+'/'+s.total+'</td>'+
+      '<td><span class="badge '+bc+'">'+acc+'%</span></td>'+
+      '<td>'+(s.avgMs>0?fmtMs(s.avgMs):'--')+'</td></tr>';
+  }).join('');
+  el.innerHTML='<table><thead><tr><th>Date</th><th>Mode</th><th>Score</th><th>Accuracy</th><th>Avg Speed</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ══════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════
+function doConfetti(){
+  var colors=['#ffd166','#06d6a0','#ef476f','#118ab2','#fff'];
+  for(var i=0;i<60;i++){
+    (function(i){
+      setTimeout(function(){
+        var el=document.createElement('div');
+        el.className='confetti-piece';
+        el.style.cssText='left:'+(Math.random()*100)+'%;top:0;background:'+colors[Math.floor(Math.random()*5)]+
+          ';animation-delay:'+(Math.random()*0.5)+'s;animation-duration:'+(2+Math.random()*1.5)+'s';
+        document.body.appendChild(el);
+        setTimeout(function(){ el.remove(); },3500);
+      },i*25);
+    })(i);
+  }
+}
+
+})();
+</script>
+</body>
+</html>
