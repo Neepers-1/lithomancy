@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Times Tables Practice</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #1a1a2e; color: #e8f0fe;
+  min-height: 100vh; display: flex; align-items: flex-start;
+  justify-content: center; padding: 20px 16px 60px;
+}
+#app { width: 100%; max-width: 600px; margin-top: 24px; }
+.screen { display: none; }
+.screen.active { display: block; }
+.card { background: #16213e; border-radius: 18px; padding: 30px 26px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+h1 { font-size: 2rem; font-weight: 900; text-align: center; color: #ffd166; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #7a8fb5; font-size: 0.9rem; font-weight: 600; margin-bottom: 24px; }
+label { display: block; font-weight: 700; color: #7a8fb5; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+input[type="text"], input[type="number"] {
+  width: 100%; background: #0f3460; border: 2px solid #0f3460; border-radius: 10px;
+  padding: 12px 15px; font-size: 1.05rem; font-family: inherit; color: #e8f0fe;
+  outline: none; transition: border-color 0.2s; font-weight: 700;
+}
+input:focus { border-color: #ffd166; }
+.btn {
+  display: block; width: 100%; padding: 13px; border-radius: 10px;
+  font-family: inherit; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+  border: none; transition: transform 0.1s, filter 0.15s; margin-top: 12px; text-align: center;
+}
+.btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-yellow { background: #ffd166; color: #1a1a2e; }
+.btn-red    { background: #ef476f; color: #fff; }
+.btn-teal   { background: #06d6a0; color: #1a1a2e; }
+.btn-blue   { background: #118ab2; color: #fff; }
+.btn-gray   { background: #0f3460; color: #e8f0fe; }
+.btn-purple { background: #7b5ea7; color: #fff; }
+.btn-small  { padding: 9px; font-size: 0.85rem; margin-top: 10px; }
+.btn:disabled { opacity: 0.38; pointer-events: none; }
+
+.welcome-box { background: #0f3460; border: 1px solid #06d6a0; border-radius: 10px; padding: 12px 15px; margin-bottom: 18px; display: none; }
+.welcome-box.show { display: block; }
+.welcome-name { font-weight: 800; color: #06d6a0; font-size: 0.98rem; }
+.welcome-stats { color: #7a8fb5; font-size: 0.82rem; margin-top: 3px; }
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.mode-btn {
+  background: #0f3460; border: 2px solid transparent; border-radius: 12px; padding: 16px 10px;
+  cursor: pointer; text-align: center; color: #e8f0fe; transition: border-color 0.2s, transform 0.1s; font-family: inherit;
+}
+.mode-btn:hover { border-color: #ffd166; transform: translateY(-1px); }
+.mode-btn.selected { border-color: #ffd166; background: rgba(255,209,102,0.1); }
+.mode-time  { font-size: 1.6rem; font-weight: 900; color: #ffd166; }
+.mode-label { font-size: 0.82rem; color: #7a8fb5; font-weight: 700; margin-top: 3px; }
+.mode-count { font-size: 0.75rem; color: #7a8fb5; margin-top: 2px; }
+.link-row { display: flex; justify-content: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+.link-btn { background: none; border: none; color: #7a8fb5; font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; padding: 4px; transition: color 0.2s; }
+.link-btn:hover { color: #e8f0fe; }
+.section-box { background: #0f3460; border-radius: 10px; padding: 13px 15px; margin-top: 14px; }
+.section-box h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #7a8fb5; margin-bottom: 9px; font-weight: 700; }
+.hist-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.86rem; }
+.hist-row:last-child { border-bottom: none; }
+.hist-score { font-weight: 800; color: #06d6a0; }
+.hist-date  { color: #7a8fb5; font-size: 0.76rem; }
+
+/* ── ATTACK ZONE BOX ── */
+.zones-box { background: #0f3460; border-radius: 14px; padding: 15px; margin-top: 14px; }
+.zones-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.zones-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #e8f0fe; font-weight: 800; }
+.zones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.zone-btn {
+  border: 2px solid transparent; border-radius: 12px; padding: 12px 10px;
+  cursor: pointer; font-family: inherit; font-weight: 900; font-size: 0.88rem;
+  text-align: center; transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+  line-height: 1.3;
+}
+.zone-btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.15); }
+.zone-btn:disabled { opacity: 0.32; cursor: default; }
+.zone-count { display: block; font-size: 0.7rem; font-weight: 700; margin-top: 3px; opacity: 0.82; }
+.zone-gold   { background: linear-gradient(135deg,#ffd700,#ff9500); color: #1a1a2e;
+                box-shadow: 0 0 16px rgba(255,210,0,0.5); animation: goldPulse 2s ease infinite; }
+@keyframes goldPulse { 0%,100%{box-shadow:0 0 10px rgba(255,210,0,0.4);} 50%{box-shadow:0 0 28px rgba(255,210,0,0.9);} }
+.zone-green  { background: #06d6a0; color: #1a1a2e; }
+.zone-blue   { background: #118ab2; color: #fff; }
+.zone-yellow { background: #e6b800; color: #1a1a2e; }
+.zone-red    { background: linear-gradient(135deg,#ef476f,#c0392b); color: #fff;
+               box-shadow: 0 0 14px rgba(239,71,111,0.45); animation: redPulse 1.8s ease infinite; }
+@keyframes redPulse { 0%,100%{box-shadow:0 0 10px rgba(239,71,111,0.35);} 50%{box-shadow:0 0 26px rgba(239,71,111,0.75);} }
+
+/* ── WSIP box ── */
+.wsip-box {
+  background: linear-gradient(135deg,rgba(123,94,167,0.2),rgba(17,138,178,0.15));
+  border: 1px solid rgba(123,94,167,0.4); border-radius: 12px; padding: 16px; margin-top: 14px;
+}
+.wsip-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: #b89fd4; font-weight: 800; margin-bottom: 10px; }
+.wsip-facts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.wsip-tag { background: rgba(239,71,111,0.2); border: 1px solid rgba(239,71,111,0.4); border-radius: 8px; padding: 6px 12px; font-weight: 900; font-size: 0.95rem; color: #ef476f; }
+.wsip-tag span { font-size: 0.75rem; color: #7a8fb5; font-weight: 600; margin-left: 4px; }
+.wsip-prompt { font-size: 0.88rem; color: #b89fd4; font-weight: 600; margin-bottom: 10px; }
+.wsip-modes { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.wsip-mode-btn {
+  background: rgba(123,94,167,0.25); border: 1px solid rgba(123,94,167,0.4);
+  border-radius: 8px; padding: 8px 4px; text-align: center; cursor: pointer;
+  font-family: inherit; color: #e8f0fe; transition: background 0.2s, transform 0.1s;
+}
+.wsip-mode-btn:hover { background: rgba(123,94,167,0.5); transform: translateY(-1px); }
+.wsip-mode-time  { font-size: 1rem; font-weight: 900; color: #ffd166; }
+.wsip-mode-label { font-size: 0.65rem; color: #7a8fb5; font-weight: 700; margin-top: 2px; }
+
+/* ── QUIZ ── */
+.quiz-header { display: flex; justify-content: space-between; gap: 7px; margin-bottom: 14px; }
+.stat-box { flex: 1; background: #0f3460; border-radius: 10px; padding: 9px 5px; text-align: center; }
+.stat-val { font-size: 1.2rem; font-weight: 900; color: #ffd166; line-height: 1.1; }
+.stat-lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.4px; color: #7a8fb5; font-weight: 700; margin-top: 1px; }
+.timer-bar-wrap { width: 100%; height: 7px; background: #0f3460; border-radius: 4px; margin-bottom: 16px; overflow: hidden; }
+.timer-bar { height: 100%; background: #06d6a0; border-radius: 4px; transition: width 0.9s linear, background 0.5s; }
+.timer-bar.warn   { background: #ffd166; }
+.timer-bar.danger { background: #ef476f; }
+.focus-badge { background: rgba(123,94,167,0.3); border: 1px solid rgba(123,94,167,0.5); border-radius: 8px; padding: 6px 12px; font-size: 0.78rem; font-weight: 700; color: #b89fd4; text-align: center; margin-bottom: 12px; display: none; }
+.focus-badge.show { display: block; }
+.progress-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 14px; justify-content: center; min-height: 12px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #0f3460; transition: background 0.2s; }
+.dot.c   { background: #06d6a0; }
+.dot.cur { background: #ffd166; animation: dpulse 0.7s ease infinite; }
+@keyframes dpulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.6);} }
+.problem-display { text-align: center; font-size: 3.8rem; font-weight: 900; letter-spacing: 3px; margin: 8px 0 20px; color: #e8f0fe; }
+.problem-display .op { color: #118ab2; }
+.problem-display .eq { color: #7a8fb5; }
+#answerInput { font-size: 1.9rem; font-weight: 900; text-align: center; padding: 13px; border-radius: 12px; border-width: 3px; }
+#answerInput.correct { border-color: #06d6a0; background: rgba(6,214,160,0.1); }
+#answerInput.wrong   { border-color: #ef476f; background: rgba(239,71,111,0.12); animation: shake 0.35s; }
+@keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 60%{transform:translateX(8px);} 80%{transform:translateX(-4px);} }
+
+/* ── RESULTS ── */
+.result-hero { text-align: center; margin-bottom: 20px; }
+.result-emoji { font-size: 3rem; display: block; margin-bottom: 5px; }
+.result-title { font-size: 1.9rem; font-weight: 900; color: #ffd166; }
+.result-sub   { color: #7a8fb5; font-size: 0.9rem; font-weight: 600; margin-top: 3px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-bottom: 16px; }
+.stat-card { background: #0f3460; border-radius: 10px; padding: 13px 7px; text-align: center; }
+.sc-val { font-size: 1.4rem; font-weight: 900; color: #ffd166; }
+.sc-lbl { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.4px; color: #7a8fb5; font-weight: 700; margin-top: 2px; }
+.slow-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #7a8fb5; font-weight: 700; margin: 14px 0 6px; }
+.tag-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.slow-tag { background: rgba(239,71,111,0.15); border: 1px solid rgba(239,71,111,0.35); border-radius: 7px; padding: 5px 10px; font-weight: 800; font-size: 0.85rem; color: #ef476f; }
+.slow-tag span { font-size: 0.72rem; color: #7a8fb5; font-weight: 600; margin-left: 3px; }
+.good-tag { background: rgba(6,214,160,0.12); border: 1px solid rgba(6,214,160,0.3); border-radius: 7px; padding: 5px 10px; font-weight: 800; font-size: 0.85rem; color: #06d6a0; }
+.good-tag span { font-size: 0.72rem; color: #7a8fb5; font-weight: 600; margin-left: 3px; }
+.btn-row { display: flex; gap: 8px; margin-top: 14px; }
+.btn-row .btn { margin-top: 0; }
+
+/* ── INFO SCREEN ── */
+.back-link { background: none; border: none; color: #7a8fb5; font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; padding: 0 0 14px; display: block; transition: color 0.2s; }
+.back-link:hover { color: #e8f0fe; }
+.screen-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 3px; }
+.screen-sub   { color: #7a8fb5; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab {
+  flex: 1; min-width: 52px; padding: 8px 2px; background: #0f3460; border: 2px solid transparent;
+  border-radius: 9px; font-family: inherit; font-size: 0.7rem; font-weight: 800; color: #7a8fb5;
+  cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.tab:hover { color: #e8f0fe; }
+.tab.active { border-color: #ffd166; color: #ffd166; background: rgba(255,209,102,0.08); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.info-section { margin-bottom: 20px; }
+.info-section-title { font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #7a8fb5; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.summary-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; }
+.pill-gold { background: rgba(255,209,102,0.15); color: #ffd166; border: 1px solid rgba(255,209,102,0.3); }
+.pill-teal { background: rgba(6,214,160,0.12);   color: #06d6a0; border: 1px solid rgba(6,214,160,0.25); }
+
+/* ── FACT MAP ── */
+.fact-list { display: flex; flex-direction: column; gap: 4px; }
+.fact-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; background: #0f3460; }
+.fact-row-label { font-weight: 900; font-size: 0.88rem; min-width: 60px; color: #e8f0fe; }
+.fact-row-bar-wrap { flex: 1; height: 8px; background: #1a1a2e; border-radius: 4px; overflow: hidden; }
+.fact-row-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.fact-row-time { font-size: 0.8rem; font-weight: 800; min-width: 52px; text-align: right; }
+.fact-row-count { font-size: 0.7rem; color: #7a8fb5; min-width: 28px; text-align: right; }
+.fact-row.unseen .fact-row-label { color: #3a4f6b; }
+.fact-row.unseen .fact-row-time  { color: #3a4f6b; }
+
+/* ── TOP 10 ── */
+.fact-top10-block { margin-bottom: 14px; background: #0f3460; border-radius: 10px; padding: 10px 12px; }
+.fact-top10-title { font-size: 0.82rem; font-weight: 900; color: #e8f0fe; margin-bottom: 8px; }
+.t10-row { display: flex; align-items: center; gap: 7px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.82rem; }
+.t10-row:last-child { border-bottom: none; }
+.t10-rank { min-width: 22px; font-size: 0.7rem; color: #7a8fb5; font-weight: 700; }
+.t10-bar-wrap { flex: 1; height: 5px; background: #1a1a2e; border-radius: 3px; overflow: hidden; }
+.t10-bar { height: 100%; border-radius: 3px; }
+.t10-time { font-size: 0.78rem; font-weight: 800; min-width: 38px; text-align: right; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { text-align: left; color: #7a8fb5; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; padding: 5px 9px; font-weight: 700; }
+td { padding: 8px 9px; border-top: 1px solid rgba(255,255,255,0.05); font-weight: 600; }
+tr:hover td { background: rgba(255,255,255,0.03); }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 0.72rem; font-weight: 800; }
+.badge-gold  { background: rgba(255,209,102,0.2); color: #ffd166; }
+.badge-green { background: rgba(6,214,160,0.2);   color: #06d6a0; }
+.badge-red   { background: rgba(239,71,111,0.2);   color: #ef476f; }
+.empty { text-align: center; padding: 28px; color: #7a8fb5; font-weight: 600; }
+
+/* ── GRAPHS ── */
+.fact-selector-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-bottom: 14px; }
+.fact-sel-btn {
+  background: #0f3460; border: 2px solid transparent; border-radius: 7px; padding: 7px 3px;
+  font-family: inherit; font-size: 0.75rem; font-weight: 800; color: #7a8fb5;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.fact-sel-btn:hover { border-color: #ffd166; color: #e8f0fe; }
+.fact-sel-btn.active { border-color: #ffd166; background: rgba(255,209,102,0.12); }
+.fact-sel-btn.has-data { color: #e8f0fe; }
+.fact-sel-btn.no-data  { opacity: 0.35; }
+.graph-wrap { background: #0f3460; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.graph-title { font-size: 0.78rem; font-weight: 800; color: #7a8fb5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.graph-svg { width: 100%; display: block; }
+.graph-empty { text-align: center; padding: 36px 0; color: #7a8fb5; font-weight: 600; font-size: 0.9rem; }
+.graph-stats { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }
+.graph-stat { background: #16213e; border-radius: 8px; padding: 7px 11px; }
+.graph-stat span { display: block; font-size: 1rem; font-weight: 900; color: #ffd166; margin-bottom: 2px; }
+.graph-stat label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7a8fb5; font-weight: 700; }
+
+/* ── DEFEAT POPUP ── */
+.defeat-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+.defeat-card {
+  background: #16213e; border-radius: 22px; padding: 36px 30px; text-align: center;
+  max-width: 340px; width: 90%; box-shadow: 0 12px 48px rgba(0,0,0,0.8);
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }
+.defeat-monster { font-size: 5rem; margin-bottom: 6px; display: block; animation: mBounce 0.6s ease; }
+@keyframes mBounce { 0%,100%{transform:translateY(0) rotate(0);} 30%{transform:translateY(-16px) rotate(-10deg);} 60%{transform:translateY(-8px) rotate(8deg);} }
+.defeat-title { font-size: 2rem; font-weight: 900; color: #ffd166; margin-bottom: 6px; }
+.defeat-count { font-size: 1.1rem; font-weight: 700; color: #06d6a0; margin-bottom: 4px; }
+.defeat-facts { font-size: 0.85rem; color: #7a8fb5; font-weight: 600; margin-bottom: 22px; }
+.defeat-close { background: #ffd166; color: #1a1a2e; border: none; border-radius: 10px; padding: 12px 30px; font-family: inherit; font-weight: 900; font-size: 1rem; cursor: pointer; }
+.defeat-close:hover { filter: brightness(1.1); }
+
+/* ── CONFETTI ── */
+.confetti-piece { position: fixed; width: 9px; height: 9px; border-radius: 2px; pointer-events: none; z-index: 9998; animation: cfall 2.5s ease forwards; }
+@keyframes cfall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1;} 100%{transform:translateY(105vh) rotate(720deg);opacity:0;} }
+
+/* ── GOLD ATTACK BUTTON GLOW ── */
+@keyframes goldAttackGlow {
+  0%,100% { box-shadow: 0 0 8px rgba(255,215,0,0.5), 0 0 20px rgba(255,215,0,0.2); filter: brightness(1); }
+  50%      { box-shadow: 0 0 18px rgba(255,215,0,0.9), 0 0 40px rgba(255,180,0,0.5); filter: brightness(1.15); }
+}
+/* gold-attack-btn kept for reference but not applied to attack button */
+
+/* Gold fact row glow in Fact Map */
+@keyframes goldFactGlow {
+  0%,100% { box-shadow: 0 0 4px rgba(255,215,0,0.4); text-shadow: 0 0 6px rgba(255,215,0,0.5); }
+  50%      { box-shadow: 0 0 14px rgba(255,215,0,0.9); text-shadow: 0 0 16px rgba(255,215,0,0.9); }
+}
+.gold-fact-bar { animation: goldFactGlow 2s ease-in-out infinite; border-radius: 4px; }
+.gold-fact-time { animation: goldFactGlow 2s ease-in-out infinite; }
+
+/* ── GOLD CONFIRM POPUP ── */
+.gold-confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center; z-index: 9999;
+  animation: fadeIn 0.15s ease;
+}
+.gold-confirm-card {
+  background: linear-gradient(135deg,#1a1a2e,#16213e);
+  border: 2px solid #ffd700; border-radius: 22px; padding: 32px 26px;
+  text-align: center; max-width: 320px; width: 90%;
+  box-shadow: 0 0 40px rgba(255,215,0,0.4), 0 12px 48px rgba(0,0,0,0.8);
+  animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.gold-confirm-emoji { font-size: 4rem; display: block; margin-bottom: 10px; animation: goldSpin 1s ease; }
+@keyframes goldSpin { 0%{transform:rotate(-15deg) scale(0.7);} 100%{transform:rotate(0) scale(1);} }
+.gold-confirm-title { font-size: 1.5rem; font-weight: 900; color: #ffd700; margin-bottom: 8px; }
+.gold-confirm-msg { font-size: 0.92rem; color: #b89fd4; font-weight: 600; margin-bottom: 20px; line-height: 1.5; }
+.gold-confirm-btns { display: flex; gap: 10px; }
+.gold-confirm-btns button { flex: 1; padding: 11px; border-radius: 10px; border: none; font-family: inherit; font-weight: 900; font-size: 0.9rem; cursor: pointer; }
+
+/* ── LEVEL BAR ── */
+.mode-level-layout { display: flex; gap: 14px; align-items: flex-start; }
+.mode-left { flex: 1; min-width: 0; }
+.level-bar-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  width: 46px; flex-shrink: 0; cursor: pointer; position: relative;
+}
+.level-bar-track {
+  width: 16px; background: #0a0e1a; border-radius: 8px; overflow: hidden;
+  box-shadow: 0 0 12px rgba(0,0,0,0.6), inset 0 0 8px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+}
+.level-bar-fill {
+  width: 100%; border-radius: 8px; transition: height 1s cubic-bezier(0.34,1.1,0.64,1);
+  background: linear-gradient(to top, #ef476f, #e6b800, #118ab2, #06d6a0, #ffd700);
+  position: absolute; bottom: 0; left: 0;
+}
+@keyframes levelGlow {
+  0%,100% { box-shadow: 0 0 6px rgba(255,215,0,0.3); }
+  50%      { box-shadow: 0 0 18px rgba(255,215,0,0.8), 0 0 30px rgba(255,150,0,0.4); }
+}
+.level-bar-fill.at-gold { animation: levelGlow 2s ease-in-out infinite; }
+.level-notch {
+  position: absolute; left: -2px; right: -2px; height: 2px;
+  background: rgba(255,255,255,0.25); border-radius: 1px;
+}
+.level-label-top { font-size: 0.6rem; font-weight: 900; color: #7a8fb5; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.level-badge {
+  width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 900; margin-top: 5px; border: 2px solid rgba(255,255,255,0.12);
+  transition: all 0.4s;
+}
+.level-badge.achieved { border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+/* Level tooltip */
+.level-tooltip {
+  position: absolute; right: 50px; top: 0; width: 220px;
+  background: #16213e; border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px; padding: 14px; z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  animation: fadeIn 0.15s ease;
+  display: none;
+}
+.level-tooltip.show { display: block; }
+.level-tooltip-title { font-size: 0.8rem; font-weight: 900; color: #ffd166; margin-bottom: 8px; }
+.level-tooltip-item {
+  display: flex; align-items: center; gap: 8px; padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.78rem;
+}
+.level-tooltip-item:last-child { border-bottom: none; }
+.level-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.level-check { font-size: 0.8rem; margin-left: auto; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen" class="screen active">
+  <div class="card">
+    <h1>&#11088; Times Tables</h1>
+    <p class="subtitle">Multiplication Practice &middot; Grade 4</p>
+    <div id="welcomeBox" class="welcome-box">
+      <div class="welcome-name" id="wbName"></div>
+      <div class="welcome-stats" id="wbStats"></div>
+    </div>
+    <label for="nameInput">What's your name?</label>
+    <input type="text" id="nameInput" placeholder="Type your name here..." maxlength="30" autocomplete="off">
+    <button class="btn btn-yellow" id="loginBtn">Let's Go! &#x1F680;</button>
+  </div>
+</div>
+
+<!-- ══ MODE SELECT ══ -->
+<div id="modeScreen" class="screen">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;">
+      <div>
+        <h1 style="font-size:1.4rem;text-align:left;margin-bottom:2px;" id="modeGreeting">Hi!</h1>
+        <p class="subtitle" style="text-align:left;margin-bottom:0;">Choose how long to practice:</p>
+      </div>
+      <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
+    </div>
+    <div class="mode-level-layout">
+      <div class="mode-left">
+        <div class="mode-grid">
+          <button class="mode-btn" id="mode-30"><div class="mode-time">0:30</div><div class="mode-label">Quick Burst</div><div class="mode-count">~10 problems</div></button>
+          <button class="mode-btn" id="mode-60"><div class="mode-time">1:00</div><div class="mode-label">Speed Round</div><div class="mode-count">~20 problems</div></button>
+          <button class="mode-btn" id="mode-120"><div class="mode-time">2:00</div><div class="mode-label">Challenge</div><div class="mode-count">~40 problems</div></button>
+          <button class="mode-btn" id="mode-300"><div class="mode-time">5:00</div><div class="mode-label">Full Test</div><div class="mode-count">100 problems</div></button>
+        </div>
+        <button class="btn btn-yellow" id="startBtn" disabled>Start Practice &#x26A1;</button>
+        <div id="histMini"></div>
+        <!-- What Should I Practice -->
+        <div id="wsipBox" class="wsip-box" style="display:none;">
+          <div class="wsip-title" id="wsipTitle">&#x1F3AF; What Should I Practice?</div>
+          <div class="wsip-facts" id="wsipFacts"></div>
+          <div class="wsip-prompt">Pick a time and let's go:</div>
+          <div class="wsip-modes">
+            <button class="wsip-mode-btn" id="wsip-30"><div class="wsip-mode-time">0:30</div><div class="wsip-mode-label">Quick</div></button>
+            <button class="wsip-mode-btn" id="wsip-60"><div class="wsip-mode-time">1:00</div><div class="wsip-mode-label">Speed</div></button>
+            <button class="wsip-mode-btn" id="wsip-120"><div class="wsip-mode-time">2:00</div><div class="wsip-mode-label">Challenge</div></button>
+            <button class="wsip-mode-btn" id="wsip-300"><div class="wsip-mode-time">5:00</div><div class="wsip-mode-label">Full</div></button>
+          </div>
+        </div>
+        <div class="link-row">
+          <button class="link-btn" id="switchPlayerBtn">&larr; Switch Player</button>
+        </div>
+      </div>
+      <!-- Level Progress Bar -->
+      <div class="level-bar-wrap" id="levelBarWrap" onclick="toggleLevelTooltip()">
+        <div class="level-label-top">LVL</div>
+        <div style="position:relative;">
+          <div class="level-bar-track" id="levelBarTrack" style="height:280px;">
+            <div class="level-bar-fill" id="levelBarFill" style="height:0%;"></div>
+            <!-- notches will be injected by JS -->
+          </div>
+          <div class="level-tooltip" id="levelTooltip">
+            <div class="level-tooltip-title" id="levelTooltipTitle">Level 1</div>
+            <div id="levelTooltipBody"></div>
+          </div>
+        </div>
+        <div class="level-badge" id="levelBadge" style="background:#0f3460;color:#7a8fb5;">1</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="quizScreen" class="screen">
+  <div class="card">
+    <div class="quiz-header">
+      <div class="stat-box"><div class="stat-val" id="timerDisp">5:00</div><div class="stat-lbl">Time</div></div>
+      <div class="stat-box"><div class="stat-val" id="scoreDisp">0</div><div class="stat-lbl">Correct</div></div>
+      <div class="stat-box"><div class="stat-val" id="totalDisp">0</div><div class="stat-lbl">Done</div></div>
+      <div class="stat-box"><div class="stat-val" id="streakDisp">0&#x1F525;</div><div class="stat-lbl">Streak</div></div>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%;"></div></div>
+    <div class="focus-badge" id="focusBadge"></div>
+    <div class="progress-dots" id="progressDots"></div>
+    <div class="problem-display">
+      <span id="numA">6</span><span class="op"> &times; </span><span id="numB">7</span><span class="eq"> = </span>
+    </div>
+    <input type="number" id="answerInput" placeholder="?" min="0" max="999" autocomplete="off">
+    <button class="btn btn-red btn-small" id="endEarlyBtn" style="margin-top:16px;">&#9209; End Test Early</button>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div id="resultsScreen" class="screen">
+  <div class="card">
+    <div class="result-hero">
+      <span class="result-emoji" id="resEmoji">&#x1F389;</span>
+      <div class="result-title" id="resTitle">Amazing!</div>
+      <div class="result-sub" id="resSub"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="sc-val" id="resScore">0</div><div class="sc-lbl">Correct</div></div>
+      <div class="stat-card"><div class="sc-val" id="resAcc">0%</div><div class="sc-lbl">Accuracy</div></div>
+      <div class="stat-card"><div class="sc-val" id="resAvg">--</div><div class="sc-lbl">Avg Speed</div></div>
+    </div>
+    <div id="defeatedBanner" style="display:none;margin-bottom:12px;"></div>
+    <div id="improvementSection" style="display:none;margin-bottom:12px;"></div>
+    <div id="slowSection" style="display:none;"><div class="slow-title">&#x1F422; Needs Work (slowest this session)</div><div class="tag-grid" id="slowGrid"></div></div>
+    <div id="wrongSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x274C; Most Wrong This Session</div><div class="tag-grid" id="wrongGrid"></div></div>
+    <div id="fastSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x26A1; Fastest This Session</div><div class="tag-grid" id="fastGrid"></div></div>
+    <div class="btn-row">
+      <button class="btn btn-gray"   id="resMyInfoBtn">&#x1F4CA; My Info</button>
+      <button class="btn btn-yellow" id="resReturnBtn">&#x1F3E0; Return Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MY INFO ══ -->
+<div id="infoScreen" class="screen">
+  <div class="card">
+    <button class="back-link" id="infoBackBtn">&larr; Back</button>
+    <div class="screen-title" id="infoTitle">My Info</div>
+    <div class="screen-sub" id="infoSub"></div>
+    <div class="tabs">
+      <button class="tab active" id="tab-overview" onclick="switchTab('overview')">Overview</button>
+      <button class="tab"        id="tab-factmap"  onclick="switchTab('factmap')">Fact Map</button>
+      <button class="tab"        id="tab-speed"    onclick="switchTab('speed')">Speed</button>
+    </div>
+    <div class="tab-panel active" id="panel-overview">
+      <div class="info-section">
+        <div class="info-section-title">&#x1F3C6; You're Great At</div>
+        <div class="tag-grid" id="bestFacts"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">&#x1F3AF; Keep Practicing</div>
+        <div class="tag-grid" id="weakFacts"></div>
+        <button class="btn btn-purple btn-small" id="practiceWorst4Btn" style="display:none;margin-top:10px;">&#x1F3AF; Practice My Worst 4 Facts</button>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">&#x274C; Most Frequently Wrong</div>
+        <div class="tag-grid" id="wrongFacts"></div>
+      </div>
+      <div class="info-section">
+        <div class="info-section-title">&#x1F4CA; Overall Stats</div>
+        <div class="summary-pills" id="overallStats"></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-factmap">
+      <!-- Zone attack buttons at the top -->
+      <div id="zoneAttackBtns" style="margin-bottom:12px;"></div>
+      <!-- Expanded attack zone facts + launch -->
+      <div id="attackPanel" style="display:none;background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.3);border-radius:12px;padding:13px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:0.8rem;font-weight:800;color:#ef476f;" id="attackPanelTitle">⚔️ Attack Facts</div>
+          <button onclick="closeAttackPanel()" style="background:none;border:none;color:#7a8fb5;cursor:pointer;font-size:1rem;padding:2px 6px;">✕</button>
+        </div>
+        <div style="font-size:0.78rem;color:#b89fd4;font-weight:600;margin-bottom:10px;" id="attackPanelSub">Tap any fact to deselect it:</div>
+        <div id="attackFactChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+        <div id="attackModes" class="wsip-modes">
+          <button class="wsip-mode-btn" onclick="launchAttack(30)"><div class="wsip-mode-time">0:30</div><div class="wsip-mode-label">Quick</div></button>
+          <button class="wsip-mode-btn" onclick="launchAttack(60)"><div class="wsip-mode-time">1:00</div><div class="wsip-mode-label">Speed</div></button>
+          <button class="wsip-mode-btn" onclick="launchAttack(120)"><div class="wsip-mode-time">2:00</div><div class="wsip-mode-label">Challenge</div></button>
+          <button class="wsip-mode-btn" onclick="launchAttack(300)"><div class="wsip-mode-time">5:00</div><div class="wsip-mode-label">Full</div></button>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:#7a8fb5;margin-bottom:8px;font-weight:600;">
+        Zone colors: ⚡ Gold &lt;1s · 🌟 Green &lt;2s · 🧊 Blue &lt;3s · 😤 Yellow &lt;5s · 👹 Red 5s+
+      </p>
+      <div id="factMapContent"></div>
+    </div>
+    <div class="tab-panel" id="panel-speed">
+      <p style="font-size:0.8rem;color:#7a8fb5;margin-bottom:12px;font-weight:600;">Tap any fact to see your full speed history for that problem.</p>
+      <div class="fact-selector-grid" id="graphFactGrid"></div>
+      <!-- Inline speed popup -->
+      <div id="speedPopup" style="display:none;margin-top:12px;background:#0f3460;border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:1rem;font-weight:900;color:#e8f0fe;" id="speedPopupTitle"></div>
+          <button onclick="document.getElementById('speedPopup').style.display='none';document.querySelectorAll('.fact-sel-btn').forEach(function(b){b.classList.remove('active');});" style="background:none;border:none;color:#7a8fb5;cursor:pointer;font-size:1.1rem;padding:2px 6px;">✕</button>
+        </div>
+        <div id="speedPopupContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<!-- Gold confirm popup -->
+<div class="gold-confirm-overlay" id="goldConfirmOverlay" style="display:none;" onclick="if(event.target===this)closeGoldConfirm()">
+  <div class="gold-confirm-card">
+    <span class="gold-confirm-emoji">⚡</span>
+    <div class="gold-confirm-title">Bruh, you're already<br>fast as lightning!</div>
+    <div class="gold-confirm-msg" id="goldConfirmMsg">These facts are already Gold Zone (&lt;1s). You sure you want to keep grinding them?</div>
+    <div class="gold-confirm-btns">
+      <button onclick="closeGoldConfirm()" style="background:#0f3460;color:#e8f0fe;">Nah, pick another</button>
+      <button onclick="confirmGoldAttack()" style="background:linear-gradient(135deg,#ffd700,#ff9500);color:#1a1a2e;">Yeah, let's go! ⚡</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+
+// ══════════════════════════════════════════
+// COLOR ZONES
+// gold<1s, green<2s, blue<3s, yellow<5s, red>=5s
+// ══════════════════════════════════════════
+var ZONES={
+  gold:   { ms:1000, hex:'#ffd700', label:'Gold Zone',   emoji:'⚡', monster:'⚡' },
+  green:  { ms:2000, hex:'#06d6a0', label:'Green Zone',  emoji:'🟢', monster:'🌟' },
+  blue:   { ms:3000, hex:'#118ab2', label:'Blue Zone',   emoji:'🔵', monster:'🧊' },
+  yellow: { ms:5000, hex:'#e6b800', label:'Yellow Zone', emoji:'🟡', monster:'😤' },
+  red:    { ms:Infinity, hex:'#ef476f', label:'Red Zone', emoji:'🔴', monster:'👹' }
+};
+var ZONE_ORDER=['gold','green','blue','yellow','red'];
+
+function getZone(ms){
+  if(ms===null||ms===undefined) return null;
+  for(var i=0;i<ZONE_ORDER.length;i++){
+    if(ms<ZONES[ZONE_ORDER[i]].ms) return ZONE_ORDER[i];
+  }
+  return 'red';
+}
+
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+function getData(){ try{ return JSON.parse(localStorage.getItem('tt_v4')||'{}'); }catch(e){ return {}; } }
+function saveData(d){ localStorage.setItem('tt_v4',JSON.stringify(d)); }
+function getUser(name){ return getData()[name.trim().toLowerCase()]||null; }
+
+function initUser(name){
+  var d=getData(), k=name.trim().toLowerCase();
+  if(!d[k]) d[k]={ displayName:name.trim(), sessions:[], facts:{} };
+  else{ d[k].displayName=name.trim(); if(!d[k].facts) d[k].facts={}; }
+  saveData(d); return d[k];
+}
+
+// facts[key]:
+//   count       - total attempts (correct + wrong)
+//   wrongCount  - total wrong answers
+//   history     - [{t,ms}] all correct answers ever (for graph) — capped at 500
+//   recent10    - last 10 correct ms values (for avg display)
+//   best10      - 10 fastest correct ms values (sorted asc)
+function recordFact(d, ukey, fk, ms, isWrong){
+  var facts=d[ukey].facts;
+  if(!facts[fk]) facts[fk]={ count:0, wrongCount:0, history:[], recent10:[], best10:[] };
+  var f=facts[fk];
+  if(!f.history)  f.history=[];
+  if(!f.recent10) f.recent10=[];
+  if(!f.best10)   f.best10=[];
+  f.count=(f.count||0)+1;
+  if(isWrong){
+    f.wrongCount=(f.wrongCount||0)+1;
+  } else {
+    f.history.push({t:Date.now(),ms:ms});
+    if(f.history.length>500) f.history=f.history.slice(-500);
+    f.recent10.push(ms);
+    if(f.recent10.length>10) f.recent10=f.recent10.slice(-10);
+    f.best10.push(ms);
+    f.best10.sort(function(a,b){return a-b;});
+    if(f.best10.length>10) f.best10=f.best10.slice(0,10);
+  }
+}
+
+// Recent-10 average (null if no correct answers)
+function factAvg(f){
+  if(!f||!f.recent10||!f.recent10.length) return null;
+  return f.recent10.reduce(function(s,v){return s+v;},0)/f.recent10.length;
+}
+
+function saveSession(ukey, session){
+  var d=getData();
+  if(!d[ukey]) return;
+  d[ukey].sessions.push({date:session.date,dur:session.dur,correct:session.correct,total:session.total,avgMs:session.avgMs});
+  session.times.forEach(function(t){ recordFact(d,ukey,t.p,t.ms,!t.ok); });
+  saveData(d);
+}
+
+function fmtMs(ms){ if(ms===undefined||ms===null) return '--'; return (ms/1000).toFixed(2)+'s'; }
+function fmtMsShort(ms){ return (ms/1000).toFixed(1)+'s'; }
+function fmtTime(s){ if(s>=300) return '5 min'; if(s>=120) return '2 min'; if(s>=60) return '1 min'; return '30 sec'; }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function fkey(a,b){ return a+'x'+b; }
+function flabel(k){ return k.replace('x','\u00D7'); }
+
+var ALL_FACTS=(function(){
+  var r=[];
+  for(var a=2;a<=9;a++) for(var b=2;b<=9;b++) r.push([a,b]);
+  return r;
+})();
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+var userKey=null, selMode=null;
+var activeAttackZone=null;   // zone name being attacked
+var preAttackSnapshot={};    // zones before attack session
+var problems=[], qIdx=0, qCorrect=0, qTotal=0, qStreak=0;
+var timeLeft=0, totalTime=0, timer=null;
+var qTimes=[], qStart=0;
+var prevScreen='modeScreen', currentTab='overview';
+var selectedGraphFact=null;
+var answerLocked=false;
+
+// ══════════════════════════════════════════
+// SCREEN HELPER
+// ══════════════════════════════════════════
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════
+var nameInput=document.getElementById('nameInput');
+nameInput.addEventListener('input',function(){
+  var n=this.value.trim(), wb=document.getElementById('welcomeBox');
+  if(n.length>1){
+    var ud=getUser(n);
+    if(ud&&ud.sessions&&ud.sessions.length){
+      wb.classList.add('show');
+      document.getElementById('wbName').textContent='Welcome back, '+ud.displayName+'!';
+      var last=ud.sessions[ud.sessions.length-1];
+      var best=ud.sessions.reduce(function(b,s){return s.correct>(b?b.correct:-1)?s:b;},null);
+      document.getElementById('wbStats').textContent=ud.sessions.length+' sessions \u00b7 Last: '+last.correct+'/'+last.total+' \u00b7 Best: '+best.correct+'/'+best.total;
+    } else wb.classList.remove('show');
+  } else wb.classList.remove('show');
+});
+nameInput.addEventListener('keydown',function(e){if(e.key==='Enter') handleLogin();});
+document.getElementById('loginBtn').addEventListener('click',handleLogin);
+
+function handleLogin(){
+  var name=nameInput.value.trim();
+  if(!name){ nameInput.focus(); nameInput.style.borderColor='#ef476f'; setTimeout(function(){nameInput.style.borderColor='';},1000); return; }
+  userKey=name.toLowerCase();
+  var ud=initUser(name);
+  document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
+  selMode=null; activeAttackZone=null;
+  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
+  document.getElementById('startBtn').disabled=true;
+  renderModeScreen();
+  show('modeScreen');
+}
+
+// ══════════════════════════════════════════
+// MODE SCREEN
+// ══════════════════════════════════════════
+[30,60,120,300].forEach(function(s){
+  document.getElementById('mode-'+s).addEventListener('click',function(){selectMode(s);});
+});
+document.getElementById('startBtn').addEventListener('click',function(){
+  // Regular timed test — always all facts, never a leftover focus
+  activeAttackZone=null;
+  window._wsipFacts=null;
+  startQuiz(false,null);
+});
+document.getElementById('switchPlayerBtn').addEventListener('click',function(){show('loginScreen');});
+document.getElementById('myInfoBtnMode').addEventListener('click',function(){showInfo('overview');});
+[30,60,120,300].forEach(function(s){
+  document.getElementById('wsip-'+s).addEventListener('click',function(){startQuiz(true,s);});
+});
+
+function selectMode(s){
+  selMode=s;
+  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
+  document.getElementById('mode-'+s).classList.add('selected');
+  document.getElementById('startBtn').disabled=false;
+}
+
+// ══════════════════════════════════════════
+// LEVEL SYSTEM
+// ══════════════════════════════════════════
+var LEVELS=[
+  // Level 1 — just starting
+  { n:1,  label:'Newcomer',    color:'#7a8fb5', req:'Practice your first 8 facts',
+    check:function(stats){ return stats.practiced>=8; } },
+  // Level 2 — getting going
+  { n:2,  label:'Warming Up',  color:'#ef476f', req:'Get 16+ facts to Yellow Zone or faster (<5s)',
+    check:function(s){ return s.yellowOrFaster>=16; } },
+  // Level 3 — explored them all
+  { n:3,  label:'Explorer',    color:'#ef476f', req:'Attempt all 64 facts at least once',
+    check:function(s){ return s.practiced>=64; } },
+  // Level 4 — half out of red
+  { n:4,  label:'Rookie',      color:'#e6b800', req:'32+ facts in Yellow Zone or faster',
+    check:function(s){ return s.yellowOrFaster>=32; } },
+  // Level 5 — no more reds
+  { n:5,  label:'No More Red', color:'#e6b800', req:'All 64 facts Yellow Zone or faster (no more Reds!)',
+    check:function(s){ return s.yellowOrFaster>=64; } },
+  // Level 6 — half into blue
+  { n:6,  label:'Blue Racer',  color:'#118ab2', req:'32+ facts in Blue Zone or faster (<3s)',
+    check:function(s){ return s.blueOrFaster>=32; } },
+  // Level 7 — all blue+
+  { n:7,  label:'Speed Demon', color:'#118ab2', req:'All 64 facts Blue Zone or faster',
+    check:function(s){ return s.blueOrFaster>=64; } },
+  // Level 8 — half green
+  { n:8,  label:'Green Machine',color:'#06d6a0', req:'32+ facts in Green Zone or faster (<2s)',
+    check:function(s){ return s.greenOrFaster>=32; } },
+  // Level 9 — all green
+  { n:9,  label:'Lightning',   color:'#06d6a0', req:'All 64 facts Green Zone or faster',
+    check:function(s){ return s.greenOrFaster>=64; } },
+  // Level 10 — all gold
+  { n:10, label:'⚡ GOD MODE', color:'#ffd700', req:'All 64 facts Gold Zone — under 1 second each!',
+    check:function(s){ return s.goldCount>=64; } },
+];
+
+function getLevelStats(){
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.facts) return {practiced:0,yellowOrFaster:0,blueOrFaster:0,greenOrFaster:0,goldCount:0};
+  var s={practiced:0,yellowOrFaster:0,blueOrFaster:0,greenOrFaster:0,goldCount:0};
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+    if(avg===null) return;
+    s.practiced++;
+    var z=getZone(avg), zi=ZONE_ORDER.indexOf(z);
+    if(zi<=ZONE_ORDER.indexOf('yellow')) s.yellowOrFaster++;
+    if(zi<=ZONE_ORDER.indexOf('blue'))   s.blueOrFaster++;
+    if(zi<=ZONE_ORDER.indexOf('green'))  s.greenOrFaster++;
+    if(z==='gold')                        s.goldCount++;
+  });
+  return s;
+}
+
+function computeLevel(){
+  var stats=getLevelStats();
+  var lvl=0;
+  for(var i=0;i<LEVELS.length;i++){
+    if(LEVELS[i].check(stats)) lvl=LEVELS[i].n;
+    else break;
+  }
+  return {level:lvl, stats:stats};
+}
+
+var levelTooltipOpen=false;
+window.toggleLevelTooltip=function(){
+  levelTooltipOpen=!levelTooltipOpen;
+  var tt=document.getElementById('levelTooltip');
+  if(levelTooltipOpen){
+    renderLevelTooltip();
+    tt.classList.add('show');
+  } else {
+    tt.classList.remove('show');
+  }
+};
+
+function renderLevelTooltip(){
+  var res=computeLevel(), stats=res.stats, curLevel=res.level;
+  var tt=document.getElementById('levelTooltip');
+  document.getElementById('levelTooltipTitle').textContent='Your Level: '+curLevel+'/10';
+  var html='';
+  LEVELS.forEach(function(lv){
+    var done=curLevel>=lv.n;
+    html+='<div class="level-tooltip-item">'+
+      '<div class="level-dot" style="background:'+lv.color+';'+(done?'box-shadow:0 0 4px '+lv.color+';':'opacity:0.35;')+'"></div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:0.72rem;font-weight:800;color:'+(done?'#e8f0fe':'#7a8fb5')+';">Lv '+lv.n+': '+lv.label+'</div>'+
+        '<div style="font-size:0.65rem;color:#7a8fb5;line-height:1.3;margin-top:1px;">'+lv.req+'</div>'+
+      '</div>'+
+      '<div class="level-check">'+(done?'<span style="color:#06d6a0;font-size:0.9rem;">✓</span>':'<span style="color:#3a4f6b;font-size:0.75rem;">○</span>')+'</div>'+
+    '</div>';
+  });
+  document.getElementById('levelTooltipBody').innerHTML=html;
+}
+
+function renderLevelBar(){
+  var res=computeLevel(), curLevel=res.level;
+  var pct=curLevel===0 ? 4 : Math.round((curLevel/10)*100);
+
+  var fill=document.getElementById('levelBarFill');
+  var badge=document.getElementById('levelBadge');
+  var track=document.getElementById('levelBarTrack');
+
+  fill.style.height=pct+'%';
+  if(curLevel===10) fill.classList.add('at-gold'); else fill.classList.remove('at-gold');
+
+  // Color badge by current level
+  var lv=LEVELS[curLevel-1]||LEVELS[0];
+  var badgeColor=curLevel===0?'#7a8fb5':lv.color;
+  badge.textContent=curLevel||'0';
+  badge.style.background=badgeColor+(curLevel===0?'33':'33');
+  badge.style.color=curLevel===0?'#7a8fb5':badgeColor;
+  badge.style.borderColor=curLevel===0?'rgba(255,255,255,0.1)':badgeColor;
+  if(curLevel===10){ badge.classList.add('achieved'); } else { badge.classList.remove('achieved'); }
+
+  // Draw notches
+  var notchHtml='';
+  for(var i=1;i<10;i++){
+    var topPct=100-(i/10*100);
+    notchHtml+='<div class="level-notch" style="top:'+topPct+'%;"></div>';
+  }
+  // Re-append fill and notches
+  track.innerHTML='<div class="level-bar-fill'+(curLevel===10?' at-gold':'')+'" id="levelBarFill" style="height:'+pct+'%;"></div>'+notchHtml;
+}
+
+function renderModeScreen(){
+  renderHistMini(); renderWSIP(); renderLevelBar();
+}
+
+function renderHistMini(){
+  var d=getData(), ud=d[userKey], hm=document.getElementById('histMini');
+  if(!ud||!ud.sessions||!ud.sessions.length){hm.innerHTML='';return;}
+  var recent=ud.sessions.slice().reverse().slice(0,4);
+  hm.innerHTML='<div class="section-box"><h3>Recent Sessions</h3>'+
+    recent.map(function(s){
+      var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+      return '<div class="hist-row"><span>'+fmtTime(s.dur)+'</span><span class="hist-score">'+s.correct+'/'+s.total+' ('+acc+'%)</span><span class="hist-date">'+fmtDate(s.date)+'</span></div>';
+    }).join('')+'</div>';
+}
+
+// ── Zone box ─────────────────────────────
+// ── Fact Map attack: zone buttons → show all facts in that zone pre-selected ──
+var activeAttackZoneFacts={}; // k -> true/false for current attack expansion
+var expandedAttackZone=null;  // which zone button is currently expanded
+
+window.closeAttackPanel=function(){
+  expandedAttackZone=null;
+  activeAttackZoneFacts={};
+  document.getElementById('attackPanel').style.display='none';
+};
+
+var pendingGoldAttack=null; // stores zone to launch after gold confirm
+
+window.closeGoldConfirm=function(){
+  document.getElementById('goldConfirmOverlay').style.display='none';
+  pendingGoldAttack=null;
+};
+window.confirmGoldAttack=function(){
+  document.getElementById('goldConfirmOverlay').style.display='none';
+  if(pendingGoldAttack) _openZoneAttack(pendingGoldAttack);
+  pendingGoldAttack=null;
+};
+
+window.openZoneAttack=function(zone){
+  if(zone==='gold'){
+    // Show the "Bruh" confirmation first
+    var d=getData(), ud=d[userKey];
+    var cnt=0;
+    if(ud&&ud.facts){
+      ALL_FACTS.forEach(function(ab){
+        var f=ud.facts[fkey(ab[0],ab[1])], avg=factAvg(f);
+        if(avg!==null && getZone(avg)==='gold') cnt++;
+      });
+    }
+    document.getElementById('goldConfirmMsg').textContent=
+      'You\'ve got '+cnt+' Gold Zone facts (under 1s). These are already lightning fast — you sure you want to drill them more?';
+    pendingGoldAttack='gold';
+    document.getElementById('goldConfirmOverlay').style.display='flex';
+    return;
+  }
+  _openZoneAttack(zone);
+};
+
+function _openZoneAttack(zone){
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.facts) return;
+  var zoneFacts=[];
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+    if(avg!==null && getZone(avg)===zone) zoneFacts.push(k);
+  });
+  if(!zoneFacts.length) return;
+
+  if(expandedAttackZone===zone){
+    window.closeAttackPanel();
+    return;
+  }
+  expandedAttackZone=zone;
+
+  // If fewer than 3 in zone, pad up to 4 total with worst facts outside zone
+  var displayFacts=zoneFacts.slice();
+  if(zoneFacts.length < 3){
+    // Collect all practiced facts NOT in this zone, sorted slowest first
+    var extras=[];
+    ALL_FACTS.forEach(function(ab){
+      var k=fkey(ab[0],ab[1]);
+      if(zoneFacts.indexOf(k)!==-1) return; // already in zone
+      var f=ud.facts[k], avg=factAvg(f);
+      if(avg!==null) extras.push({k:k, avg:avg});
+    });
+    extras.sort(function(a,b){ return b.avg-a.avg; }); // slowest first
+    var needed=4-zoneFacts.length;
+    for(var i=0;i<needed&&i<extras.length;i++) displayFacts.push(extras[i].k);
+  }
+
+  // Mark zone facts as selected; extras start selected too but are visually distinct
+  activeAttackZoneFacts={};
+  displayFacts.forEach(function(k){ activeAttackZoneFacts[k]=true; });
+
+  renderAttackPanel(zone, displayFacts, ud, zoneFacts);
+}
+
+function renderAttackPanel(zone, allZoneFacts, ud, coreZoneFacts){
+  var panel=document.getElementById('attackPanel');
+  var zi=ZONES[zone];
+  var coreCount=(coreZoneFacts||allZoneFacts).length;
+  var padded=allZoneFacts.length>coreCount;
+  var title='⚔️ Attack '+zi.label+'!';
+  if(padded) title+=' ('+coreCount+' '+zone+', +'+( allZoneFacts.length-coreCount)+' bonus)';
+  else title+=' ('+coreCount+' fact'+(coreCount!==1?'s':'')+')';
+  document.getElementById('attackPanelTitle').textContent=title;
+  updateAttackChips(allZoneFacts, ud, coreZoneFacts||allZoneFacts);
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  updateAttackLaunchReady();
+}
+
+function updateAttackChips(allZoneFacts, ud, coreZoneFacts){
+  ud=ud||(function(){ var d=getData(); return d[userKey]; })();
+  var coreSet={};
+  (coreZoneFacts||allZoneFacts).forEach(function(k){ coreSet[k]=true; });
+  var html='';
+  allZoneFacts.forEach(function(k){
+    var p=k.split('x'), ab=[parseInt(p[0]),parseInt(p[1])];
+    var f=ud&&ud.facts?ud.facts[k]:null, avg=factAvg(f);
+    var selected=!!activeAttackZoneFacts[k];
+    var isBonus=!coreSet[k];
+    var zi2=avg!==null?ZONES[getZone(avg)]:ZONES['red'];
+    var selStyle=selected
+      ? 'background:'+zi2.hex+'33;border:2px solid '+zi2.hex+';color:'+zi2.hex+';'
+      : 'background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.12);color:#7a8fb5;text-decoration:line-through;';
+    var bonusLabel=isBonus?'<span style="font-size:0.6rem;color:#7a8fb5;display:block;margin-top:1px;">bonus</span>':'';
+    html+='<button onclick="toggleAttackChip(\''+k+'\')" style="'+selStyle+'border-radius:8px;padding:6px 10px;font-family:inherit;font-weight:900;font-size:0.88rem;cursor:pointer;transition:all 0.15s;'+(isBonus?'opacity:0.8;':'')+'">'
+      +ab[0]+'\u00D7'+ab[1]
+      +(avg!==null?'<span style="font-size:0.7rem;font-weight:600;margin-left:4px;opacity:0.8;">'+fmtMsShort(avg)+'</span>':'')
+      +bonusLabel
+      +'</button>';
+  });
+  document.getElementById('attackFactChips').innerHTML=html;
+}
+
+window.toggleAttackChip=function(k){
+  var d=getData(), ud=d[userKey];
+  var z=expandedAttackZone;
+  if(!z) return;
+
+  // Rebuild core zone facts
+  var coreZoneFacts=[];
+  ALL_FACTS.forEach(function(ab){
+    var kk=fkey(ab[0],ab[1]), f=ud&&ud.facts?ud.facts[kk]:null, avg=factAvg(f);
+    if(avg!==null && getZone(avg)===z) coreZoneFacts.push(kk);
+  });
+
+  // Rebuild the full display list (core + any bonus that are currently shown)
+  var allShown=Object.keys(activeAttackZoneFacts); // keys currently in the panel
+
+  if(activeAttackZoneFacts[k]){
+    delete activeAttackZoneFacts[k];
+  } else {
+    activeAttackZoneFacts[k]=true;
+  }
+  updateAttackChips(allShown, ud, coreZoneFacts);
+  updateAttackLaunchReady();
+};
+
+function updateAttackLaunchReady(){
+  var selected=Object.keys(activeAttackZoneFacts).filter(function(k){return activeAttackZoneFacts[k];});
+  var modes=document.getElementById('attackModes');
+  var sub=document.getElementById('attackPanelSub');
+  if(selected.length<1){
+    modes.style.opacity='0.3'; modes.style.pointerEvents='none';
+    sub.textContent='Select at least 1 fact to attack:';
+  } else {
+    modes.style.opacity='1'; modes.style.pointerEvents='auto';
+    sub.textContent=selected.length+' fact'+(selected.length!==1?'s':'')+' selected — pick a time:';
+  }
+}
+
+window.launchAttack=function(dur){
+  var keys=Object.keys(activeAttackZoneFacts).filter(function(k){return activeAttackZoneFacts[k];});
+  if(!keys.length) return;
+  var d=getData(), ud=d[userKey];
+  var facts=keys.map(function(k){ var p=k.split('x'); return [parseInt(p[0]),parseInt(p[1])]; });
+
+  preAttackSnapshot={}; window._attackPreAvgs={};
+  if(ud&&ud.facts){
+    ALL_FACTS.forEach(function(ab){
+      var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+      preAttackSnapshot[k]=avg===null?null:getZone(avg);
+    });
+    facts.forEach(function(ab){
+      var k=fkey(ab[0],ab[1]), f=ud.facts[k];
+      window._attackPreAvgs[k]=factAvg(f);
+    });
+  }
+
+  activeAttackZone=expandedAttackZone||'red';
+  window._wsipFacts=facts;
+  expandedAttackZone=null;
+  activeAttackZoneFacts={};
+
+  prevScreen='modeScreen'; show('modeScreen'); renderHistMini();
+  document.getElementById('wsipTitle').textContent='⚔️ Attacking '+facts.length+' Fact'+(facts.length!==1?'s':'')+'!';
+  document.getElementById('wsipBox').style.display='block';
+  document.getElementById('wsipFacts').innerHTML=facts.map(function(ab){
+    var f=ud&&ud.facts?ud.facts[fkey(ab[0],ab[1])]:null, avg=factAvg(f);
+    return '<div class="wsip-tag">'+ab[0]+'\u00D7'+ab[1]+(avg!==null?'<span>'+fmtMsShort(avg)+'</span>':'')+'</div>';
+  }).join('');
+  startQuiz(true, dur);
+};
+
+function renderWSIP(){
+  var d=getData(), ud=d[userKey], box=document.getElementById('wsipBox');
+  if(activeAttackZone){return;}
+  if(!ud||!ud.facts){box.style.display='none';return;}
+  var entries=ALL_FACTS
+    .map(function(ab){
+      var k=fkey(ab[0],ab[1]),f=ud.facts[k],avg=factAvg(f);
+      return (avg!==null&&f.recent10&&f.recent10.length>=2)?{ab:ab,avg:avg}:null;
+    })
+    .filter(Boolean).sort(function(a,b){return b.avg-a.avg;}).slice(0,4);
+  if(!entries.length){box.style.display='none';return;}
+  box.style.display='block';
+  document.getElementById('wsipTitle').textContent='\uD83C\uDFAF What Should I Practice?';
+  document.getElementById('wsipFacts').innerHTML=entries.map(function(e){
+    return '<div class="wsip-tag">'+e.ab[0]+'\u00D7'+e.ab[1]+'<span>avg '+fmtMsShort(e.avg)+'</span></div>';
+  }).join('');
+  window._wsipFacts=entries.map(function(e){return e.ab;});
+}
+
+// ══════════════════════════════════════════
+// PROBLEM GENERATION
+// ══════════════════════════════════════════
+function genProblems(n, restrictFacts){
+  var source=restrictFacts||ALL_FACTS;
+  var d=getData(), ud=d[userKey], facts=ud&&ud.facts?ud.facts:{};
+  var pool=[];
+  source.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
+    // When attacking specific facts, give equal weight so every fact gets practiced
+    var w=restrictFacts ? 1 : (avg===null?2:avg>6000?5:avg>4000?4:avg>3000?3:avg>2000?2:1);
+    for(var i=0;i<w;i++) pool.push(ab);
+  });
+  pool.sort(function(){return Math.random()-0.5;});
+  var result=[];
+  for(var j=0;j<n;j++) result.push(pool[j%pool.length]);
+  return result;
+}
+
+// ══════════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════════
+function startQuiz(isFocus, forceDur){
+  var dur=isFocus?forceDur:selMode;
+  if(!dur) return;
+  var restrict=isFocus?window._wsipFacts:null;
+
+  // Fix 1: Attack mode — practice ONLY those exact facts, cycling through them
+  var n;
+  if(activeAttackZone && restrict && restrict.length){
+    // Cycle through only the attacked facts for the full duration
+    var base=restrict.length;
+    n=dur===300?Math.max(base*10,100):Math.max(base*3, Math.floor(dur/3));
+  } else {
+    n=dur===300?100:Math.max(10,Math.floor(dur/3));
+  }
+
+  problems=genProblems(n,restrict);
+  qIdx=0; qCorrect=0; qTotal=0; qStreak=0; qTimes=[];
+  timeLeft=dur; totalTime=dur;
+
+  var fb=document.getElementById('focusBadge');
+  if(activeAttackZone){
+    var zi=ZONES[activeAttackZone];
+    fb.textContent=zi.monster+' Attacking the '+zi.label+'! Defeat those monsters!';
+    fb.classList.add('show');
+  } else if(restrict&&restrict.length){
+    fb.textContent='\uD83C\uDFAF Focus: '+restrict.map(function(ab){return ab[0]+'\u00D7'+ab[1];}).join(', ');
+    fb.classList.add('show');
+  } else { fb.classList.remove('show'); }
+
+  var dots=document.getElementById('progressDots'); dots.innerHTML='';
+  var showN=Math.min(n,50);
+  for(var i=0;i<showN;i++){
+    var dot=document.createElement('div');
+    dot.className='dot'+(i===0?' cur':'');
+    dot.id='dot'+i; dots.appendChild(dot);
+  }
+  updateStats(); updateTimerDisplay(); showProblem();
+  show('quizScreen');
+  var inp=document.getElementById('answerInput');
+  inp.value=''; inp.className='';
+  setTimeout(function(){inp.focus();},100);
+  clearInterval(timer);
+  timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
+}
+
+function showProblem(){
+  if(qIdx>=problems.length){endQuiz();return;}
+  answerLocked=false;
+  var ab=problems[qIdx];
+  document.getElementById('numA').textContent=ab[0];
+  document.getElementById('numB').textContent=ab[1];
+  qStart=Date.now();
+  var inp=document.getElementById('answerInput');
+  inp.value=''; inp.className='';
+}
+
+function submitAnswer(){
+  if(answerLocked) return;
+  var inp=document.getElementById('answerInput');
+  var val=parseInt(inp.value.trim(),10);
+  if(isNaN(val)) return;
+  var ab=problems[qIdx], ms=Date.now()-qStart;
+  if(val===ab[0]*ab[1]){
+    qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:true});
+    inp.className='correct';
+    qCorrect++; qTotal++; qStreak++;
+    updateStats();
+    var pd=document.getElementById('dot'+qIdx); if(pd) pd.className='dot c';
+    qIdx++;
+    var nd=document.getElementById('dot'+qIdx); if(nd) nd.className='dot cur';
+    setTimeout(function(){showProblem(); inp.focus();},200);
+  } else {
+    qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:false});
+    qStreak=0; updateStats();
+    answerLocked=true;
+    // Clear value immediately so student doesn't need to backspace
+    inp.value='';
+    inp.className=''; void inp.offsetWidth; inp.className='wrong';
+    setTimeout(function(){inp.className=''; answerLocked=false; inp.focus(); qStart=Date.now();},500);
+  }
+}
+
+document.getElementById('answerInput').addEventListener('input',function(){
+  if(answerLocked) return;
+  var val=parseInt(this.value,10); if(isNaN(val)) return;
+  if(val===problems[qIdx][0]*problems[qIdx][1]) submitAnswer();
+});
+document.getElementById('answerInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault(); submitAnswer();}
+});
+document.getElementById('endEarlyBtn').addEventListener('click', function(){
+  clearInterval(timer);
+  endQuiz();
+});
+
+function updateStats(){
+  document.getElementById('scoreDisp').textContent=qCorrect;
+  document.getElementById('totalDisp').textContent=qTotal;
+  document.getElementById('streakDisp').textContent=qStreak+'\uD83D\uDD25';
+}
+function updateTimerDisplay(){
+  var m=Math.floor(timeLeft/60), s=timeLeft%60;
+  document.getElementById('timerDisp').textContent=m+':'+(s<10?'0':'')+s;
+  var pct=(timeLeft/totalTime)*100;
+  var bar=document.getElementById('timerBar');
+  bar.style.width=pct+'%';
+  bar.className='timer-bar'+(pct<15?' danger':pct<30?' warn':'');
+}
+
+function endQuiz(){
+  clearInterval(timer);
+  answerLocked=true; // prevent any further input processing
+  var okTimes=qTimes.filter(function(t){return t.ok;});
+  var avgMs=okTimes.length?Math.round(okTimes.reduce(function(s,t){return s+t.ms;},0)/okTimes.length):0;
+  var session={date:new Date().toISOString(),dur:totalTime,correct:qCorrect,total:qTotal,avgMs:avgMs,times:qTimes};
+  try { saveSession(userKey,session); } catch(e){}
+
+  var defeated=[];
+  var attackedZone=activeAttackZone;
+  try { defeated=checkDefeats(); } catch(e){}
+  activeAttackZone=null;
+
+  try {
+    showResults(session, defeated, attackedZone);
+  } catch(e) {
+    // If showResults errors, at minimum navigate away from quiz
+    show('resultsScreen');
+  }
+}
+
+// ── Defeat detection ─────────────────────
+function checkDefeats(){
+  if(!activeAttackZone) return [];
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.facts) return [];
+  var defeated=[];
+  var az=activeAttackZone;
+  var fromIdx=ZONE_ORDER.indexOf(az);
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]);
+    if(preAttackSnapshot[k]!==az) return; // wasn't in attacked zone before
+    var f=ud.facts[k], nowAvg=factAvg(f);
+    if(nowAvg===null) return;
+    var nowZone=getZone(nowAvg);
+    var nowIdx=ZONE_ORDER.indexOf(nowZone);
+    if(nowIdx<fromIdx) defeated.push(ab); // lower index = faster zone = defeated!
+  });
+  return defeated;
+}
+
+// ══════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════
+document.getElementById('resMyInfoBtn').addEventListener('click',function(){showInfo('overview');});
+document.getElementById('resReturnBtn').addEventListener('click',function(){
+  activeAttackZone=null;
+  window._wsipFacts=null;
+  renderModeScreen();
+  show('modeScreen');
+});
+
+function showResults(s, defeated, attackedZone){
+  show('resultsScreen');
+  var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+  var emoji,title;
+  if(acc>=95){emoji='\uD83C\uDFC6';title='Superstar!';doConfetti();}
+  else if(acc>=85){emoji='\uD83C\uDF1F';title='Awesome!';}
+  else if(acc>=70){emoji='\uD83D\uDC4D';title='Good Job!';}
+  else{emoji='\uD83D\uDCAA';title='Keep Going!';}
+  document.getElementById('resEmoji').textContent=emoji;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resSub').textContent=s.correct+' correct out of '+s.total+' answered';
+  document.getElementById('resScore').textContent=s.correct+'/'+s.total;
+  document.getElementById('resAcc').textContent=acc+'%';
+  document.getElementById('resAvg').textContent=s.avgMs>0?fmtMs(s.avgMs):'--';
+
+  // Defeat banner
+  var db=document.getElementById('defeatedBanner');
+  if(defeated&&defeated.length){
+    var zi=ZONES[attackedZone]||ZONES['red'];
+    db.style.display='block';
+    db.innerHTML='<div style="background:rgba(6,214,160,0.1);border:2px solid #06d6a0;border-radius:12px;padding:14px;text-align:center;">'+
+      '<div style="font-size:1.8rem;margin-bottom:4px;">⚔️ 🏆 ⚔️</div>'+
+      '<div style="font-size:1.1rem;font-weight:900;color:#06d6a0;margin-bottom:3px;">'+
+        'You defeated '+defeated.length+' '+zi.monster+' monster'+(defeated.length===1?'':'s')+'!</div>'+
+      '<div style="font-size:0.82rem;color:#7a8fb5;font-weight:600;">'+
+        defeated.map(function(ab){return ab[0]+'\u00D7'+ab[1];}).join(' &middot; ')+
+        ' escaped the '+zi.label+'!</div></div>';
+    setTimeout(function(){showDefeatPopup(defeated,attackedZone);},500);
+  } else { db.style.display='none'; }
+
+  // ── Improvement report (attack sessions) ──
+  var impSec=document.getElementById('improvementSection');
+  if(attackedZone && window._attackPreAvgs && Object.keys(window._attackPreAvgs).length){
+    var d2=getData(), ud2=d2[userKey], facts2=ud2&&ud2.facts?ud2.facts:{};
+    var impRows=[];
+    Object.keys(window._attackPreAvgs).forEach(function(k){
+      var before=window._attackPreAvgs[k];
+      var f=facts2[k], after=factAvg(f);
+      if(before===null||after===null) return;
+      var diff=before-after;
+      impRows.push({k:k, before:before, after:after, diff:diff});
+    });
+    impRows.sort(function(a,b){return b.diff-a.diff;}); // most improved first
+    if(impRows.length){
+      var html='<div style="background:#0f3460;border-radius:12px;padding:13px 14px;margin-bottom:4px;">';
+      html+='<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:#7a8fb5;font-weight:800;margin-bottom:10px;">📈 Your Progress This Attack</div>';
+      impRows.forEach(function(r){
+        var zi=ZONES[getZone(r.after)], ziOld=ZONES[getZone(r.before)];
+        var improved=r.diff>0;
+        var arrow=improved?'▼':'▲';
+        var arrowColor=improved?'#06d6a0':'#ef476f';
+        var zoneChange=getZone(r.before)!==getZone(r.after)?
+          ' <span style="color:'+zi.hex+';">→ '+zi.monster+' '+zi.label+'!</span>':'';
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">'+
+          '<span style="font-weight:900;font-size:0.9rem;min-width:44px;">'+flabel(r.k)+'</span>'+
+          '<span style="color:'+ziOld.hex+';font-size:0.82rem;font-weight:700;">'+fmtMsShort(r.before)+'</span>'+
+          '<span style="color:#7a8fb5;font-size:0.82rem;">→</span>'+
+          '<span style="color:'+zi.hex+';font-size:0.82rem;font-weight:900;">'+fmtMsShort(r.after)+'</span>'+
+          '<span style="color:'+arrowColor+';font-weight:800;font-size:0.8rem;">'+arrow+' '+Math.abs(Math.round(r.diff/10)/100).toFixed(2)+'s'+zoneChange+'</span>'+
+          '</div>';
+      });
+      html+='</div>';
+      impSec.style.display='block';
+      impSec.innerHTML=html;
+    } else { impSec.style.display='none'; }
+    window._attackPreAvgs=null;
+  } else { impSec.style.display='none'; }
+
+  // Session fact summary
+  var factMap={};
+  s.times.forEach(function(t){
+    if(!factMap[t.p]) factMap[t.p]={slowest:0,fastest:Infinity,wrongCount:0};
+    if(t.ms>factMap[t.p].slowest) factMap[t.p].slowest=t.ms;
+    if(t.ms<factMap[t.p].fastest) factMap[t.p].fastest=t.ms;
+    if(!t.ok) factMap[t.p].wrongCount++;
+  });
+  var slowEntries=Object.keys(factMap).filter(function(k){return factMap[k].slowest>4000;})
+    .sort(function(a,b){return factMap[b].slowest-factMap[a].slowest;}).slice(0,8);
+  var slowSec=document.getElementById('slowSection');
+  if(slowEntries.length){
+    slowSec.style.display='';
+    document.getElementById('slowGrid').innerHTML=slowEntries.map(function(k){
+      return '<div class="slow-tag">'+flabel(k)+'<span>'+fmtMsShort(factMap[k].slowest)+'</span></div>';
+    }).join('');
+  } else slowSec.style.display='none';
+
+  var wrongEntries=Object.keys(factMap).filter(function(k){return factMap[k].wrongCount>0;})
+    .sort(function(a,b){return factMap[b].wrongCount-factMap[a].wrongCount;}).slice(0,8);
+  var wrongSec=document.getElementById('wrongSection');
+  if(wrongEntries.length){
+    wrongSec.style.display='';
+    document.getElementById('wrongGrid').innerHTML=wrongEntries.map(function(k){
+      return '<div class="slow-tag">'+flabel(k)+'<span>'+factMap[k].wrongCount+' wrong</span></div>';
+    }).join('');
+  } else wrongSec.style.display='none';
+
+  var fastEntries=Object.keys(factMap).filter(function(k){return factMap[k].fastest<2000;})
+    .sort(function(a,b){return factMap[a].fastest-factMap[b].fastest;}).slice(0,6);
+  var fastSec=document.getElementById('fastSection');
+  if(fastEntries.length){
+    fastSec.style.display='';
+    document.getElementById('fastGrid').innerHTML=fastEntries.map(function(k){
+      return '<div class="good-tag">'+flabel(k)+'<span>'+fmtMsShort(factMap[k].fastest)+'</span></div>';
+    }).join('');
+  } else fastSec.style.display='none';
+}
+
+function showDefeatPopup(facts, zone){
+  var zi=ZONES[zone]||ZONES['red'];
+  var n=facts.length;
+  var overlay=document.createElement('div');
+  overlay.className='defeat-overlay';
+  overlay.innerHTML=
+    '<div class="defeat-card">'+
+    '<span class="defeat-monster">'+zi.monster+'</span>'+
+    '<div class="defeat-title">DEFEATED! 🗡️</div>'+
+    '<div class="defeat-count">You crushed '+n+' '+zi.label+' monster'+(n===1?'':'s')+'!</div>'+
+    '<div class="defeat-facts">'+facts.map(function(ab){return ab[0]+'\u00D7'+ab[1];}).join(' \u00b7 ')+'<br>moved to a faster zone! 🎉</div>'+
+    '<button class="defeat-close" onclick="this.closest(\'.defeat-overlay\').remove()">Awesome! 💪</button>'+
+    '</div>';
+  document.body.appendChild(overlay);
+  doConfetti();
+}
+
+// ══════════════════════════════════════════
+// MY INFO
+// ══════════════════════════════════════════
+function showInfo(tabName){
+  prevScreen=document.querySelector('.screen.active')?document.querySelector('.screen.active').id:'modeScreen';
+  show('infoScreen');
+  var d=getData(), ud=d[userKey];
+  document.getElementById('infoTitle').textContent=(ud?ud.displayName:'')+'\u2019s Info';
+  var ns=ud&&ud.sessions?ud.sessions.length:0;
+  var na=ud&&ud.sessions?ud.sessions.reduce(function(t,s){return t+s.total;},0):0;
+  document.getElementById('infoSub').textContent=ns+' sessions \u00b7 '+na+' problems answered';
+  switchTab(tabName||'overview');
+}
+
+document.getElementById('infoBackBtn').addEventListener('click',function(){
+  show(prevScreen||'modeScreen');
+  if(prevScreen==='modeScreen') renderModeScreen();
+});
+
+function switchTab(name){
+  currentTab=name;
+  // Reset attack panel state when leaving factmap
+  if(name!=='factmap'){
+    expandedAttackZone=null;
+    activeAttackZoneFacts={};
+    var ap=document.getElementById('attackPanel');
+    if(ap) ap.style.display='none';
+  }
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='overview') renderOverview();
+  if(name==='factmap')  renderFactMap();
+  if(name==='speed')    renderGraphs();
+}
+window.switchTab=switchTab;
+
+// Practice Worst 4
+document.getElementById('practiceWorst4Btn').addEventListener('click',function(){
+  if(!window._worst4Facts||!window._worst4Facts.length) return;
+  window._wsipFacts=window._worst4Facts;
+  activeAttackZone=null;
+  prevScreen='modeScreen'; show('modeScreen'); renderHistMini();
+  var d=getData(), ud=d[userKey];
+  document.getElementById('wsipTitle').textContent='\uD83C\uDFAF What Should I Practice?';
+  document.getElementById('wsipBox').style.display='block';
+  document.getElementById('wsipFacts').innerHTML=window._worst4Facts.map(function(ab){
+    var f=ud&&ud.facts?ud.facts[fkey(ab[0],ab[1])]:null, avg=factAvg(f);
+    return '<div class="wsip-tag">'+ab[0]+'\u00D7'+ab[1]+(avg!==null?'<span>'+fmtMsShort(avg)+'</span>':'')+'</div>';
+  }).join('');
+});
+
+// ── Overview ─────────────────────────────
+function renderOverview(){
+  var d=getData(), ud=d[userKey];
+  if(!ud) return;
+  var facts=ud.facts||{};
+  var practiced=ALL_FACTS.map(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
+    return (avg!==null&&f.recent10&&f.recent10.length>=2)?{k:k,avg:avg,wrongCount:f.wrongCount||0}:null;
+  }).filter(Boolean);
+  practiced.sort(function(a,b){return a.avg-b.avg;});
+  var best=practiced.slice(0,8), weak=practiced.slice().reverse().slice(0,8);
+
+  var mostWrong=ALL_FACTS.map(function(ab){
+    var k=fkey(ab[0],ab[1]),f=facts[k];
+    return f&&(f.wrongCount||0)>=1?{k:k,wrongCount:f.wrongCount}:null;
+  }).filter(Boolean).sort(function(a,b){return b.wrongCount-a.wrongCount;}).slice(0,8);
+
+  // Render with zone colors
+  document.getElementById('bestFacts').innerHTML=best.length
+    ? best.map(function(e){
+        var z=getZone(e.avg), zi=ZONES[z];
+        return '<div style="background:'+zi.hex+'1a;border:1px solid '+zi.hex+'55;border-radius:7px;padding:5px 10px;font-weight:800;font-size:0.85rem;color:'+zi.hex+';">'+
+          zi.monster+' '+flabel(e.k)+'<span style="font-size:0.72rem;color:#7a8fb5;font-weight:600;margin-left:3px;">'+fmtMsShort(e.avg)+'</span></div>';
+      }).join('')
+    : '<span style="color:#7a8fb5;font-size:0.85rem;">Not enough data yet \u2014 keep playing!</span>';
+
+  document.getElementById('weakFacts').innerHTML=weak.length
+    ? weak.map(function(e){
+        var z=getZone(e.avg), zi=ZONES[z];
+        return '<div class="slow-tag" style="color:'+zi.hex+';border-color:'+zi.hex+'55;">'+
+          zi.monster+' '+flabel(e.k)+'<span>'+fmtMsShort(e.avg)+'</span></div>';
+      }).join('')
+    : '<span style="color:#7a8fb5;font-size:0.85rem;">Not enough data yet \u2014 keep playing!</span>';
+
+  document.getElementById('wrongFacts').innerHTML=mostWrong.length
+    ? mostWrong.map(function(e){return '<div class="slow-tag">'+flabel(e.k)+'<span>'+e.wrongCount+' wrong</span></div>';}).join('')
+    : '<span style="color:#7a8fb5;font-size:0.85rem;">No wrong answers yet \u2014 nice!</span>';
+
+  var worst4=weak.slice(0,4).map(function(e){var p=e.k.split('x');return[parseInt(p[0]),parseInt(p[1])];});
+  window._worst4Facts=worst4;
+  document.getElementById('practiceWorst4Btn').style.display=worst4.length?'':'none';
+
+  var sessions=ud.sessions||[];
+  var ta=sessions.reduce(function(t,s){return t+s.total;},0);
+  var tc=sessions.reduce(function(t,s){return t+s.correct;},0);
+  var acc=ta>0?Math.round(tc/ta*100):0;
+  var pCount=Object.keys(facts).filter(function(k){return (facts[k].recent10||[]).length>0;}).length;
+  var allBest=[];
+  Object.keys(facts).forEach(function(k){if(facts[k].best10&&facts[k].best10.length) allBest.push(facts[k].best10[0]);});
+  var overallBest=allBest.length?Math.min.apply(null,allBest):0;
+  document.getElementById('overallStats').innerHTML=
+    '<span class="pill pill-gold">\uD83D\uDCDD '+sessions.length+' sessions</span>'+
+    '<span class="pill pill-teal">\u2705 '+acc+'% accuracy</span>'+
+    '<span class="pill pill-gold">\uD83D\uDD22 '+pCount+'/64 facts</span>'+
+    (overallBest>0?'<span class="pill pill-teal">\u26A1 Best: '+fmtMs(overallBest)+'</span>':'');
+}
+
+// ── Fact Map ─────────────────────────────
+function renderFactMap(){
+  var d=getData(), ud=d[userKey];
+  var facts=ud&&ud.facts?ud.facts:{};
+
+  // Build zone counts for attack buttons
+  var zoneCounts={gold:0,green:0,blue:0,yellow:0,red:0};
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
+    if(avg!==null && zoneCounts[getZone(avg)]!==undefined) zoneCounts[getZone(avg)]++;
+  });
+
+  // Render zone attack buttons
+  var displayOrder=['red','yellow','blue','green','gold'];
+  var btnHtml='<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;">';
+  displayOrder.forEach(function(z){
+    var cnt=zoneCounts[z], zi=ZONES[z];
+    if(!cnt) return;
+    var isActive=expandedAttackZone===z;
+    var activeSt=isActive?'outline:2px solid #ffd166;outline-offset:2px;filter:brightness(1.15);':'';
+    var extraClass='';
+    btnHtml+='<button onclick="openZoneAttack(\''+z+'\')" class="'+extraClass+'" style="'+
+      'background:'+zi.hex+';color:'+(z==='gold'||z==='green'||z==='yellow'?'#1a1a2e':'#fff')+';'+
+      'border:none;border-radius:10px;padding:8px 14px;font-family:inherit;font-weight:900;font-size:0.85rem;cursor:pointer;'+
+      activeSt+'transition:filter 0.15s;'+
+      (z==='red'?'box-shadow:0 0 12px rgba(239,71,111,0.45);':'')+
+      (z==='gold'?'box-shadow:0 0 12px rgba(255,215,0,0.5);':'')+
+      '">'+zi.monster+' Attack '+zi.label.replace(' Zone','')+'! <span style="opacity:0.8;font-size:0.75rem;">('+cnt+')</span></button>';
+  });
+  btnHtml+='</div>';
+  var zoneAttackEl=document.getElementById('zoneAttackBtns');
+  if(zoneAttackEl) zoneAttackEl.innerHTML=btnHtml;
+
+  // Render fact list
+  var rows=ALL_FACTS.map(function(ab){
+    var k=fkey(ab[0],ab[1]),f=facts[k],avg=factAvg(f);
+    return {ab:ab,k:k,avg:avg,totalCount:f?f.count||0:0};
+  });
+  var seen=rows.filter(function(r){return r.avg!==null;}).sort(function(a,b){return b.avg-a.avg;});
+  var unseen=rows.filter(function(r){return r.avg===null;});
+  var maxAvg=seen.length?seen[0].avg:1;
+  var html='<div class="fact-list">';
+  seen.concat(unseen).forEach(function(r){
+    var label=r.ab[0]+' \u00D7 '+r.ab[1]+' = '+r.ab[0]*r.ab[1];
+    if(r.avg===null){
+      html+='<div class="fact-row unseen" style="opacity:0.45;">'+
+        '<span class="fact-row-label">'+label+'</span>'+
+        '<div class="fact-row-bar-wrap"><div class="fact-row-bar" style="width:0%;background:#3a4f6b;"></div></div>'+
+        '<span class="fact-row-time" style="color:#3a4f6b;">not yet</span>'+
+        '<span class="fact-row-count"></span></div>';
+    } else {
+      var pct=Math.max(4,Math.round(r.avg/maxAvg*100));
+      var z=getZone(r.avg), zi=ZONES[z];
+      var isGold=(z==='gold');
+      html+='<div class="fact-row'+(isGold?' gold-row':'')+'">'+
+        '<span class="fact-row-label">'+label+'</span>'+
+        '<div class="fact-row-bar-wrap"><div class="fact-row-bar'+(isGold?' gold-fact-bar':'')+'" style="width:'+pct+'%;background:'+zi.hex+';"></div></div>'+
+        '<span class="fact-row-time'+(isGold?' gold-fact-time':'')+'" style="color:'+zi.hex+';">'+zi.monster+' '+fmtMs(r.avg)+'</span>'+
+        '<span class="fact-row-count">'+r.totalCount+'x</span></div>';
+    }
+  });
+  html+='</div>';
+  document.getElementById('factMapContent').innerHTML=html;
+}
+
+// ── Speed History ──────────────────────
+function renderGraphs(){
+  var d=getData(), ud=d[userKey];
+  var facts=ud&&ud.facts?ud.facts:{};
+  var html='';
+  for(var a=2;a<=9;a++){
+    for(var b=2;b<=9;b++){
+      var k=fkey(a,b), f=facts[k];
+      var hasData=f&&f.history&&f.history.length>0;
+      var avg=factAvg(f);
+      var z=hasData&&avg!==null?getZone(avg):null;
+      var zi=z?ZONES[z]:null;
+      var borderColor=zi?zi.hex+'66':'transparent';
+      var textColor=zi?zi.hex:'#7a8fb5';
+      var bgColor=zi?zi.hex+'18':'transparent';
+      var cls='fact-sel-btn '+(hasData?'has-data':'no-data')+(selectedGraphFact===k?' active':'');
+      html+='<button class="'+cls+'" '+
+        (hasData?'onclick="selectGraphFact(\''+k+'\')"':'disabled title="No data yet"')+' '+
+        'style="'+(hasData?'border-color:'+borderColor+';color:'+textColor+';background:'+bgColor+';':'')+'">'+
+        a+'\u00D7'+b+'</button>';
+    }
+  }
+  document.getElementById('graphFactGrid').innerHTML=html;
+  // Hide popup when re-rendering
+  document.getElementById('speedPopup').style.display='none';
+  selectedGraphFact=null;
+}
+
+window.selectGraphFact=function(k){
+  selectedGraphFact=k;
+  document.querySelectorAll('.fact-sel-btn').forEach(function(b){b.classList.remove('active');});
+  var parts=k.split('x'), idx=(parseInt(parts[0])-2)*8+(parseInt(parts[1])-2);
+  var btns=document.querySelectorAll('.fact-sel-btn');
+  if(btns[idx]) btns[idx].classList.add('active');
+  drawSpeedHistory(k);
+};
+
+function drawSpeedHistory(k){
+  var popup=document.getElementById('speedPopup');
+  var content=document.getElementById('speedPopupContent');
+  var titleEl=document.getElementById('speedPopupTitle');
+
+  if(!k){ popup.style.display='none'; return; }
+  var d=getData(), ud=d[userKey];
+  var f=ud&&ud.facts?ud.facts[k]:null;
+  var history=f&&f.history?f.history:[];
+  var parts=k.split('x'), a2=parseInt(parts[0]), b3=parseInt(parts[1]);
+  var label=a2+' \u00D7 '+b3+' = '+(a2*b3);
+
+  titleEl.textContent=label;
+  popup.style.display='block';
+  popup.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  if(!history.length){
+    content.innerHTML='<div style="text-align:center;padding:20px;color:#7a8fb5;font-weight:600;">No data yet!<br>Practice this fact to see your history.</div>';
+    return;
+  }
+
+  var bestMs=Math.min.apply(null,history.map(function(h){return h.ms;}));
+  var curAvg=factAvg(f);
+  var curZi=curAvg!==null?ZONES[getZone(curAvg)]:ZONES['red'];
+
+  // Zone color scale bar
+  var zoneBarHtml='<div style="display:flex;gap:3px;margin-bottom:12px;border-radius:8px;overflow:hidden;">';
+  ['red','yellow','blue','green','gold'].forEach(function(z){
+    var zi2=ZONES[z];
+    zoneBarHtml+='<div style="flex:1;background:'+zi2.hex+';padding:4px 2px;text-align:center;font-size:0.65rem;font-weight:800;color:'+(z==='gold'||z==='green'||z==='yellow'?'#1a1a2e':'#fff')+';">'+zi2.monster+'<br>'+
+      (z==='gold'?'&lt;1s':z==='green'?'&lt;2s':z==='blue'?'&lt;3s':z==='yellow'?'&lt;5s':'5s+')+
+    '</div>';
+  });
+  zoneBarHtml+='</div>';
+
+  // Stats
+  var statsHtml='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+
+    '<div style="background:#16213e;border-radius:8px;padding:7px 10px;"><span style="display:block;font-size:0.95rem;font-weight:900;color:#ffd166;">'+fmtMs(bestMs)+'</span><span style="font-size:0.62rem;text-transform:uppercase;color:#7a8fb5;font-weight:700;">Best Ever</span></div>'+
+    '<div style="background:#16213e;border-radius:8px;padding:7px 10px;"><span style="display:block;font-size:0.95rem;font-weight:900;color:#ffd166;">'+fmtMs(curAvg)+'</span><span style="font-size:0.62rem;text-transform:uppercase;color:#7a8fb5;font-weight:700;">Recent Avg</span></div>'+
+    '<div style="background:#16213e;border-radius:8px;padding:7px 10px;"><span style="display:block;font-size:0.95rem;font-weight:900;color:'+curZi.hex+';">'+curZi.monster+'</span><span style="font-size:0.62rem;text-transform:uppercase;color:#7a8fb5;font-weight:700;">Zone</span></div>'+
+    '<div style="background:#16213e;border-radius:8px;padding:7px 10px;"><span style="display:block;font-size:0.95rem;font-weight:900;color:#e8f0fe;">'+history.length+'</span><span style="font-size:0.62rem;text-transform:uppercase;color:#7a8fb5;font-weight:700;">Attempts</span></div>'+
+    '</div>';
+
+  // Full history list — most recent first
+  var listHtml='<div style="display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto;">';
+  var reversed=history.slice().reverse();
+  reversed.forEach(function(h,i){
+    var z=getZone(h.ms), zi=ZONES[z];
+    var num=history.length-i;
+    var isFirst=i===0;
+    var barPct=Math.min(100,Math.round(h.ms/8000*100));
+    var glow=z==='gold'?'box-shadow:0 0 6px rgba(255,215,0,0.5);':'';
+    listHtml+='<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:#16213e;border-radius:7px;'+
+      (isFirst?'border:1px solid '+zi.hex+'55;'+glow:'border:1px solid rgba(255,255,255,0.03);')+'">'+
+      '<span style="font-size:0.65rem;color:#7a8fb5;font-weight:700;min-width:22px;text-align:right;">#'+num+'</span>'+
+      '<div style="flex:1;height:7px;background:#0f3460;border-radius:4px;overflow:hidden;">'+
+        '<div style="width:'+barPct+'%;height:100%;background:'+zi.hex+';border-radius:4px;"></div>'+
+      '</div>'+
+      '<span style="font-weight:900;font-size:0.85rem;color:'+zi.hex+';min-width:50px;text-align:right;">'+zi.monster+' '+fmtMsShort(h.ms)+'</span>'+
+      (isFirst?'<span style="font-size:0.6rem;color:#ffd166;font-weight:800;min-width:36px;">LATEST</span>':'<span style="min-width:36px;"></span>')+
+    '</div>';
+  });
+  listHtml+='</div>';
+
+  content.innerHTML=zoneBarHtml+statsHtml+listHtml;
+}
+function renderHistory(){
+  var d=getData(), ud=d[userKey], el=document.getElementById('histTableContent');
+  if(!ud||!ud.sessions||!ud.sessions.length){el.innerHTML='<div class="empty">No sessions yet!</div>';return;}
+  var rows=ud.sessions.slice().reverse().map(function(s){
+    var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+    var bc=acc>=90?'badge-gold':acc>=75?'badge-green':'badge-red';
+    return '<tr><td>'+fmtDate(s.date)+'</td><td>'+fmtTime(s.dur)+'</td><td>'+s.correct+'/'+s.total+'</td>'+
+      '<td><span class="badge '+bc+'">'+acc+'%</span></td><td>'+(s.avgMs>0?fmtMs(s.avgMs):'--')+'</td></tr>';
+  }).join('');
+  el.innerHTML='<table><thead><tr><th>Date</th><th>Mode</th><th>Score</th><th>Acc</th><th>Avg</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ══════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════
+function doConfetti(){
+  var colors=['#ffd166','#06d6a0','#ef476f','#118ab2','#fff','#ffd700','#b89fd4'];
+  for(var i=0;i<90;i++){
+    (function(i){
+      setTimeout(function(){
+        var el=document.createElement('div');
+        el.className='confetti-piece';
+        el.style.cssText='left:'+(Math.random()*100)+'%;top:0;background:'+colors[i%colors.length]+
+          ';animation-delay:'+(Math.random()*0.6)+'s;animation-duration:'+(1.8+Math.random()*1.5)+'s;'+
+          'border-radius:'+(Math.random()>0.5?'50%':'2px')+';width:'+(7+Math.random()*6)+'px;height:'+(7+Math.random()*6)+'px;';
+        document.body.appendChild(el);
+        setTimeout(function(){el.remove();},3500);
+      },i*18);
+    })(i);
+  }
+}
+
+// Close level tooltip on outside click
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('levelBarWrap');
+  if(wrap&&!wrap.contains(e.target)&&levelTooltipOpen){
+    levelTooltipOpen=false;
+    var tt=document.getElementById('levelTooltip');
+    if(tt) tt.classList.remove('show');
+  }
+});
+
+})();
+</script>
+</body>
+</html>
