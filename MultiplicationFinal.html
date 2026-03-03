@@ -701,7 +701,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <span id="numA">6</span><span class="op"> &times; </span><span id="numB">7</span><span class="eq"> = </span>
     </div>
     <input type="number" id="answerInput" placeholder="?" min="0" max="999" autocomplete="off">
-    <button class="btn btn-red btn-small" id="endEarlyBtn" style="margin-top:16px;">&#9209; End Test Early</button>
+    <div id="wrongGuessList" style="min-height:22px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:6px;"></div>
+    <button class="btn btn-red btn-small" id="endEarlyBtn" style="margin-top:10px;">&#9209; End Test Early</button>
   </div>
 </div>
 
@@ -998,6 +999,7 @@ var userKey=null, selMode=null;
 var activeAttackZone=null;   // zone name being attacked
 var preAttackSnapshot={};    // zones before attack session
 var problems=[], qIdx=0, qCorrect=0, qTotal=0, qStreak=0;
+var wrongGuesses=[];
 var timeLeft=0, totalTime=0, timer=null;
 var qTimes=[], qStart=0;
 var prevScreen='modeScreen', currentTab='overview';
@@ -1342,6 +1344,37 @@ function checkAndSaveBadges(){
     ud.badges['legendary']=true; changed=true;
   }
 
+  // Perfectionist — complete a session with 0 wrong answers (min 10 questions)
+  if(!ud.badges['perfectionist']){
+    for(var si=0;si<sessions.length;si++){
+      var sess=sessions[si];
+      if(sess.total>=10 && sess.times && sess.times.every(function(t){return t.ok;})){
+        ud.badges['perfectionist']=true; changed=true; break;
+      }
+    }
+  }
+
+  // Clutch — get a correct answer after 3+ wrong guesses on the same problem
+  // Tracked in ud.clutchUnlocked
+  if(ud.clutchUnlocked && !ud.badges['clutch']){
+    ud.badges['clutch']=true; changed=true;
+  }
+
+  // Speed Blitz — 10 correct in a row all under 1.5s
+  if(!ud.badges['speedBlitz']){
+    for(var si2=0;si2<sessions.length;si2++){
+      var sess2=sessions[si2];
+      if(!sess2.times) continue;
+      var streak2=0;
+      for(var ti=0;ti<sess2.times.length;ti++){
+        var t=sess2.times[ti];
+        if(t.ok && t.ms<1500){ streak2++; if(streak2>=10){ud.badges['speedBlitz']=true;changed=true;break;} }
+        else streak2=0;
+      }
+      if(ud.badges['speedBlitz']) break;
+    }
+  }
+
   // Inferno streak — save best streak
   var best=getBestStreak(sessions);
   if(best>(ud.bestStreak||0)){ ud.bestStreak=best; changed=true; }
@@ -1401,14 +1434,31 @@ function renderBadges(){
   }
   html+='</div></div>';
 
-  // ── Row 2: Square badges ──
+  // ── Row 2: ONE unified Squares badge ──
   html+='<div class="badge-section"><div class="badge-row">';
-  for(var sq=2;sq<=9;sq++){
-    var stier=badges['sq'+sq]||null;
-    var scol=stier?ZONE_COLORS[stier]:'rgba(255,255,255,0.08)';
-    var slocked=!stier;
-    html+=makeShieldBadge('sqb'+sq, slocked, scol, slocked?'?':sq+'²', slocked?'':'sq', stier);
+  // Find best tier achieved across ALL squares (2x2 through 9x9)
+  var squaresUnified=null;
+  for(var t=0;t<BADGE_TIERS.length;t++){
+    var stierCheck=BADGE_TIERS[t];
+    var allSqMeet=true;
+    for(var sqn=2;sqn<=9;sqn++){
+      var sqtier=getSquareBadgeTier(sqn,facts);
+      if(!sqtier){ allSqMeet=false; break; }
+      // Check this square meets at least this tier
+      if(BADGE_TIERS.indexOf(sqtier)<t){ allSqMeet=false; break; }
+    }
+    if(allSqMeet){ squaresUnified=stierCheck; break; }
   }
+  // Also check partial: if ANY squares are done, show partial progress
+  var sqDoneCount=0;
+  for(var sqn2=2;sqn2<=9;sqn2++){
+    if(getSquareBadgeTier(sqn2,facts)){ sqDoneCount++; }
+  }
+  var sqLocked=squaresUnified===null;
+  var sqColor=squaresUnified?ZONE_COLORS[squaresUnified]:'rgba(255,255,255,0.08)';
+  var sqLabel=sqLocked?(sqDoneCount>0?sqDoneCount+'/8':'?'):'x²';
+  var sqSub=sqLocked?(sqDoneCount>0?'squares':''):'all';
+  html+=makeShieldBadge('sq-all', sqLocked, sqColor, sqLocked?sqLabel:'x²', sqSub, squaresUnified);
   html+='</div></div>';
 
   // ── Row 3: Special badges ──
@@ -1424,6 +1474,18 @@ function renderBadges(){
   var curStr=getCurrentStreak();
   var infernoEarned=bestStr>=50;
   html+=makeInfernoBadge(infernoEarned, bestStr, curStr);
+
+  // Perfectionist — 100% accuracy session
+  var perfEarned=!!badges['perfectionist'];
+  html+=makeRoundBadge('perfectionist', perfEarned, '#06d6a0', '🎯', perfEarned?'100%':'?', perfEarned?'PERFECT':'???');
+
+  // Speed Blitz — 10 correct sub-1.5s in a row
+  var blitzEarned=!!badges['speedBlitz'];
+  html+=makeRoundBadge('speedBlitz', blitzEarned, '#118ab2', '⚡', blitzEarned?'x10':'?', blitzEarned?'BLITZ':'???');
+
+  // Clutch — correct after 3+ wrong guesses on same problem
+  var clutchEarned=!!badges['clutch'];
+  html+=makeRoundBadge('clutch', clutchEarned, '#9b59b6', '🧊', clutchEarned?'ICE':'?', clutchEarned?'CLUTCH':'???');
 
   // Giver-upper
   var quits=ud.earlyQuits||0;
@@ -1965,6 +2027,8 @@ function startQuiz(isFocus, forceDur){
 function showProblem(){
   if(qIdx>=problems.length){endQuiz();return;}
   answerLocked=false;
+  wrongGuesses=[];
+  document.getElementById('wrongGuessList').innerHTML='';
   var ab=problems[qIdx];
   document.getElementById('numA').textContent=ab[0];
   document.getElementById('numB').textContent=ab[1];
@@ -1980,6 +2044,10 @@ function submitAnswer(){
   if(isNaN(val)) return;
   var ab=problems[qIdx], ms=Date.now()-qStart;
   if(val===ab[0]*ab[1]){
+    // Check for clutch badge (correct after 3+ wrong guesses on this problem)
+    if(wrongGuesses.length>=3){
+      var cd=getData(); if(cd[userKey]){ cd[userKey].clutchUnlocked=true; saveData(cd); }
+    }
     qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:true});
     inp.className='correct';
     qCorrect++; qTotal++; qStreak++;
@@ -1991,17 +2059,24 @@ function submitAnswer(){
   } else {
     qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:false});
     qStreak=0; updateStats();
-    answerLocked=true;
+    // Store wrong guess
+    var guessVal=val;
+    wrongGuesses.push(guessVal);
+    var gl=document.getElementById('wrongGuessList');
+    var tag=document.createElement('span');
+    tag.style.cssText='display:inline-flex;align-items:center;gap:3px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.4);border-radius:6px;padding:2px 7px;font-size:0.78rem;font-weight:800;color:#ef476f;';
+    tag.innerHTML=guessVal+'<span style="font-size:0.7rem;opacity:0.8;">✕</span>';
+    gl.appendChild(tag);
+    // Flash red and clear immediately (no lock needed)
     inp.value='';
     inp.className=''; void inp.offsetWidth; inp.className='wrong';
-    // Shake the card too
     var card=document.querySelector('#quizScreen .card');
     if(card){ card.classList.remove('card-shake'); void card.offsetWidth; card.classList.add('card-shake'); }
     setTimeout(function(){
       inp.className='';
       if(card) card.classList.remove('card-shake');
-      answerLocked=false; inp.focus(); qStart=Date.now();
-    },500);
+      inp.focus(); qStart=Date.now();
+    },350);
   }
 }
 
