@@ -979,6 +979,24 @@ function saveSession(ukey, session){
   saveData(d);
 }
 
+var SHEETS_URL='https://script.google.com/macros/s/AKfycbzigs4r0EN52xOEUwzfrD9WYu4MLEpwvCPgVlKL-FeUDQq8KD9RIhgP_qBPOpb5hmfIHA/exec';
+
+function sendToSheets(studentName, session){
+  var accuracy=session.total>0?Math.round((session.correct/session.total)*100):0;
+  var params=[
+    'studentName='+encodeURIComponent(studentName),
+    'date='+encodeURIComponent(session.date),
+    'duration='+encodeURIComponent(session.dur),
+    'correct='+encodeURIComponent(session.correct),
+    'total='+encodeURIComponent(session.total),
+    'avgSpeedMs='+encodeURIComponent(session.avgMs),
+    'accuracy='+encodeURIComponent(accuracy)
+  ].join('&');
+  var img=new Image();
+  img.src=SHEETS_URL+'?'+params;
+  img.onerror=img.onload=function(){ img=null; };
+}
+
 function fmtMs(ms){ if(ms===undefined||ms===null) return '--'; return (ms/1000).toFixed(2)+'s'; }
 function fmtMsShort(ms){ return (ms/1000).toFixed(1)+'s'; }
 function fmtTime(s){ if(s>=300) return '5 min'; if(s>=120) return '2 min'; if(s>=60) return '1 min'; return '30 sec'; }
@@ -2149,6 +2167,8 @@ function endQuiz(){
   var avgMs=okTimes.length?Math.round(okTimes.reduce(function(s,t){return s+t.ms;},0)/okTimes.length):0;
   var session={date:new Date().toISOString(),dur:totalTime,correct:qCorrect,total:qTotal,avgMs:avgMs,times:qTimes};
   try { saveSession(userKey,session); } catch(e){}
+  // Sync to Google Sheets (fire and forget — won't block the game)
+  try { sendToSheets(userKey, session); } catch(e){}
 
   var defeated=[];
   var attackedZone=activeAttackZone;
