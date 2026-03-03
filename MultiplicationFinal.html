@@ -2058,7 +2058,7 @@ function submitAnswer(){
     setTimeout(function(){showProblem(); inp.focus();},200);
   } else {
     qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:false});
-    qStreak=0; updateStats();
+    qTotal++; qStreak=0; updateStats();
     // Store wrong guess
     var guessVal=val;
     wrongGuesses.push(guessVal);
@@ -2067,7 +2067,8 @@ function submitAnswer(){
     tag.style.cssText='display:inline-flex;align-items:center;gap:3px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.4);border-radius:6px;padding:2px 7px;font-size:0.78rem;font-weight:800;color:#ef476f;';
     tag.innerHTML=guessVal+'<span style="font-size:0.7rem;opacity:0.8;">✕</span>';
     gl.appendChild(tag);
-    // Flash red and clear immediately (no lock needed)
+    // Flash red and clear immediately
+    answerLocked=true;
     inp.value='';
     inp.className=''; void inp.offsetWidth; inp.className='wrong';
     var card=document.querySelector('#quizScreen .card');
@@ -2075,15 +2076,20 @@ function submitAnswer(){
     setTimeout(function(){
       inp.className='';
       if(card) card.classList.remove('card-shake');
-      inp.focus(); qStart=Date.now();
-    },350);
+      answerLocked=false; inp.focus(); qStart=Date.now();
+    },400);
   }
 }
 
 document.getElementById('answerInput').addEventListener('input',function(){
   if(answerLocked) return;
   var val=parseInt(this.value,10); if(isNaN(val)) return;
-  if(val===problems[qIdx][0]*problems[qIdx][1]) submitAnswer();
+  var correct=problems[qIdx][0]*problems[qIdx][1];
+  if(val===correct){ submitAnswer(); return; }
+  // Auto-fire wrong as soon as they've typed at least as many digits as the answer
+  var correctDigits=String(correct).length;
+  var typedDigits=String(Math.abs(val)).length;
+  if(typedDigits>=correctDigits){ submitAnswer(); }
 });
 document.getElementById('answerInput').addEventListener('keydown',function(e){
   if(e.key==='Enter'){e.preventDefault(); submitAnswer();}
