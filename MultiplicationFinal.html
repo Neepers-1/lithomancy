@@ -341,28 +341,55 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   animation: legendaryPulse 2.5s ease-in-out infinite;
 }
 
-/* ── MYSTERY BADGES ── */
-.badge-row { display: flex; gap: 8px; justify-content: center; margin: 10px 0 6px; flex-wrap: wrap; }
-.mystery-badge {
-  width: 44px; height: 44px; border-radius: 50%;
-  border: 2px dashed rgba(255,255,255,0.18);
+/* ── BADGES ── */
+.badge-section { margin: 8px 0 10px; }
+.badge-section-label { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1.5px; color: #3a4f6b; font-weight: 700; text-align: center; margin-bottom: 5px; }
+.badge-row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+
+/* Shield shape via clip-path */
+.shield-badge {
+  width: 38px; height: 44px;
+  clip-path: polygon(50% 0%, 100% 18%, 100% 65%, 50% 100%, 0% 65%, 0% 18%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  position: relative; cursor: default; transition: all 0.3s;
-  background: rgba(255,255,255,0.02);
-  flex-shrink: 0;
+  position: relative; cursor: default; transition: filter 0.3s; flex-shrink: 0;
+  background: rgba(255,255,255,0.06);
 }
-.mystery-badge .badge-icon { font-size: 1.1rem; opacity: 0.15; filter: grayscale(1); }
-.mystery-badge .badge-qmark { position: absolute; font-size: 0.95rem; font-weight: 900; color: rgba(255,255,255,0.18); }
-.mystery-badge.earned { border-style: solid; border-color: var(--badge-color,#ffd700); background: rgba(255,255,255,0.05); }
-.mystery-badge.earned .badge-icon { opacity: 1; filter: none; }
-.mystery-badge.earned .badge-qmark { display: none; }
-.mystery-badge.earned { box-shadow: 0 0 10px var(--badge-color,#ffd700), 0 0 20px rgba(0,0,0,0.3); }
-.mystery-badge .badge-count {
-  position: absolute; bottom: -3px; right: -3px;
-  min-width: 16px; height: 16px; border-radius: 8px; padding: 0 3px;
-  font-size: 0.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center;
-  background: var(--badge-color,#ffd700); color: #1a1a2e; border: 1.5px solid #1a1a2e;
+.shield-badge.locked { background: rgba(255,255,255,0.04); }
+.shield-badge.earned { filter: drop-shadow(0 0 5px var(--sc,#ffd700)); }
+.shield-badge .sb-inner {
+  width: 32px; height: 38px;
+  clip-path: polygon(50% 0%, 100% 18%, 100% 65%, 50% 100%, 0% 65%, 0% 18%);
+  background: #0f1a30;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
 }
+.shield-badge .sb-content { font-size: 0.9rem; font-weight: 900; line-height: 1; color: var(--sc,rgba(255,255,255,0.2)); text-align: center; }
+.shield-badge .sb-sub { font-size: 0.42rem; font-weight: 700; color: var(--sc,rgba(255,255,255,0.15)); letter-spacing: 0.3px; line-height: 1; opacity: 0.7; }
+
+/* Special round badges (legendary, inferno, giverUp) */
+.round-badge {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 2px dashed rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.02); cursor: default;
+  transition: all 0.3s; flex-shrink: 0; position: relative;
+}
+.round-badge.earned {
+  border-style: solid; border-color: var(--bc,#ffd700);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 10px var(--bc,#ffd700), 0 0 20px rgba(0,0,0,0.3);
+}
+.round-badge .rb-icon { font-size: 1rem; opacity: 0.18; filter: grayscale(1); }
+.round-badge .rb-qmark { position: absolute; font-size: 0.9rem; font-weight: 900; color: rgba(255,255,255,0.15); }
+.round-badge.earned .rb-icon { opacity: 1; filter: none; }
+.round-badge.earned .rb-qmark { display: none; }
+.round-badge .rb-num { font-size: 0.5rem; font-weight: 900; color: var(--bc,#888); line-height: 1; margin-top: 1px; }
+.round-badge .rb-sub { font-size: 0.42rem; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.2px; }
+
+/* Inferno double-stack badge */
+.inferno-badge { flex-direction: column; gap: 0; }
+.inferno-badge .ib-top { font-size: 0.65rem; font-weight: 900; line-height: 1; }
+.inferno-badge .ib-bot { font-size: 0.52rem; font-weight: 700; opacity: 0.6; line-height: 1; }
 .countdown-overlay {
   position: absolute; inset: 0; background: rgba(10,14,26,0.92);
   display: flex; align-items: center; justify-content: center;
@@ -606,14 +633,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       </div>
       <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
     </div>
-    <!-- Mystery badges -->
-    <div class="badge-row" id="mysteryBadgeRow">
-      <div class="mystery-badge" id="mbadge-legendary" title="???"><span class="badge-icon">👑</span><span class="badge-qmark">?</span></div>
-      <div class="mystery-badge" id="mbadge-inferno"   title="???"><span class="badge-icon">🔥</span><span class="badge-qmark">?</span></div>
-      <div class="mystery-badge" id="mbadge-perfect"   title="???"><span class="badge-icon">💯</span><span class="badge-qmark">?</span></div>
-      <div class="mystery-badge" id="mbadge-speedster" title="???"><span class="badge-icon">⚡</span><span class="badge-qmark">?</span></div>
-      <div class="mystery-badge" id="mbadge-prismatic" title="???"><span class="badge-icon">🌈</span><span class="badge-qmark">?</span></div>
-    </div>
+    <!-- Badge rows -->
+    <div id="badgeArea" style="margin:6px 0 10px;"></div>
     <div class="mode-level-layout">
       <!-- Left timers -->
       <div class="mode-left">
@@ -634,14 +655,6 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         </div>
         <div class="level-badge" id="levelBadge" style="background:#0f3460;color:#7a8fb5;width:48px;height:48px;font-size:1.1rem;">0</div>
         <div style="font-size:0.6rem;color:#7a8fb5;font-weight:700;margin-top:3px;text-align:center;letter-spacing:0.5px;" id="levelNameLabel"></div>
-        <!-- Legendary badge -->
-        <div id="legendaryBadgeWrap" style="display:none;margin-top:8px;text-align:center;">
-          <div id="legendaryBadge" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1a0a2e,#0d0d1f);border:2px solid #9b59b6;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(155,89,182,0.6),0 0 28px rgba(155,89,182,0.3);animation:legendaryPulse 2.5s ease-in-out infinite;cursor:default;">
-            <div style="font-size:0.6rem;">👑</div>
-            <div id="legendaryCount" style="font-size:0.65rem;font-weight:900;color:#d4a8ff;line-height:1;">0</div>
-          </div>
-          <div style="font-size:0.5rem;font-weight:900;color:#9b59b6;letter-spacing:0.5px;margin-top:2px;text-transform:uppercase;">Legend</div>
-        </div>
       </div>
       <!-- Right timers -->
       <div class="mode-right">
@@ -736,7 +749,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div class="info-section">
         <div class="info-section-title">&#x1F3AF; Keep Practicing</div>
         <div class="tag-grid" id="weakFacts"></div>
-        <button class="btn btn-purple btn-small" id="practiceWorst4Btn" style="display:none;margin-top:10px;">&#x1F3AF; Practice My Worst 4 Facts</button>
+        <button class="btn btn-purple btn-small" id="practiceWorst4Btn" style="display:none;margin-top:10px;"></button>
       </div>
       <div class="info-section">
         <div class="info-section-title">&#x274C; Most Frequently Wrong</div>
@@ -856,6 +869,17 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   <div style="width:92%;max-width:380px;text-align:center;position:relative;">
     <div id="legendaryResultsContent"></div>
     <button id="legendaryResultsCloseBtn" onclick="closeLegendaryResults()" style="margin-top:18px;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;"></button>
+  </div>
+</div>
+
+<!-- Giver-Upper popup -->
+<div class="legendary-overlay" id="giverUpOverlay" style="display:none;background:rgba(0,0,0,0.88);" onclick="if(event.target===this)document.getElementById('giverUpOverlay').style.display='none'">
+  <div style="background:linear-gradient(160deg,#1a0a00,#16100e);border:2px solid #ff8c00;border-radius:22px;padding:32px 26px;text-align:center;max-width:320px;width:90%;box-shadow:0 0 40px rgba(255,140,0,0.4);animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:3.5rem;margin-bottom:6px;" id="giverUpEmoji">🏃</div>
+    <div style="font-size:0.7rem;font-weight:900;letter-spacing:4px;color:#ff8c00;text-transform:uppercase;margin-bottom:6px;">NEW BADGE UNLOCKED</div>
+    <div style="font-size:1.6rem;font-weight:900;color:#ffb347;margin-bottom:6px;" id="giverUpTitle">Giver-Upper!</div>
+    <div style="font-size:0.88rem;color:#cc7700;font-weight:600;margin-bottom:20px;line-height:1.5;" id="giverUpMsg">You've ended a test early 20 times.<br>A true quitter's commitment.</div>
+    <button onclick="document.getElementById('giverUpOverlay').style.display='none'" style="background:linear-gradient(135deg,#ff8c00,#ff4500);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;">I Deserve This 🏃</button>
   </div>
 </div>
 <script>
@@ -1211,126 +1235,246 @@ function showLevelUpPopup(lvl){
 }
 
 function renderModeScreen(){
-  renderHistMini(); renderWSIP(); renderLevelBar(); renderLegendaryBadge(); renderMysteryBadges();
+  renderHistMini(); renderWSIP(); renderLevelBar(); renderBadges();
 }
 
 // ══════════════════════════════════════════
-// MYSTERY BADGES
+// BADGE SYSTEM
 // ══════════════════════════════════════════
-var BADGES=[
-  {
-    id:'legendary', icon:'👑', color:'#9b59b6',
-    name:'Legendary Warrior',
-    secret:'Achieve Legendary Status (under 0.8s) at least once',
-    check:function(ud,sessions){
-      return (ud.legendaryDefeats||0)>=1;
-    },
-    count:function(ud){ return ud.legendaryDefeats||0; }
-  },
-  {
-    id:'inferno', icon:'🔥', color:'#ff4500',
-    name:'Inferno',
-    secret:'Complete 10 or more sessions in a single day',
-    check:function(ud,sessions){
-      if(!sessions||!sessions.length) return false;
-      var today=new Date().toDateString();
-      var todaySessions=sessions.filter(function(s){
-        return new Date(s.date).toDateString()===today;
-      });
-      return todaySessions.length>=10;
-    },
-    count:null
-  },
-  {
-    id:'perfect', icon:'💯', color:'#ffd700',
-    name:'Perfect Streak',
-    secret:'Answer 20 in a row correctly in a single session',
-    check:function(ud,sessions){
-      if(!sessions||!sessions.length) return false;
-      return sessions.some(function(s){
-        if(!s.times) return false;
-        var streak=0, best=0;
-        s.times.forEach(function(t){
-          if(t.ok){ streak++; best=Math.max(best,streak); } else { streak=0; }
-        });
-        return best>=20;
-      });
-    },
-    count:null
-  },
-  {
-    id:'speedster', icon:'⚡', color:'#06d6a0',
-    name:'Speed Master',
-    secret:'Achieve 90%+ accuracy on a full 5-minute test',
-    check:function(ud,sessions){
-      if(!sessions||!sessions.length) return false;
-      return sessions.some(function(s){
-        return s.dur===300 && s.total>0 && (s.correct/s.total)>=0.9;
-      });
-    },
-    count:null
-  },
-  {
-    id:'prismatic', icon:'🌈', color:'#cc00ff',
-    name:'Prismatic',
-    secret:'Have at least one fact in every zone simultaneously',
-    check:function(ud,sessions){
-      if(!ud||!ud.facts) return false;
-      var zones={gold:false,green:false,blue:false,yellow:false,red:false};
-      ALL_FACTS.forEach(function(ab){
-        var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
-        if(avg!==null) zones[getZone(avg)]=true;
-      });
-      return zones.gold&&zones.green&&zones.blue&&zones.yellow&&zones.red;
-    },
-    count:null
-  }
+
+var ZONE_COLORS={ gold:'#ffd700', green:'#06d6a0', blue:'#118ab2', orange:'#ff8c00', red:'#ef476f' };
+var BADGE_TIERS=['blue','green','gold']; // unlock order for number/square badges
+var BADGE_TIER_MS={ blue:3000, green:2000, gold:1000 }; // threshold ms
+
+// Giver-Upper ranks
+var GIVERRANKS=[
+  {n:20, title:'Giver-Upper!',      emoji:'🏃', msg:"You've ended a test early 20 times.\nA true quitter's commitment."},
+  {n:40, title:'Dedicated Quitter', emoji:'🚪', msg:"40 early exits. You've made quitting an art form."},
+  {n:60, title:'Master Escaper',    emoji:'💨', msg:"60 times... you're practically a ghost."},
+  {n:80, title:'Elite Abandoner',   emoji:'🌪️', msg:"80 early exits. Legendary cowardice."},
+  {n:100,title:'SUPREME QUITTER',   emoji:'👑🏃',msg:"100 early exits. A hall-of-fame achievement in giving up."}
 ];
+
+function getTableBadgeTier(tableNum, facts){
+  // Returns 'gold','green','blue' or null based on best tier ALL facts in table achieve
+  var tableFacts=ALL_FACTS.filter(function(ab){ return ab[0]===tableNum||ab[1]===tableNum; });
+  for(var t=0;t<BADGE_TIERS.length;t++){
+    var tier=BADGE_TIERS[t];
+    var threshold=BADGE_TIER_MS[tier];
+    var allMeet=tableFacts.every(function(ab){
+      var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
+      return avg!==null && avg<threshold;
+    });
+    if(allMeet) return tier;
+  }
+  return null;
+}
+
+function getSquareBadgeTier(n, facts){
+  var k=fkey(n,n), f=facts[k], avg=factAvg(f);
+  if(avg===null) return null;
+  for(var t=0;t<BADGE_TIERS.length;t++){
+    var tier=BADGE_TIERS[t];
+    if(avg<BADGE_TIER_MS[tier]) return tier;
+  }
+  return null;
+}
+
+function getBestStreak(sessions){
+  var best=0;
+  if(!sessions) return 0;
+  sessions.forEach(function(s){
+    if(!s.times) return;
+    var streak=0;
+    s.times.forEach(function(t){ if(t.ok){streak++;best=Math.max(best,streak);}else{streak=0;} });
+  });
+  return best;
+}
+
+function getCurrentStreak(){
+  // streak from most recent session
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.sessions||!ud.sessions.length) return 0;
+  var last=ud.sessions[ud.sessions.length-1];
+  if(!last||!last.times) return 0;
+  var streak=0;
+  last.times.forEach(function(t){ if(t.ok) streak++; else streak=0; });
+  return streak;
+}
 
 function checkAndSaveBadges(){
   var d=getData(), ud=d[userKey];
   if(!ud) return;
   if(!ud.badges) ud.badges={};
+  var facts=ud.facts||{};
   var sessions=ud.sessions||[];
   var changed=false;
-  BADGES.forEach(function(b){
-    if(!ud.badges[b.id] && b.check(ud,sessions)){
-      ud.badges[b.id]=true;
-      changed=true;
+
+  // Table badges 2-9
+  for(var n=2;n<=9;n++){
+    var tier=getTableBadgeTier(n,facts);
+    var key='num'+n;
+    if(tier && ud.badges[key]!==tier){
+      // Only upgrade (blue→green→gold), never downgrade
+      var old=ud.badges[key];
+      var oldIdx=BADGE_TIERS.indexOf(old), newIdx=BADGE_TIERS.indexOf(tier);
+      if(newIdx>oldIdx||old===undefined){
+        ud.badges[key]=tier; changed=true;
+      }
     }
-  });
+  }
+
+  // Square badges 2-9
+  for(var sq=2;sq<=9;sq++){
+    var stier=getSquareBadgeTier(sq,facts);
+    var skey='sq'+sq;
+    if(stier){
+      var sold=ud.badges[skey];
+      var soldIdx=BADGE_TIERS.indexOf(sold), snewIdx=BADGE_TIERS.indexOf(stier);
+      if(snewIdx>soldIdx||sold===undefined){
+        ud.badges[skey]=stier; changed=true;
+      }
+    }
+  }
+
+  // Legendary
+  if((ud.legendaryDefeats||0)>=1 && !ud.badges['legendary']){
+    ud.badges['legendary']=true; changed=true;
+  }
+
+  // Inferno streak — save best streak
+  var best=getBestStreak(sessions);
+  if(best>(ud.bestStreak||0)){ ud.bestStreak=best; changed=true; }
+
+  // Giver-upper — count saved separately, check for new rank popup
+  // (earlyQuits tracked in endEarlyBtn handler)
+
   if(changed) saveData(d);
 }
 
-function renderMysteryBadges(){
+// Called when End Early is clicked
+function recordEarlyQuit(){
   var d=getData(), ud=d[userKey];
   if(!ud) return;
-  var badges=ud.badges||{};
-  BADGES.forEach(function(b){
-    var el=document.getElementById('mbadge-'+b.id);
-    if(!el) return;
-    var earned=!!badges[b.id];
-    // Remove old count badge
-    var old=el.querySelector('.badge-count');
-    if(old) old.remove();
-
-    if(earned){
-      el.classList.add('earned');
-      el.style.setProperty('--badge-color',b.color);
-      // Add count if applicable
-      var cnt=b.count?b.count(ud):0;
-      if(cnt>0){
-        var cd=document.createElement('div');
-        cd.className='badge-count';
-        cd.textContent=cnt;
-        el.appendChild(cd);
-      }
-      el.title=b.name+': '+b.secret;
-    } else {
-      el.classList.remove('earned');
-      el.title='???';
+  ud.earlyQuits=(ud.earlyQuits||0)+1;
+  saveData(d);
+  // Check for new rank
+  var count=ud.earlyQuits;
+  for(var r=GIVERRANKS.length-1;r>=0;r--){
+    if(count===GIVERRANKS[r].n){
+      showGiverUpPopup(GIVERRANKS[r]);
+      break;
     }
-  });
+  }
+}
+
+function showGiverUpPopup(rank){
+  document.getElementById('giverUpEmoji').textContent=rank.emoji;
+  document.getElementById('giverUpTitle').textContent=rank.title;
+  document.getElementById('giverUpMsg').innerHTML=rank.msg.replace('\n','<br>');
+  document.getElementById('giverUpOverlay').style.display='flex';
+}
+
+function getGiverUpRank(count){
+  var rank=null;
+  for(var r=0;r<GIVERRANKS.length;r++){
+    if(count>=GIVERRANKS[r].n) rank=r;
+  }
+  return rank; // index into GIVERRANKS or null
+}
+
+function renderBadges(){
+  var d=getData(), ud=d[userKey];
+  if(!ud){ document.getElementById('badgeArea').innerHTML=''; return; }
+  var badges=ud.badges||{};
+  var facts=ud.facts||{};
+  var sessions=ud.sessions||[];
+  var html='';
+
+  // ── Row 1: Number badges 2-9 ──
+  html+='<div class="badge-section"><div class="badge-row">';
+  for(var n=2;n<=9;n++){
+    var tier=badges['num'+n]||null;
+    var col=tier?ZONE_COLORS[tier]:'rgba(255,255,255,0.08)';
+    var locked=!tier;
+    html+=makeShieldBadge('nb'+n, locked, col, locked?'?':String(n), locked?'':'×all', tier);
+  }
+  html+='</div></div>';
+
+  // ── Row 2: Square badges ──
+  html+='<div class="badge-section"><div class="badge-row">';
+  for(var sq=2;sq<=9;sq++){
+    var stier=badges['sq'+sq]||null;
+    var scol=stier?ZONE_COLORS[stier]:'rgba(255,255,255,0.08)';
+    var slocked=!stier;
+    html+=makeShieldBadge('sqb'+sq, slocked, scol, slocked?'?':sq+'²', slocked?'':'sq', stier);
+  }
+  html+='</div></div>';
+
+  // ── Row 3: Special badges ──
+  html+='<div class="badge-section"><div class="badge-row">';
+
+  // Legendary
+  var legEarned=!!(ud.legendaryDefeats&&ud.legendaryDefeats>=1);
+  var legCount=ud.legendaryDefeats||0;
+  html+=makeRoundBadge('leg', legEarned, '#9b59b6', '👑', legEarned?String(legCount):'?', legEarned?'LEGEND':'???');
+
+  // Inferno streak — show after best streak ≥ 50
+  var bestStr=ud.bestStreak||0;
+  var curStr=getCurrentStreak();
+  var infernoEarned=bestStr>=50;
+  html+=makeInfernoBadge(infernoEarned, bestStr, curStr);
+
+  // Giver-upper
+  var quits=ud.earlyQuits||0;
+  var grank=getGiverUpRank(quits);
+  var giverEarned=grank!==null;
+  var giverEmojis=['🏃','🚪','💨','🌪️','👑'];
+  var giverIcon=giverEarned?giverEmojis[grank]:'🏃';
+  var giverCount=giverEarned?String(quits):'?';
+  html+=makeRoundBadge('giverUp', giverEarned, '#ff8c00', giverIcon, giverCount, giverEarned?'QUITTER':'???');
+
+  html+='</div></div>';
+
+  document.getElementById('badgeArea').innerHTML=html;
+}
+
+function makeShieldBadge(id, locked, color, label, sublabel, tier){
+  var outerBg=locked?'rgba(255,255,255,0.06)':color;
+  var tierDot='';
+  if(tier){
+    tierDot='<div style="position:absolute;top:-1px;right:1px;width:9px;height:9px;border-radius:50%;background:'+color+';border:1.5px solid #0a0e1a;box-shadow:0 0 5px '+color+';z-index:2;"></div>';
+  }
+  return '<div class="shield-badge '+(locked?'locked':'earned')+'" id="sb-'+id+'" style="--sc:'+color+';background:'+outerBg+';" title="'+(locked?'???':(tier?tier.toUpperCase()+' — '+label+'×':label+'×all'))+'">'+
+    '<div class="sb-inner">'+
+      '<div class="sb-content" style="color:'+(locked?'rgba(255,255,255,0.2)':color)+';">'+(locked?'?':label)+'</div>'+
+      (!locked&&sublabel?'<div class="sb-sub" style="color:'+color+';">'+sublabel+'</div>':'')+
+    '</div>'+
+    tierDot+
+  '</div>';
+}
+
+function makeRoundBadge(id, earned, color, icon, num, sub){
+  return '<div class="round-badge '+(earned?'earned':'')+'" id="rb-'+id+'" style="--bc:'+color+';" title="'+(earned?sub:'???')+'">'+
+    '<div class="rb-icon">'+icon+'</div>'+
+    (earned?'':'<span class="rb-qmark">?</span>')+
+    (earned&&num?'<div class="rb-num">'+num+'</div>':'')+
+    (earned&&sub?'<div class="rb-sub">'+sub+'</div>':'')+
+  '</div>';
+}
+
+function makeInfernoBadge(earned, best, cur){
+  if(!earned){
+    return '<div class="round-badge" id="rb-inferno" title="???">'+
+      '<div class="rb-icon" style="opacity:0.18;filter:grayscale(1);">🔥</div>'+
+      '<span class="rb-qmark">?</span>'+
+    '</div>';
+  }
+  return '<div class="round-badge earned inferno-badge" id="rb-inferno" style="--bc:#ff4500;" title="Inferno Streak">'+
+    '<div style="font-size:0.75rem;">🔥</div>'+
+    '<div class="ib-top" style="color:#ff4500;">'+best+'</div>'+
+    '<div class="ib-bot" style="color:rgba(255,140,0,0.6);">'+cur+'</div>'+
+  '</div>';
 }
 
 window.closeLegendaryResults=function(){
@@ -1344,23 +1488,8 @@ window.closeLegendaryResults=function(){
   show('modeScreen');
 };
 
-function renderLegendaryBadge(){
-  var d=getData(), ud=d[userKey];
-  var count=ud?ud.legendaryDefeats||0:0;
-  var wrap=document.getElementById('legendaryBadgeWrap');
-  var badge=document.getElementById('legendaryBadge');
-  var countEl=document.getElementById('legendaryCount');
-  if(!wrap) return;
-  if(count>0){
-    wrap.style.display='block';
-    countEl.textContent=count;
-    // Intensify glow based on count
-    var intensity=Math.min(1, count/10);
-    badge.style.boxShadow='0 0 '+(14+intensity*20)+'px rgba(155,89,182,'+(0.6+intensity*0.4)+'),0 0 '+(28+intensity*40)+'px rgba(155,89,182,'+(0.3+intensity*0.3)+')';
-  } else {
-    wrap.style.display='none';
-  }
-}
+function renderLegendaryBadge(){ /* superseded by renderBadges */ }
+
 
 function renderHistMini(){
   var d=getData(), ud=d[userKey], hm=document.getElementById('histMini');
@@ -1886,6 +2015,7 @@ document.getElementById('answerInput').addEventListener('keydown',function(e){
 });
 document.getElementById('endEarlyBtn').addEventListener('click', function(){
   clearInterval(timer);
+  recordEarlyQuit();
   endQuiz();
 });
 
@@ -2087,6 +2217,20 @@ function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated)
   }
 
   show('resultsScreen');
+
+  // Set hero section
+  var emoji,title;
+  if(acc>=95){emoji='\uD83C\uDFC6';title='Superstar!';doConfetti();}
+  else if(acc>=85){emoji='\uD83C\uDF1F';title='Awesome!';}
+  else if(acc>=70){emoji='\uD83D\uDC4D';title='Good Job!';}
+  else{emoji='\uD83D\uDCAA';title='Keep Going!';}
+  document.getElementById('resEmoji').textContent=emoji;
+  document.getElementById('resTitle').textContent=title;
+  document.getElementById('resSub').textContent=s.correct+' correct out of '+s.total+' answered';
+  document.getElementById('resScore').textContent=s.correct+'/'+s.total;
+  document.getElementById('resAcc').textContent=acc+'%';
+  document.getElementById('resAvg').textContent=s.avgMs>0?fmtMs(s.avgMs):'--';
+
   var db=document.getElementById('defeatedBanner');
   if(defeated&&defeated.length){
     var zi=ZONES[attackedZone]||ZONES['red'];
@@ -2288,7 +2432,7 @@ function renderOverview(){
 
   var worst4=weak.slice(0,4).map(function(e){var p=e.k.split('x');return[parseInt(p[0]),parseInt(p[1])];});
   window._worst4Facts=worst4;
-  document.getElementById('practiceWorst4Btn').style.display=worst4.length?'':'none';
+  // practiceWorst4Btn removed
 
   var sessions=ud.sessions||[];
   var ta=sessions.reduce(function(t,s){return t+s.total;},0);
