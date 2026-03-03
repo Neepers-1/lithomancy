@@ -1750,9 +1750,9 @@ function _openZoneAttack(zone){
   zoneWithAvg.sort(function(a,b){ return b.avg-a.avg; }); // slowest first
   zoneFacts=zoneWithAvg.map(function(x){return x.k;});
 
-  // If fewer than 3 in zone, pad up to 4 total with worst facts outside zone
+  // If fewer than 4 in zone, pad up to 4 total with worst facts outside zone
   var displayFacts=zoneFacts.slice();
-  if(zoneFacts.length < 3){
+  if(zoneFacts.length < 4){
     var extras=[];
     ALL_FACTS.forEach(function(ab){
       var k=fkey(ab[0],ab[1]);
@@ -1766,11 +1766,20 @@ function _openZoneAttack(zone){
   }
 
   // Default: select only the worst 5 (first 5 in sorted list), deselect the rest
+  // But always ensure at least 4 are selected
   var SELECT_DEFAULT=5;
   activeAttackZoneFacts={};
+  window._attackDisplayFacts=displayFacts.slice(); // store full display list separately
   displayFacts.forEach(function(k,i){
     activeAttackZoneFacts[k]=(i<SELECT_DEFAULT);
   });
+  // Ensure at least 4 selected (in case zone has fewer than 5)
+  var selCount=displayFacts.filter(function(k){ return activeAttackZoneFacts[k]; }).length;
+  if(selCount<4){
+    for(var j=0;j<displayFacts.length&&selCount<4;j++){
+      if(!activeAttackZoneFacts[displayFacts[j]]){ activeAttackZoneFacts[displayFacts[j]]=true; selCount++; }
+    }
+  }
 
   renderAttackPanel(zone, displayFacts, ud, zoneFacts);
 }
@@ -1826,10 +1835,26 @@ window.toggleAttackChip=function(k){
     if(avg!==null && getZone(avg)===z) coreZoneFacts.push(kk);
   });
 
-  // Rebuild the full display list (core + any bonus that are currently shown)
-  var allShown=Object.keys(activeAttackZoneFacts); // keys currently in the panel
+  // Use the stored full display list (never shrink it)
+  var allShown=window._attackDisplayFacts||Object.keys(activeAttackZoneFacts);
+
+  // Count currently selected
+  var currentSelected=allShown.filter(function(fk){ return activeAttackZoneFacts[fk]; });
 
   if(activeAttackZoneFacts[k]){
+    // Trying to deselect — block if it would drop below 4
+    if(currentSelected.length<=4){
+      // Show warning, don't deselect
+      var sub=document.getElementById('attackPanelSub');
+      var orig=sub.textContent;
+      sub.style.color='#ef476f';
+      sub.textContent='⚠️ You must practice at least 4 facts!';
+      setTimeout(function(){
+        sub.style.color='';
+        updateAttackLaunchReady();
+      },1800);
+      return;
+    }
     delete activeAttackZoneFacts[k];
   } else {
     activeAttackZoneFacts[k]=true;
@@ -1839,14 +1864,17 @@ window.toggleAttackChip=function(k){
 };
 
 function updateAttackLaunchReady(){
-  var selected=Object.keys(activeAttackZoneFacts).filter(function(k){return activeAttackZoneFacts[k];});
+  var allShown=window._attackDisplayFacts||[];
+  var selected=allShown.filter(function(k){return activeAttackZoneFacts[k];});
   var modes=document.getElementById('attackModes');
   var sub=document.getElementById('attackPanelSub');
-  if(selected.length<1){
+  if(selected.length<4){
     modes.style.opacity='0.3'; modes.style.pointerEvents='none';
-    sub.textContent='Select at least 1 fact to attack:';
+    sub.style.color='#ef476f';
+    sub.textContent='⚠️ You must select at least 4 facts to battle!';
   } else {
     modes.style.opacity='1'; modes.style.pointerEvents='auto';
+    sub.style.color='';
     sub.textContent=selected.length+' fact'+(selected.length!==1?'s':'')+' selected — pick a time:';
   }
 }
