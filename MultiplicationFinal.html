@@ -133,6 +133,8 @@ input:focus { border-color: #ffd166; }
 #answerInput.correct { border-color: #06d6a0; background: rgba(6,214,160,0.1); }
 #answerInput.wrong   { border-color: #ef476f; background: rgba(239,71,111,0.12); animation: shake 0.35s; }
 @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 60%{transform:translateX(8px);} 80%{transform:translateX(-4px);} }
+@keyframes cardShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-10px);} 40%{transform:translateX(10px);} 65%{transform:translateX(-7px);} 82%{transform:translateX(7px);} }
+.card-shake { animation: cardShake 0.45s ease; }
 
 /* ── RESULTS ── */
 .result-hero { text-align: center; margin-bottom: 20px; }
@@ -249,6 +251,145 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .confetti-piece { position: fixed; width: 9px; height: 9px; border-radius: 2px; pointer-events: none; z-index: 9998; animation: cfall 2.5s ease forwards; }
 @keyframes cfall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1;} 100%{transform:translateY(105vh) rotate(720deg);opacity:0;} }
 @keyframes starTwinkle { 0%,100%{opacity:0.15;transform:scale(1);} 50%{opacity:0.9;transform:scale(1.4);} }
+
+/* ── LEGENDARY ── */
+@keyframes legendaryPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(155,89,182,0.5), 0 0 20px rgba(155,89,182,0.2); }
+  50%      { box-shadow: 0 0 22px rgba(155,89,182,0.9), 0 0 44px rgba(155,89,182,0.5), 0 0 66px rgba(155,89,182,0.2); }
+}
+@keyframes legendaryTextFlicker {
+  0%,95%,100% { opacity:1; } 96%,98% { opacity:0.4; }
+}
+
+/* Legendary confirm popups */
+.legendary-overlay {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  z-index: 9999; animation: fadeIn 0.2s ease;
+}
+.legendary-step1-bg { background: rgba(0,0,0,0.8); }
+.legendary-step2-bg { background: radial-gradient(ellipse at center, rgba(80,0,120,0.95) 0%, rgba(0,0,0,0.98) 100%); }
+.legendary-step3-bg { background: radial-gradient(ellipse at center, rgba(100,0,0,0.95) 0%, rgba(0,0,0,0.98) 100%); }
+.legendary-card {
+  border-radius: 24px; padding: 34px 28px; text-align: center;
+  max-width: 340px; width: 92%; position: relative; overflow: hidden;
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.legendary-card-1 {
+  background: linear-gradient(160deg,#1a0a2e,#0d0d1f);
+  border: 2px solid #9b59b6;
+  box-shadow: 0 0 40px rgba(155,89,182,0.5), 0 12px 48px rgba(0,0,0,0.9);
+}
+.legendary-card-2 {
+  background: linear-gradient(160deg,#200030,#0d0010);
+  border: 2px solid #cc00ff;
+  box-shadow: 0 0 60px rgba(200,0,255,0.6), 0 12px 48px rgba(0,0,0,0.9);
+}
+.legendary-card-3 {
+  background: linear-gradient(160deg,#300000,#0d0000);
+  border: 2px solid #ff2244;
+  box-shadow: 0 0 60px rgba(255,34,68,0.7), 0 12px 48px rgba(0,0,0,0.9);
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1), cardShake 0.6s ease 0.4s;
+}
+
+/* Legendary battle countdown overlay (full screen) */
+.legendary-battle-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: radial-gradient(ellipse at center, #1a0030 0%, #050005 50%, #000 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+.legendary-title-text {
+  font-size: 1.4rem; font-weight: 900; letter-spacing: 6px; text-transform: uppercase;
+  color: #d4a8ff; text-shadow: 0 0 20px rgba(180,100,255,0.8);
+  animation: legendaryTextFlicker 4s ease infinite;
+  margin-bottom: 6px;
+}
+.legendary-subtitle {
+  font-size: 0.7rem; letter-spacing: 4px; color: #9b59b6; font-weight: 700;
+  text-transform: uppercase; margin-bottom: 36px;
+}
+@keyframes legendaryCountPop {
+  0%   { transform: scale(3); opacity: 0; filter: blur(8px); }
+  35%  { transform: scale(1); opacity: 1; filter: blur(0); }
+  80%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.3); opacity: 0; }
+}
+@keyframes legendaryGoPop {
+  0%   { transform: scale(0.3) rotate(-8deg); opacity: 0; filter: blur(6px); }
+  40%  { transform: scale(1.2) rotate(2deg); opacity: 1; filter: blur(0); }
+  70%  { transform: scale(1); }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.legendary-count-num {
+  font-size: 9rem; font-weight: 900; line-height: 1;
+  animation: legendaryCountPop 0.95s ease forwards;
+  filter: drop-shadow(0 0 40px currentColor);
+}
+.legendary-count-go {
+  font-size: 5rem; font-weight: 900; letter-spacing: 8px;
+  color: #ff2244; filter: drop-shadow(0 0 30px #ff2244);
+  animation: legendaryGoPop 0.8s ease forwards;
+}
+.legendary-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+
+/* Legendary results badge on results screen */
+.legendary-results-badge {
+  background: linear-gradient(135deg,#1a0a2e,#200030);
+  border: 2px solid #9b59b6; border-radius: 16px; padding: 18px; margin-bottom: 14px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(155,89,182,0.4);
+  animation: legendaryPulse 2.5s ease-in-out infinite;
+}
+
+/* ── MYSTERY BADGES ── */
+.badge-row { display: flex; gap: 8px; justify-content: center; margin: 10px 0 6px; flex-wrap: wrap; }
+.mystery-badge {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.18);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; cursor: default; transition: all 0.3s;
+  background: rgba(255,255,255,0.02);
+  flex-shrink: 0;
+}
+.mystery-badge .badge-icon { font-size: 1.1rem; opacity: 0.15; filter: grayscale(1); }
+.mystery-badge .badge-qmark { position: absolute; font-size: 0.95rem; font-weight: 900; color: rgba(255,255,255,0.18); }
+.mystery-badge.earned { border-style: solid; border-color: var(--badge-color,#ffd700); background: rgba(255,255,255,0.05); }
+.mystery-badge.earned .badge-icon { opacity: 1; filter: none; }
+.mystery-badge.earned .badge-qmark { display: none; }
+.mystery-badge.earned { box-shadow: 0 0 10px var(--badge-color,#ffd700), 0 0 20px rgba(0,0,0,0.3); }
+.mystery-badge .badge-count {
+  position: absolute; bottom: -3px; right: -3px;
+  min-width: 16px; height: 16px; border-radius: 8px; padding: 0 3px;
+  font-size: 0.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  background: var(--badge-color,#ffd700); color: #1a1a2e; border: 1.5px solid #1a1a2e;
+}
+.countdown-overlay {
+  position: absolute; inset: 0; background: rgba(10,14,26,0.92);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 18px; z-index: 50; pointer-events: none;
+}
+@keyframes countPop {
+  0%   { transform: scale(2.5); opacity: 0; }
+  30%  { transform: scale(1);   opacity: 1; }
+  75%  { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(0.5); opacity: 0; }
+}
+@keyframes goPop {
+  0%   { transform: scale(0.4) rotate(-5deg); opacity: 0; }
+  40%  { transform: scale(1.15) rotate(2deg); opacity: 1; }
+  70%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+.countdown-num {
+  font-size: 7rem; font-weight: 900; line-height: 1;
+  animation: countPop 0.9s ease forwards;
+  filter: drop-shadow(0 0 30px currentColor);
+}
+.countdown-go {
+  font-size: 4.5rem; font-weight: 900; letter-spacing: 4px;
+  color: #06d6a0; filter: drop-shadow(0 0 24px #06d6a0);
+  animation: goPop 0.7s ease forwards;
+}
 
 /* ── GOLD ATTACK BUTTON GLOW ── */
 @keyframes goldAttackGlow {
@@ -458,12 +599,20 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 <!-- ══ MODE SELECT ══ -->
 <div id="modeScreen" class="screen">
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;">
       <div>
         <h1 style="font-size:1.4rem;text-align:left;margin-bottom:2px;" id="modeGreeting">Hi!</h1>
         <p class="subtitle" style="text-align:left;margin-bottom:0;">Choose how long to practice:</p>
       </div>
       <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
+    </div>
+    <!-- Mystery badges -->
+    <div class="badge-row" id="mysteryBadgeRow">
+      <div class="mystery-badge" id="mbadge-legendary" title="???"><span class="badge-icon">👑</span><span class="badge-qmark">?</span></div>
+      <div class="mystery-badge" id="mbadge-inferno"   title="???"><span class="badge-icon">🔥</span><span class="badge-qmark">?</span></div>
+      <div class="mystery-badge" id="mbadge-perfect"   title="???"><span class="badge-icon">💯</span><span class="badge-qmark">?</span></div>
+      <div class="mystery-badge" id="mbadge-speedster" title="???"><span class="badge-icon">⚡</span><span class="badge-qmark">?</span></div>
+      <div class="mystery-badge" id="mbadge-prismatic" title="???"><span class="badge-icon">🌈</span><span class="badge-qmark">?</span></div>
     </div>
     <div class="mode-level-layout">
       <!-- Left timers -->
@@ -485,6 +634,14 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         </div>
         <div class="level-badge" id="levelBadge" style="background:#0f3460;color:#7a8fb5;width:48px;height:48px;font-size:1.1rem;">0</div>
         <div style="font-size:0.6rem;color:#7a8fb5;font-weight:700;margin-top:3px;text-align:center;letter-spacing:0.5px;" id="levelNameLabel"></div>
+        <!-- Legendary badge -->
+        <div id="legendaryBadgeWrap" style="display:none;margin-top:8px;text-align:center;">
+          <div id="legendaryBadge" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#1a0a2e,#0d0d1f);border:2px solid #9b59b6;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(155,89,182,0.6),0 0 28px rgba(155,89,182,0.3);animation:legendaryPulse 2.5s ease-in-out infinite;cursor:default;">
+            <div style="font-size:0.6rem;">👑</div>
+            <div id="legendaryCount" style="font-size:0.65rem;font-weight:900;color:#d4a8ff;line-height:1;">0</div>
+          </div>
+          <div style="font-size:0.5rem;font-weight:900;color:#9b59b6;letter-spacing:0.5px;margin-top:2px;text-transform:uppercase;">Legend</div>
+        </div>
       </div>
       <!-- Right timers -->
       <div class="mode-right">
@@ -514,7 +671,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 <!-- ══ QUIZ ══ -->
 <div id="quizScreen" class="screen">
-  <div class="card">
+  <div class="card" style="position:relative;">
+    <div id="countdownOverlay" class="countdown-overlay" style="display:none;">
+      <div id="countdownNum" class="countdown-num" style="color:#ffd166;">3</div>
+    </div>
     <div class="quiz-header">
       <div class="stat-box"><div class="stat-val" id="timerDisp">5:00</div><div class="stat-lbl">Time</div></div>
       <div class="stat-box"><div class="stat-val" id="scoreDisp">0</div><div class="stat-lbl">Correct</div></div>
@@ -650,6 +810,52 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div class="levelup-label" id="levelUpLabel">Speed Demon</div>
     <div class="levelup-req" id="levelUpReq">All 64 facts Blue Zone or faster</div>
     <button class="levelup-close" onclick="document.getElementById('levelUpOverlay').style.display='none';">Let's Keep Going! ⚡</button>
+  </div>
+</div>
+
+<!-- Legendary Step 1: "Bruh you're lightning" -->
+<!-- (reuses existing goldConfirmOverlay — confirmGoldAttack now triggers step 2) -->
+
+<!-- Legendary Step 2: "You wish to attempt Legendary Status?" -->
+<div class="legendary-overlay legendary-step2-bg" id="legendaryStep2" style="display:none;">
+  <div class="legendary-card legendary-card-2">
+    <div style="font-size:3.5rem;margin-bottom:10px;animation:mBounce 0.8s ease;">👑</div>
+    <div style="font-size:0.7rem;letter-spacing:4px;color:#cc00ff;font-weight:900;text-transform:uppercase;margin-bottom:8px;">⚠️ WARNING ⚠️</div>
+    <div style="font-size:1.4rem;font-weight:900;color:#d4a8ff;margin-bottom:10px;line-height:1.2;">You wish to attempt<br><span style="color:#cc00ff;font-size:1.6rem;">Legendary Status?</span></div>
+    <div style="font-size:0.85rem;color:#9b59b6;font-weight:600;margin-bottom:22px;line-height:1.5;">Legendary means hitting every answer in under <strong style="color:#d4a8ff;">0.8 seconds</strong>. Only the greatest warriors achieve this.</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeLegendaryFlow()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#1a0a2e;color:#9b59b6;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;border:1px solid #9b59b6;">I'm not ready</button>
+      <button onclick="legendaryStep3()" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#8b00ff,#cc00ff);color:#fff;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;box-shadow:0 0 16px rgba(200,0,255,0.4);">I ACCEPT ⚔️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Legendary Step 3: "Are you crazy??" -->
+<div class="legendary-overlay legendary-step3-bg" id="legendaryStep3" style="display:none;">
+  <div class="legendary-card legendary-card-3">
+    <div style="font-size:3.5rem;margin-bottom:6px;">😱</div>
+    <div style="font-size:1.8rem;font-weight:900;color:#ff2244;margin-bottom:6px;animation:legendaryTextFlicker 1.5s ease infinite;">ARE YOU CRAZY??</div>
+    <div style="font-size:0.85rem;color:#ff8899;font-weight:600;margin-bottom:22px;line-height:1.5;">This is the hardest challenge in Battle Masters. Less than 1% of warriors have ever achieved Legendary Status. Do you truly dare to enter?</div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeLegendaryFlow()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#1a0000;color:#ff2244;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;border:1px solid #ff2244;">...maybe not</button>
+      <button onclick="launchLegendaryBattle()" style="flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#cc0000,#ff2244);color:#fff;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;box-shadow:0 0 20px rgba(255,34,68,0.5);">BRING IT ON! 💀</button>
+    </div>
+  </div>
+</div>
+
+<!-- Legendary Battle Countdown (full screen) -->
+<div class="legendary-battle-overlay" id="legendaryBattleOverlay" style="display:none;">
+  <div class="legendary-particles" id="legendaryParticles"></div>
+  <div class="legendary-title-text">⚔️ LEGENDARY BATTLE ⚔️</div>
+  <div class="legendary-subtitle">PREPARE YOURSELF</div>
+  <div id="legendaryCountNum" class="legendary-count-num" style="color:#cc00ff;">5</div>
+</div>
+
+<!-- Legendary Results Screen -->
+<div class="legendary-overlay" id="legendaryResultsOverlay" style="display:none;background:radial-gradient(ellipse at center,#0d001a 0%,#000 100%);">
+  <div style="width:92%;max-width:380px;text-align:center;position:relative;">
+    <div id="legendaryResultsContent"></div>
+    <button id="legendaryResultsCloseBtn" onclick="closeLegendaryResults()" style="margin-top:18px;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;"></button>
   </div>
 </div>
 <script>
@@ -1005,7 +1211,155 @@ function showLevelUpPopup(lvl){
 }
 
 function renderModeScreen(){
-  renderHistMini(); renderWSIP(); renderLevelBar();
+  renderHistMini(); renderWSIP(); renderLevelBar(); renderLegendaryBadge(); renderMysteryBadges();
+}
+
+// ══════════════════════════════════════════
+// MYSTERY BADGES
+// ══════════════════════════════════════════
+var BADGES=[
+  {
+    id:'legendary', icon:'👑', color:'#9b59b6',
+    name:'Legendary Warrior',
+    secret:'Achieve Legendary Status (under 0.8s) at least once',
+    check:function(ud,sessions){
+      return (ud.legendaryDefeats||0)>=1;
+    },
+    count:function(ud){ return ud.legendaryDefeats||0; }
+  },
+  {
+    id:'inferno', icon:'🔥', color:'#ff4500',
+    name:'Inferno',
+    secret:'Complete 10 or more sessions in a single day',
+    check:function(ud,sessions){
+      if(!sessions||!sessions.length) return false;
+      var today=new Date().toDateString();
+      var todaySessions=sessions.filter(function(s){
+        return new Date(s.date).toDateString()===today;
+      });
+      return todaySessions.length>=10;
+    },
+    count:null
+  },
+  {
+    id:'perfect', icon:'💯', color:'#ffd700',
+    name:'Perfect Streak',
+    secret:'Answer 20 in a row correctly in a single session',
+    check:function(ud,sessions){
+      if(!sessions||!sessions.length) return false;
+      return sessions.some(function(s){
+        if(!s.times) return false;
+        var streak=0, best=0;
+        s.times.forEach(function(t){
+          if(t.ok){ streak++; best=Math.max(best,streak); } else { streak=0; }
+        });
+        return best>=20;
+      });
+    },
+    count:null
+  },
+  {
+    id:'speedster', icon:'⚡', color:'#06d6a0',
+    name:'Speed Master',
+    secret:'Achieve 90%+ accuracy on a full 5-minute test',
+    check:function(ud,sessions){
+      if(!sessions||!sessions.length) return false;
+      return sessions.some(function(s){
+        return s.dur===300 && s.total>0 && (s.correct/s.total)>=0.9;
+      });
+    },
+    count:null
+  },
+  {
+    id:'prismatic', icon:'🌈', color:'#cc00ff',
+    name:'Prismatic',
+    secret:'Have at least one fact in every zone simultaneously',
+    check:function(ud,sessions){
+      if(!ud||!ud.facts) return false;
+      var zones={gold:false,green:false,blue:false,yellow:false,red:false};
+      ALL_FACTS.forEach(function(ab){
+        var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+        if(avg!==null) zones[getZone(avg)]=true;
+      });
+      return zones.gold&&zones.green&&zones.blue&&zones.yellow&&zones.red;
+    },
+    count:null
+  }
+];
+
+function checkAndSaveBadges(){
+  var d=getData(), ud=d[userKey];
+  if(!ud) return;
+  if(!ud.badges) ud.badges={};
+  var sessions=ud.sessions||[];
+  var changed=false;
+  BADGES.forEach(function(b){
+    if(!ud.badges[b.id] && b.check(ud,sessions)){
+      ud.badges[b.id]=true;
+      changed=true;
+    }
+  });
+  if(changed) saveData(d);
+}
+
+function renderMysteryBadges(){
+  var d=getData(), ud=d[userKey];
+  if(!ud) return;
+  var badges=ud.badges||{};
+  BADGES.forEach(function(b){
+    var el=document.getElementById('mbadge-'+b.id);
+    if(!el) return;
+    var earned=!!badges[b.id];
+    // Remove old count badge
+    var old=el.querySelector('.badge-count');
+    if(old) old.remove();
+
+    if(earned){
+      el.classList.add('earned');
+      el.style.setProperty('--badge-color',b.color);
+      // Add count if applicable
+      var cnt=b.count?b.count(ud):0;
+      if(cnt>0){
+        var cd=document.createElement('div');
+        cd.className='badge-count';
+        cd.textContent=cnt;
+        el.appendChild(cd);
+      }
+      el.title=b.name+': '+b.secret;
+    } else {
+      el.classList.remove('earned');
+      el.title='???';
+    }
+  });
+}
+
+window.closeLegendaryResults=function(){
+  document.getElementById('legendaryResultsOverlay').style.display='none';
+  // Reset quiz card styling
+  var qcard=document.querySelector('#quizScreen .card');
+  if(qcard){ qcard.style.background=''; qcard.style.borderColor=''; qcard.style.boxShadow=''; }
+  activeAttackZone=null;
+  window._wsipFacts=null;
+  renderModeScreen();
+  show('modeScreen');
+};
+
+function renderLegendaryBadge(){
+  var d=getData(), ud=d[userKey];
+  var count=ud?ud.legendaryDefeats||0:0;
+  var wrap=document.getElementById('legendaryBadgeWrap');
+  var badge=document.getElementById('legendaryBadge');
+  var countEl=document.getElementById('legendaryCount');
+  if(!wrap) return;
+  if(count>0){
+    wrap.style.display='block';
+    countEl.textContent=count;
+    // Intensify glow based on count
+    var intensity=Math.min(1, count/10);
+    badge.style.boxShadow='0 0 '+(14+intensity*20)+'px rgba(155,89,182,'+(0.6+intensity*0.4)+'),0 0 '+(28+intensity*40)+'px rgba(155,89,182,'+(0.3+intensity*0.3)+')';
+  } else {
+    wrap.style.display='none';
+  }
 }
 
 function renderHistMini(){
@@ -1031,16 +1385,134 @@ window.closeAttackPanel=function(){
 };
 
 var pendingGoldAttack=null; // stores zone to launch after gold confirm
+var isLegendaryBattle=false; // flag: current battle is legendary mode
 
 window.closeGoldConfirm=function(){
   document.getElementById('goldConfirmOverlay').style.display='none';
   pendingGoldAttack=null;
 };
+
+// After "Yeah let's go" on the bruh popup → show legendary step 2
 window.confirmGoldAttack=function(){
   document.getElementById('goldConfirmOverlay').style.display='none';
-  if(pendingGoldAttack) _openZoneAttack(pendingGoldAttack);
+  document.getElementById('legendaryStep2').style.display='flex';
+};
+
+window.closeLegendaryFlow=function(){
+  document.getElementById('legendaryStep2').style.display='none';
+  document.getElementById('legendaryStep3').style.display='none';
   pendingGoldAttack=null;
 };
+
+window.legendaryStep3=function(){
+  document.getElementById('legendaryStep2').style.display='none';
+  document.getElementById('legendaryStep3').style.display='flex';
+};
+
+window.launchLegendaryBattle=function(){
+  document.getElementById('legendaryStep3').style.display='none';
+  // Shake screen
+  var body=document.body;
+  body.style.animation='none'; void body.offsetWidth;
+  body.style.animation='cardShake 0.6s ease';
+  setTimeout(function(){ body.style.animation=''; },700);
+
+  // Get gold facts for the battle
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.facts) return;
+  var goldFacts=[];
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+    if(avg!==null && getZone(avg)==='gold') goldFacts.push({k:k,avg:avg,ab:ab});
+  });
+  if(!goldFacts.length) return;
+
+  // Sort slowest first, take bottom 5 but min 4 total
+  goldFacts.sort(function(a,b){ return b.avg-a.avg; });
+  var selectedFacts=goldFacts.slice(0, Math.max(5, Math.min(5, goldFacts.length))).map(function(x){return x.ab;});
+  if(selectedFacts.length<4){
+    // Pad with slowest non-gold facts
+    var extras=[];
+    ALL_FACTS.forEach(function(ab){
+      var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+      if(avg!==null && getZone(avg)!=='gold') extras.push({ab:ab,avg:avg});
+    });
+    extras.sort(function(a,b){return b.avg-a.avg;});
+    while(selectedFacts.length<4 && extras.length){
+      selectedFacts.push(extras.shift().ab);
+    }
+  }
+
+  // Snapshot pre-battle avgs for legendary check
+  preAttackSnapshot={};
+  window._attackPreAvgs={};
+  window._legendaryPreAvgs={};
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud.facts[k], avg=factAvg(f);
+    preAttackSnapshot[k]=avg===null?null:getZone(avg);
+  });
+  selectedFacts.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud.facts[k];
+    window._attackPreAvgs[k]=factAvg(f);
+    window._legendaryPreAvgs[k]=factAvg(f);
+  });
+
+  activeAttackZone='gold';
+  isLegendaryBattle=true;
+  window._wsipFacts=selectedFacts;
+  expandedAttackZone=null;
+  activeAttackZoneFacts={};
+
+  // Show legendary battle countdown overlay
+  showLegendaryCountdown(function(){
+    startQuiz(true, 40); // 40 second legendary battle
+  });
+};
+
+function showLegendaryCountdown(onDone){
+  var overlay=document.getElementById('legendaryBattleOverlay');
+  var numEl=document.getElementById('legendaryCountNum');
+  overlay.style.display='flex';
+
+  // Spawn purple particles
+  var parts=document.getElementById('legendaryParticles');
+  var ph='';
+  for(var i=0;i<60;i++){
+    var x=Math.random()*100, dur=1.5+Math.random()*3, del=Math.random()*2;
+    var colors=['#9b59b6','#cc00ff','#ff2244','#d4a8ff','#ffffff'];
+    var c=colors[Math.floor(Math.random()*colors.length)];
+    var s=3+Math.random()*7;
+    ph+='<div style="position:absolute;left:'+x+'%;bottom:-10px;width:'+s+'px;height:'+s+'px;border-radius:50%;background:'+c+';opacity:0.7;animation:cfall '+(dur)+'s '+(del)+'s ease forwards;"></div>';
+  }
+  parts.innerHTML=ph;
+
+  var counts=[
+    {txt:'5',color:'#9b59b6',cls:'legendary-count-num'},
+    {txt:'4',color:'#aa44cc',cls:'legendary-count-num'},
+    {txt:'3',color:'#cc00ff',cls:'legendary-count-num'},
+    {txt:'2',color:'#ff4466',cls:'legendary-count-num'},
+    {txt:'1',color:'#ff2244',cls:'legendary-count-num'},
+    {txt:'GO!',color:'#ffffff',cls:'legendary-count-go'}
+  ];
+  var ci=0;
+  function showC(){
+    var c=counts[ci];
+    numEl.className=c.cls;
+    numEl.style.color=c.color;
+    numEl.textContent=c.txt;
+    numEl.style.animation='none'; void numEl.offsetWidth; numEl.style.animation='';
+    ci++;
+    if(ci<counts.length){
+      setTimeout(showC, 800);
+    } else {
+      setTimeout(function(){
+        overlay.style.display='none';
+        if(onDone) onDone();
+      }, 600);
+    }
+  }
+  showC();
+}
 
 window.openZoneAttack=function(zone){
   if(zone==='gold'){
@@ -1078,25 +1550,36 @@ function _openZoneAttack(zone){
   }
   expandedAttackZone=zone;
 
+  // Sort zone facts slowest first
+  var zoneWithAvg=[];
+  zoneFacts.forEach(function(k){
+    var f=ud.facts[k], avg=factAvg(f)||99999;
+    zoneWithAvg.push({k:k,avg:avg});
+  });
+  zoneWithAvg.sort(function(a,b){ return b.avg-a.avg; }); // slowest first
+  zoneFacts=zoneWithAvg.map(function(x){return x.k;});
+
   // If fewer than 3 in zone, pad up to 4 total with worst facts outside zone
   var displayFacts=zoneFacts.slice();
   if(zoneFacts.length < 3){
-    // Collect all practiced facts NOT in this zone, sorted slowest first
     var extras=[];
     ALL_FACTS.forEach(function(ab){
       var k=fkey(ab[0],ab[1]);
-      if(zoneFacts.indexOf(k)!==-1) return; // already in zone
+      if(zoneFacts.indexOf(k)!==-1) return;
       var f=ud.facts[k], avg=factAvg(f);
       if(avg!==null) extras.push({k:k, avg:avg});
     });
-    extras.sort(function(a,b){ return b.avg-a.avg; }); // slowest first
+    extras.sort(function(a,b){ return b.avg-a.avg; });
     var needed=4-zoneFacts.length;
     for(var i=0;i<needed&&i<extras.length;i++) displayFacts.push(extras[i].k);
   }
 
-  // Mark zone facts as selected; extras start selected too but are visually distinct
+  // Default: select only the worst 5 (first 5 in sorted list), deselect the rest
+  var SELECT_DEFAULT=5;
   activeAttackZoneFacts={};
-  displayFacts.forEach(function(k){ activeAttackZoneFacts[k]=true; });
+  displayFacts.forEach(function(k,i){
+    activeAttackZoneFacts[k]=(i<SELECT_DEFAULT);
+  });
 
   renderAttackPanel(zone, displayFacts, ud, zoneFacts);
 }
@@ -1289,11 +1772,65 @@ function startQuiz(isFocus, forceDur){
   }
   updateStats(); updateTimerDisplay(); showProblem();
   show('quizScreen');
+  // Visual mode: legendary gets purple tint
+  var qcard=document.querySelector('#quizScreen .card');
+  if(qcard){
+    if(isLegendaryBattle){
+      qcard.style.background='linear-gradient(160deg,#1a0a2e,#16213e,#0a0010)';
+      qcard.style.borderColor='rgba(155,89,182,0.4)';
+      qcard.style.boxShadow='0 8px 32px rgba(0,0,0,0.5),0 0 30px rgba(155,89,182,0.2)';
+    } else {
+      qcard.style.background=''; qcard.style.borderColor=''; qcard.style.boxShadow='';
+    }
+  }
   var inp=document.getElementById('answerInput');
   inp.value=''; inp.className='';
-  setTimeout(function(){inp.focus();},100);
-  clearInterval(timer);
-  timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
+
+  // Countdown 3-2-1-GO! then start timer (skip for legendary — has its own 5-4-3-2-1)
+  if(isLegendaryBattle){
+    // Just lock until showLegendaryCountdown callback fires startQuiz, which sets overlay none
+    // The overlay is already hidden by legendary countdown's onDone — just start timer directly
+    var overlay2=document.getElementById('countdownOverlay');
+    overlay2.style.display='none';
+    answerLocked=false;
+    inp.focus();
+    clearInterval(timer);
+    timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
+    return;
+  }
+
+  var overlay=document.getElementById('countdownOverlay');
+  var numEl=document.getElementById('countdownNum');
+  var counts=[
+    {txt:'3',cls:'countdown-num',color:'#ef476f'},
+    {txt:'2',cls:'countdown-num',color:'#ff8c00'},
+    {txt:'1',cls:'countdown-num',color:'#ffd166'},
+    {txt:'GO!',cls:'countdown-go',color:'#06d6a0'}
+  ];
+  overlay.style.display='flex';
+  answerLocked=true;
+  var ci=0;
+  function showCount(){
+    var c=counts[ci];
+    numEl.className=c.cls;
+    numEl.style.color=c.color;
+    numEl.textContent=c.txt;
+    numEl.style.animation='none'; void numEl.offsetWidth;
+    numEl.style.animation='';
+    ci++;
+    if(ci<counts.length){
+      setTimeout(showCount, 850);
+    } else {
+      setTimeout(function(){
+        overlay.style.display='none';
+        answerLocked=false;
+        inp.focus();
+        clearInterval(timer);
+        timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
+      }, 650);
+    }
+  }
+  showCount();
 }
 
 function showProblem(){
@@ -1326,10 +1863,16 @@ function submitAnswer(){
     qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:false});
     qStreak=0; updateStats();
     answerLocked=true;
-    // Clear value immediately so student doesn't need to backspace
     inp.value='';
     inp.className=''; void inp.offsetWidth; inp.className='wrong';
-    setTimeout(function(){inp.className=''; answerLocked=false; inp.focus(); qStart=Date.now();},500);
+    // Shake the card too
+    var card=document.querySelector('#quizScreen .card');
+    if(card){ card.classList.remove('card-shake'); void card.offsetWidth; card.classList.add('card-shake'); }
+    setTimeout(function(){
+      inp.className='';
+      if(card) card.classList.remove('card-shake');
+      answerLocked=false; inp.focus(); qStart=Date.now();
+    },500);
   }
 }
 
@@ -1362,7 +1905,7 @@ function updateTimerDisplay(){
 
 function endQuiz(){
   clearInterval(timer);
-  answerLocked=true; // prevent any further input processing
+  answerLocked=true;
   var okTimes=qTimes.filter(function(t){return t.ok;});
   var avgMs=okTimes.length?Math.round(okTimes.reduce(function(s,t){return s+t.ms;},0)/okTimes.length):0;
   var session={date:new Date().toISOString(),dur:totalTime,correct:qCorrect,total:qTotal,avgMs:avgMs,times:qTimes};
@@ -1371,12 +1914,37 @@ function endQuiz(){
   var defeated=[];
   var attackedZone=activeAttackZone;
   try { defeated=checkDefeats(); } catch(e){}
+
+  // Check legendary defeats
+  var legendaryDefeated=[];
+  if(isLegendaryBattle && window._legendaryPreAvgs){
+    var d2=getData(), ud2=d2[userKey];
+    if(ud2&&ud2.facts){
+      Object.keys(window._legendaryPreAvgs).forEach(function(k){
+        var f=ud2.facts[k], nowAvg=factAvg(f);
+        if(nowAvg!==null && nowAvg<=800){ // legendary threshold: 0.8s
+          var p=k.split('x');
+          legendaryDefeated.push([parseInt(p[0]),parseInt(p[1])]);
+        }
+      });
+    }
+  }
+  // Save legendary defeats
+  if(legendaryDefeated.length>0){
+    var ld=getData(); var lud=ld[userKey];
+    if(lud){ lud.legendaryDefeats=(lud.legendaryDefeats||0)+legendaryDefeated.length; saveData(ld); }
+  }
+
+  // Check all badges
+  try { checkAndSaveBadges(); } catch(e){}
+
+  var wasLegendary=isLegendaryBattle;
+  isLegendaryBattle=false;
   activeAttackZone=null;
 
   try {
-    showResults(session, defeated, attackedZone);
+    showResults(session, defeated, attackedZone, wasLegendary, legendaryDefeated);
   } catch(e) {
-    // If showResults errors, at minimum navigate away from quiz
     show('resultsScreen');
   }
 }
@@ -1412,22 +1980,113 @@ document.getElementById('resReturnBtn').addEventListener('click',function(){
   show('modeScreen');
 });
 
-function showResults(s, defeated, attackedZone){
-  show('resultsScreen');
-  var acc=s.total>0?Math.round(s.correct/s.total*100):0;
-  var emoji,title;
-  if(acc>=95){emoji='\uD83C\uDFC6';title='Superstar!';doConfetti();}
-  else if(acc>=85){emoji='\uD83C\uDF1F';title='Awesome!';}
-  else if(acc>=70){emoji='\uD83D\uDC4D';title='Good Job!';}
-  else{emoji='\uD83D\uDCAA';title='Keep Going!';}
-  document.getElementById('resEmoji').textContent=emoji;
-  document.getElementById('resTitle').textContent=title;
-  document.getElementById('resSub').textContent=s.correct+' correct out of '+s.total+' answered';
-  document.getElementById('resScore').textContent=s.correct+'/'+s.total;
-  document.getElementById('resAcc').textContent=acc+'%';
-  document.getElementById('resAvg').textContent=s.avgMs>0?fmtMs(s.avgMs):'--';
+function showLegendaryResults(s, legendaryDefeated, acc){
+  var victory = legendaryDefeated && legendaryDefeated.length > 0;
+  var d3=getData(), ud3=d3[userKey];
+  var totalLeg=ud3?ud3.legendaryDefeats||0:0;
 
-  // Defeat banner
+  var overlay=document.getElementById('legendaryResultsOverlay');
+  var content=document.getElementById('legendaryResultsContent');
+  var closeBtn=document.getElementById('legendaryResultsCloseBtn');
+
+  if(victory){
+    doConfetti();
+    // Burst purple confetti too
+    setTimeout(function(){
+      var colors=['#9b59b6','#cc00ff','#d4a8ff','#ffd700','#ffffff','#ff2244'];
+      for(var i=0;i<80;i++){
+        (function(i){setTimeout(function(){
+          var el=document.createElement('div');
+          el.className='confetti-piece';
+          el.style.cssText='left:'+(Math.random()*100)+'%;top:0;background:'+colors[i%colors.length]+
+            ';animation-delay:'+(Math.random()*0.5)+'s;animation-duration:'+(2+Math.random()*1.5)+'s;'+
+            'border-radius:'+(Math.random()>0.5?'50%':'2px')+';width:'+(6+Math.random()*7)+'px;height:'+(6+Math.random()*7)+'px;';
+          document.body.appendChild(el);
+          setTimeout(function(){el.remove();},4000);
+        },i*15);})(i);
+      }
+    },300);
+
+    content.innerHTML=
+      '<div style="animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">'+
+        '<div style="font-size:5rem;margin-bottom:8px;filter:drop-shadow(0 0 30px #9b59b6);">👑</div>'+
+        '<div style="font-size:0.72rem;font-weight:900;letter-spacing:5px;color:#9b59b6;text-transform:uppercase;margin-bottom:6px;">LEGENDARY VICTORY</div>'+
+        '<div style="font-size:2.4rem;font-weight:900;line-height:1.1;margin-bottom:10px;'+
+          'background:linear-gradient(135deg,#9b59b6,#d4a8ff,#ffffff,#d4a8ff,#9b59b6);'+
+          '-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;'+
+          'filter:drop-shadow(0 0 20px rgba(155,89,182,0.8));text-shadow:none;">'+
+          'LEGENDARY<br>ACHIEVED!</div>'+
+        '<div style="background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.4);border-radius:12px;padding:12px 16px;margin-bottom:14px;">'+
+          '<div style="font-size:0.72rem;color:#9b59b6;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Facts Conquered at &lt;0.8s</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">'+
+            legendaryDefeated.map(function(ab){
+              return '<span style="background:rgba(155,89,182,0.35);border:2px solid #9b59b6;border-radius:8px;padding:5px 12px;font-weight:900;color:#d4a8ff;font-size:1rem;">'+ab[0]+'\u00D7'+ab[1]+'</span>';
+            }).join('')+
+          '</div>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'+
+          '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 6px;text-align:center;">'+
+            '<div style="font-size:1.3rem;font-weight:900;color:#d4a8ff;">'+s.correct+'/'+s.total+'</div>'+
+            '<div style="font-size:0.62rem;color:#6a3f8a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Score</div></div>'+
+          '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 6px;text-align:center;">'+
+            '<div style="font-size:1.3rem;font-weight:900;color:#d4a8ff;">'+acc+'%</div>'+
+            '<div style="font-size:0.62rem;color:#6a3f8a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Accuracy</div></div>'+
+          '<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 6px;text-align:center;">'+
+            '<div style="font-size:1.3rem;font-weight:900;color:#ffd700;">'+totalLeg+'</div>'+
+            '<div style="font-size:0.62rem;color:#6a3f8a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Total Leg.</div></div>'+
+        '</div>'+
+        '<div style="font-size:0.72rem;color:#6a3f8a;font-weight:700;letter-spacing:1px;">⚔️ YOUR NAME IS WRITTEN IN THE CHRONICLES ⚔️</div>'+
+      '</div>';
+    closeBtn.style.background='linear-gradient(135deg,#8b00ff,#cc00ff)';
+    closeBtn.style.color='#fff';
+    closeBtn.style.boxShadow='0 0 24px rgba(155,89,182,0.5)';
+    closeBtn.textContent='👑 Claim Your Glory';
+
+  } else {
+    // Defeat screen
+    content.innerHTML=
+      '<div style="animation:fadeIn 0.4s ease;">'+
+        '<div style="font-size:4rem;margin-bottom:8px;opacity:0.8;">💀</div>'+
+        '<div style="font-size:0.72rem;font-weight:900;letter-spacing:5px;color:#ff2244;text-transform:uppercase;margin-bottom:6px;">LEGENDARY DEFEAT</div>'+
+        '<div style="font-size:2rem;font-weight:900;line-height:1.1;margin-bottom:10px;color:#ff8899;">The Legend<br>Escaped...</div>'+
+        '<div style="background:rgba(255,34,68,0.08);border:1px solid rgba(255,34,68,0.25);border-radius:12px;padding:14px;margin-bottom:14px;">'+
+          '<div style="font-size:0.88rem;color:#ff8899;font-weight:600;line-height:1.6;">'+
+            'None of your facts broke the 0.8s threshold this battle.<br>'+
+            '<span style="color:#9b59b6;font-size:0.82rem;">Legendary Status remains locked.</span>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'+
+          '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 6px;text-align:center;">'+
+            '<div style="font-size:1.3rem;font-weight:900;color:#e8f0fe;">'+s.correct+'/'+s.total+'</div>'+
+            '<div style="font-size:0.62rem;color:#3a4f6b;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Score</div></div>'+
+          '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 6px;text-align:center;">'+
+            '<div style="font-size:1.3rem;font-weight:900;color:#e8f0fe;">'+acc+'%</div>'+
+            '<div style="font-size:0.62rem;color:#3a4f6b;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Accuracy</div></div>'+
+          '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 6px;text-align:center;">'+
+            '<div style="font-size:1.3rem;font-weight:900;color:'+(totalLeg>0?'#ffd700':'#3a4f6b')+'">'+(totalLeg>0?totalLeg:'-')+'</div>'+
+            '<div style="font-size:0.62rem;color:#3a4f6b;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Total Leg.</div></div>'+
+        '</div>'+
+        '<div style="font-size:0.82rem;color:#6a3f8a;font-weight:700;font-style:italic;">Keep pushing your limits, warrior.</div>'+
+      '</div>';
+    closeBtn.style.background='linear-gradient(135deg,#300030,#500050)';
+    closeBtn.style.color='#d4a8ff';
+    closeBtn.style.boxShadow='0 0 16px rgba(100,0,100,0.4)';
+    closeBtn.textContent='⚔️ Train Harder';
+  }
+
+  overlay.style.display='flex';
+}
+
+function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated){
+  var acc=s.total>0?Math.round(s.correct/s.total*100):0;
+
+  // Legendary gets its own full-screen results
+  if(wasLegendary){
+    showLegendaryResults(s, legendaryDefeated, acc);
+    return;
+  }
+
+  show('resultsScreen');
   var db=document.getElementById('defeatedBanner');
   if(defeated&&defeated.length){
     var zi=ZONES[attackedZone]||ZONES['red'];
