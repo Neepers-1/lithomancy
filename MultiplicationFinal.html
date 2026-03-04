@@ -133,6 +133,8 @@ input:focus { border-color: #ffd166; }
 #answerInput.correct { border-color: #06d6a0; background: rgba(6,214,160,0.1); }
 #answerInput.wrong   { border-color: #ef476f; background: rgba(239,71,111,0.12); animation: shake 0.35s; }
 @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 60%{transform:translateX(8px);} 80%{transform:translateX(-4px);} }
+@keyframes fireFlicker { from{transform:scaleY(1) scaleX(1);} to{transform:scaleY(1.06) scaleX(0.97);} }
+@keyframes laughSpin { from{transform:rotate(-15deg) scale(1);} to{transform:rotate(15deg) scale(1.2);} }
 @keyframes cardShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-10px);} 40%{transform:translateX(10px);} 65%{transform:translateX(-7px);} 82%{transform:translateX(7px);} }
 .card-shake { animation: cardShake 0.45s ease; }
 
@@ -386,6 +388,21 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .round-badge .rb-num { font-size: 0.5rem; font-weight: 900; color: var(--bc,#888); line-height: 1; margin-top: 1px; }
 .round-badge .rb-sub { font-size: 0.42rem; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.2px; }
 
+/* Badge tooltip popup */
+.badge-tip-overlay { position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7); }
+.badge-tip-card { background:linear-gradient(160deg,#0d1b2e,#0a0e1a);border:2px solid #1e3a5f;border-radius:18px;padding:22px 24px;text-align:center;max-width:300px;width:88%;box-shadow:0 0 40px rgba(0,0,0,0.6);animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.badge-tip-icon { font-size:2.4rem;margin-bottom:6px; }
+.badge-tip-name { font-size:1.1rem;font-weight:900;color:#e8f0fe;margin-bottom:4px; }
+.badge-tip-status { font-size:0.75rem;font-weight:700;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase; }
+.badge-tip-desc { font-size:0.82rem;color:#b89fd4;font-weight:600;line-height:1.5;margin-bottom:14px; }
+.badge-tip-close { background:#1e3a5f;color:#e8f0fe;border:none;border-radius:8px;padding:8px 22px;font-family:inherit;font-weight:800;font-size:0.85rem;cursor:pointer; }
+/* Fire badge */
+.fire-badge-wrap { display:flex;flex-direction:column;align-items:center;cursor:pointer;margin:8px auto 4px; }
+.fire-svg-wrap { position:relative;width:64px;height:80px; }
+.fire-label { font-size:0.55rem;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;color:#ff8c00; }
+/* Quitter tease popup */
+.quitter-tease-overlay { position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center; }
+.quitter-tease-card { background:linear-gradient(160deg,#1a0500,#0d0000);border:2px solid #ef476f;border-radius:22px;padding:28px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 0 50px rgba(239,71,111,0.5);animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);position:relative; }
 /* Inferno double-stack badge */
 .inferno-badge { flex-direction: column; gap: 0; }
 .inferno-badge .ib-top { font-size: 0.65rem; font-weight: 900; line-height: 1; }
@@ -634,7 +651,9 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
     </div>
     <!-- Badge rows -->
-    <div id="badgeArea" style="margin:6px 0 10px;"></div>
+    <div id="badgeArea" style="margin:6px 0 4px;"></div>
+    <!-- Fire badge -->
+    <div id="fireBadgeArea" style="margin:0 0 8px;"></div>
     <div class="mode-level-layout">
       <!-- Left timers -->
       <div class="mode-left">
@@ -883,6 +902,29 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <button onclick="document.getElementById('giverUpOverlay').style.display='none'" style="background:linear-gradient(135deg,#ff8c00,#ff4500);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;">I Deserve This 🏃</button>
   </div>
 </div>
+<!-- Badge tooltip popup -->
+<div id="badgeTipOverlay" class="badge-tip-overlay" style="display:none;" onclick="if(event.target===this)closeBadgeTip()">
+  <div class="badge-tip-card">
+    <div class="badge-tip-icon" id="badgeTipIcon">🏆</div>
+    <div class="badge-tip-name" id="badgeTipName">Badge</div>
+    <div class="badge-tip-status" id="badgeTipStatus"></div>
+    <div class="badge-tip-desc" id="badgeTipDesc"></div>
+    <button class="badge-tip-close" onclick="closeBadgeTip()">Got it</button>
+  </div>
+</div>
+
+<!-- Quitter tease popup (fires at exactly 5 early quits, once ever) -->
+<div id="quitterTeaseOverlay" class="quitter-tease-overlay" style="display:none;">
+  <div class="quitter-tease-card">
+    <div style="font-size:3rem;margin-bottom:8px;">😤</div>
+    <div style="font-size:1.3rem;font-weight:900;color:#ef476f;margin-bottom:10px;">Bruh!</div>
+    <div style="font-size:0.92rem;color:#ffb3b3;font-weight:600;line-height:1.6;margin-bottom:20px;">You keep giving up!<br>You afraid of math? 😂<br>You need a tissue?<br>Call the nurse! 🤣</div>
+    <div style="position:relative;height:44px;">
+      <button id="quitterNoBtn" onclick="quitterNoBtnClick()" style="background:#1e3a5f;color:#e8f0fe;border:none;border-radius:10px;padding:10px 28px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;position:absolute;transition:all 0.15s;">No 😢</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -1397,6 +1439,60 @@ function checkAndSaveBadges(){
   var best=getBestStreak(sessions);
   if(best>(ud.bestStreak||0)){ ud.bestStreak=best; changed=true; }
 
+  // ── Expiring badges (reset if condition no longer met) ──
+  var now=Date.now();
+
+  // Untouchable — last session: 0 wrong AND avg < 2s (expires: loses it if next session fails)
+  var lastSess=sessions.length?sessions[sessions.length-1]:null;
+  var untouchable=false;
+  if(lastSess&&lastSess.times){
+    var allOk=lastSess.times.every(function(t){return t.ok;});
+    var okT=lastSess.times.filter(function(t){return t.ok;});
+    var avgT=okT.length?okT.reduce(function(s,t){return s+t.ms;},0)/okT.length:9999;
+    if(allOk&&avgT<2000&&lastSess.total>=8) untouchable=true;
+  }
+  if(untouchable!==!!ud.badges['untouchable']){ ud.badges['untouchable']=untouchable; changed=true; }
+
+  // Ghost Mode — 100% accuracy in a 5-min session (expires like untouchable)
+  var ghost=false;
+  if(lastSess&&lastSess.dur>=300&&lastSess.times&&lastSess.times.every(function(t){return t.ok;})&&lastSess.total>=20) ghost=true;
+  if(ghost!==!!ud.badges['ghost']){ ud.badges['ghost']=ghost; changed=true; }
+
+  // Redline — 5 correct in a row all under 0.8s (ever, doesn't expire)
+  if(!ud.badges['redline']){
+    outer: for(var sri=0;sri<sessions.length;sri++){
+      var srSess=sessions[sri]; if(!srSess.times) continue;
+      var srStreak=0;
+      for(var sti=0;sti<srSess.times.length;sti++){
+        var srt=srSess.times[sti];
+        if(srt.ok&&srt.ms<800){ srStreak++; if(srStreak>=5){ud.badges['redline']=true;changed=true;break outer;} }
+        else srStreak=0;
+      }
+    }
+  }
+
+  // Veteran — 50 total sessions
+  if(!ud.badges['veteran']&&sessions.length>=50){ ud.badges['veteran']=true; changed=true; }
+
+  // Iron Will — 60 cumulative minutes practiced
+  var totalSecs=sessions.reduce(function(s,ss){return s+(ss.dur||0);},0);
+  if(!ud.badges['ironWill']&&totalSecs>=3600){ ud.badges['ironWill']=true; changed=true; }
+
+  // Consistent — sessions on 5 different calendar days
+  if(!ud.badges['consistent']){
+    var days={};
+    sessions.forEach(function(ss){ if(ss.date) days[ss.date.slice(0,10)]=true; });
+    if(Object.keys(days).length>=5){ ud.badges['consistent']=true; changed=true; }
+  }
+
+  // Turtle — answered a fact in > 10s this session (expires after 3 min)
+  if(ud.turtleTime&&(now-ud.turtleTime)>180000){ delete ud.turtleTime; ud.badges['turtle']=false; changed=true; }
+  if(ud.turtleTime&&!ud.badges['turtle']){ ud.badges['turtle']=true; changed=true; }
+
+  // Stubborn — typed same wrong answer twice in a row on same problem (expires after 3 min)
+  if(ud.stubbornTime&&(now-ud.stubbornTime)>180000){ delete ud.stubbornTime; ud.badges['stubborn']=false; changed=true; }
+  if(ud.stubbornTime&&!ud.badges['stubborn']){ ud.badges['stubborn']=true; changed=true; }
+
   // Giver-upper — count saved separately, check for new rank popup
   // (earlyQuits tracked in endEarlyBtn handler)
 
@@ -1409,13 +1505,15 @@ function recordEarlyQuit(){
   if(!ud) return;
   ud.earlyQuits=(ud.earlyQuits||0)+1;
   saveData(d);
-  // Check for new rank
   var count=ud.earlyQuits;
+  // Quitter tease at exactly 5, once ever
+  if(count===5&&!ud.quitterTeaseSeen){
+    ud.quitterTeaseSeen=true; saveData(d);
+    setTimeout(showQuitterTease, 800);
+  }
+  // Check for new giver-up rank
   for(var r=GIVERRANKS.length-1;r>=0;r--){
-    if(count===GIVERRANKS[r].n){
-      showGiverUpPopup(GIVERRANKS[r]);
-      break;
-    }
+    if(count===GIVERRANKS[r].n){ showGiverUpPopup(GIVERRANKS[r]); break; }
   }
 }
 
@@ -1433,6 +1531,186 @@ function getGiverUpRank(count){
   }
   return rank; // index into GIVERRANKS or null
 }
+
+// ── BADGE TOOLTIP ──
+var BADGE_INFO={
+  'untouchable': { icon:'🛡️', name:'Untouchable', desc:'Finish a session with ZERO wrong answers AND average under 2 seconds. Resets if you fail next session — keep it up!', color:'#06d6a0' },
+  'ghost':       { icon:'👻', name:'Ghost Mode',  desc:'Complete a full 5-minute session (20+ problems) with 100% accuracy. Haunting.', color:'#b89fd4' },
+  'redline':     { icon:'🏎️', name:'Redline',     desc:'Get 5 correct answers in a row, all under 0.8 seconds. Absolute speed.', color:'#ef476f' },
+  'veteran':     { icon:'💀', name:'Veteran',     desc:'Complete 50 total sessions. No shortcuts. Just grind.', color:'#7a8fb5' },
+  'ironWill':    { icon:'🔩', name:'Iron Will',   desc:'Practice for a cumulative total of 60 minutes. That\'s dedication.', color:'#aaa' },
+  'consistent':  { icon:'📅', name:'Consistent',  desc:'Play sessions on 5 different calendar days. Show up. Every day.', color:'#118ab2' },
+  'turtle':      { icon:'🐢', name:'Turtle',      desc:'Take longer than 10 seconds on a single fact. Badge vanishes after 3 minutes — a badge of shame!', color:'#06d6a0' },
+  'stubborn':    { icon:'🔄', name:'Stubborn',    desc:'Type the same wrong answer twice in a row on the same problem. Badge vanishes after 3 minutes. Classic.', color:'#ffd700' },
+  'perfectionist':{ icon:'🎯', name:'Perfectionist', desc:'Finish a session (10+ problems) with zero wrong answers.', color:'#06d6a0' },
+  'speedBlitz':  { icon:'⚡', name:'Blitz',       desc:'Get 10 correct answers in a row, all under 1.5 seconds.', color:'#118ab2' },
+  'clutch':      { icon:'🧊', name:'Clutch',      desc:'Get a correct answer after typing 3 or more wrong guesses on the same problem. Ice cold.', color:'#9b59b6' },
+  'legendary':   { icon:'👑', name:'Legend',      desc:'Defeat the Legendary boss at least once. Respect.', color:'#9b59b6' },
+  'giverUp':     { icon:'🏃', name:'Quitter',     desc:'End a test early 20+ times. A true commitment to giving up.', color:'#ff8c00' },
+  'inferno':     { icon:'🔥', name:'Inferno',     desc:'Get a streak of 50+ correct answers in a single session. Unstoppable.', color:'#ff4500' },
+};
+
+window.showBadgeTip=function(id, earned){
+  var info=BADGE_INFO[id]; if(!info) return;
+  document.getElementById('badgeTipIcon').textContent=info.icon;
+  document.getElementById('badgeTipName').textContent=info.name;
+  var statusEl=document.getElementById('badgeTipStatus');
+  if(earned){
+    statusEl.textContent='✓ UNLOCKED';
+    statusEl.style.color=info.color;
+  } else {
+    statusEl.textContent='🔒 LOCKED';
+    statusEl.style.color='rgba(255,255,255,0.3)';
+  }
+  document.getElementById('badgeTipDesc').textContent=info.desc;
+  document.getElementById('badgeTipOverlay').style.display='flex';
+};
+window.closeBadgeTip=function(){
+  document.getElementById('badgeTipOverlay').style.display='none';
+};
+
+// ── FIRE BADGE (overall speed indicator) ──
+function getOverallAvgMs(){
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.facts) return null;
+  var avgs=[];
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=ud.facts[k], a=factAvg(f);
+    if(a!==null) avgs.push(a);
+  });
+  if(avgs.length<4) return null;
+  return avgs.reduce(function(s,v){return s+v;},0)/avgs.length;
+}
+
+function getFireLevel(avgMs){
+  // Returns 0-4: 0=cold/tiny, 1=small, 2=medium, 3=big, 4=BLAZING
+  if(avgMs===null) return 0;
+  if(avgMs<1000) return 4;
+  if(avgMs<1500) return 3;
+  if(avgMs<2500) return 2;
+  if(avgMs<4000) return 1;
+  return 0;
+}
+
+function renderFireBadge(){
+  var avg=getOverallAvgMs();
+  var level=getFireLevel(avg);
+  var area=document.getElementById('fireBadgeArea');
+  if(!area) return;
+
+  var msgs=[
+    'The fire is cold! ❄️\nTime to heat it up!',
+    'Just a spark... 🔥\nKeep practicing!',
+    'Getting warmer! 🔥🔥\nPush it!',
+    'ON FIRE! 🔥🔥🔥\nYou\'re cooking!',
+    'YOU\'RE BLAZING FAST!! 🔥🔥🔥🔥\nAbsolute legend!'
+  ];
+  var fireMsg=msgs[level];
+  var avgLabel=avg?'Avg: '+(avg/1000).toFixed(1)+'s':'Keep practicing!';
+
+  // Fire colors by level
+  var colors=[
+    ['#334','#445','#223'],            // cold/grey
+    ['#ff6600','#cc3300','#ff9900'],   // small
+    ['#ff6600','#ff3300','#ffaa00'],   // medium
+    ['#ff4400','#ff0000','#ffcc00'],   // big
+    ['#ff2200','#ff6600','#ffff00']    // blazing
+  ];
+  var c=colors[level];
+
+  // SVG flame — grows with level
+  var flameH=[30,44,56,68,80][level];
+  var flameW=[24,32,40,52,64][level];
+  var glow=level>=3?'filter:drop-shadow(0 0 '+(level*4)+'px '+c[0]+');':'';
+
+  var flameSvg='<svg width="'+flameW+'" height="'+flameH+'" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" style="'+glow+'">'
+    +'<defs>'
+    +'<radialGradient id="fg1" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="'+c[2]+'"/><stop offset="60%" stop-color="'+c[0]+'"/><stop offset="100%" stop-color="'+c[1]+'" stop-opacity="0.3"/></radialGradient>'
+    +(level>=2?'<radialGradient id="fg2" cx="50%" cy="70%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.8"/><stop offset="100%" stop-color="'+c[2]+'" stop-opacity="0"/></radialGradient>':'')
+    +'</defs>'
+    +'<path d="M32,78 C10,78 4,60 8,46 C12,32 20,28 18,14 C26,22 24,34 30,38 C30,28 36,16 44,8 C44,24 38,30 42,42 C46,34 52,30 56,36 C62,46 58,78 32,78 Z" fill="url(#fg1)"/>'
+    +(level>=2?'<path d="M32,70 C20,70 18,58 22,50 C26,42 30,40 32,32 C34,40 36,46 40,52 C42,56 40,70 32,70 Z" fill="url(#fg2)" opacity="0.6"/>':'')
+    +(level>=4?'<circle cx="32" cy="55" r="8" fill="#fff" opacity="0.25"/>':'')
+    +'</svg>';
+
+  var animStyle=level>=3?'animation:fireFlicker '+(1.2-level*0.15).toFixed(1)+'s ease-in-out infinite alternate;':'';
+
+  area.innerHTML='<div class="fire-badge-wrap" onclick="showFireMsg()" title="Click to see your fire level">'
+    +'<div class="fire-svg-wrap" style="'+animStyle+'width:'+flameW+'px;height:'+flameH+'px;">'+flameSvg+'</div>'
+    +'<div class="fire-label" style="color:'+c[0]+';">'+avgLabel+'</div>'
+    +'</div>';
+}
+
+window.showFireMsg=function(){
+  var avg=getOverallAvgMs();
+  var level=getFireLevel(avg);
+  var msgs=[
+    '❄️ The fire is cold!\nTime to heat it up! Keep practicing!',
+    '🔥 Just a spark...\nYou\'re getting there. Keep grinding!',
+    '🔥🔥 Getting warmer!\nPush it — you\'re improving!',
+    '🔥🔥🔥 ON FIRE!\nYou\'re cooking right now!',
+    '🔥🔥🔥🔥 YOU\'RE BLAZING FAST!!\nAbsolute legend. Nothing can stop you!'
+  ];
+  var colors=['#7a8fb5','#ff6600','#ff8c00','#ff4400','#ff2200'];
+  document.getElementById('badgeTipIcon').textContent=['❄️','🔥','🔥🔥','🔥🔥🔥','🔥🔥🔥🔥'][level];
+  document.getElementById('badgeTipName').textContent='Your Fire Level';
+  var statusEl=document.getElementById('badgeTipStatus');
+  statusEl.textContent=['COLD','WARM','HEATING UP','ON FIRE','BLAZING'][level];
+  statusEl.style.color=colors[level];
+  document.getElementById('badgeTipDesc').textContent=msgs[level]+(avg?' (Overall avg: '+(avg/1000).toFixed(1)+'s)':'');
+  document.getElementById('badgeTipOverlay').style.display='flex';
+};
+
+// ── QUITTER TEASE ──
+function showQuitterTease(){
+  var overlay=document.getElementById('quitterTeaseOverlay');
+  overlay.style.display='flex';
+  // Position the No button randomly to start
+  resetNoBtn();
+}
+
+function resetNoBtn(){
+  var btn=document.getElementById('quitterNoBtn');
+  if(!btn) return;
+  btn.textContent='No 😢';
+  btn.style.left='50%';
+  btn.style.top='0px';
+  btn.style.transform='translateX(-50%)';
+}
+
+window.quitterNoBtnClick=function(){
+  var btn=document.getElementById('quitterNoBtn');
+  var card=document.querySelector('.quitter-tease-card');
+  // Move 1 — dodge to random spot
+  var x=Math.floor(Math.random()*180)+10;
+  btn.style.left=x+'px';
+  btn.style.top='0px';
+  btn.style.transform='none';
+  btn.textContent='You too slow bruh! 😜';
+  btn.onclick=function(){
+    // Move 2 — dodge again with taunt
+    var x2=Math.floor(Math.random()*180)+10;
+    btn.style.left=x2+'px';
+    btn.style.top='8px';
+    btn.textContent='You fast, but you not fast enooouugh! 😂';
+    btn.style.fontSize='0.75rem';
+    btn.onclick=function(){
+      // Final — laughing emoji takes over
+      btn.style.display='none';
+      var laugh=document.createElement('div');
+      laugh.style.cssText='font-size:3.5rem;animation:laughSpin 0.4s ease-in-out infinite alternate;';
+      laugh.textContent='😝';
+      card.appendChild(laugh);
+      setTimeout(function(){
+        document.getElementById('quitterTeaseOverlay').style.display='none';
+        card.removeChild(laugh);
+        btn.style.display='';
+        btn.style.fontSize='';
+        resetNoBtn();
+      },2200);
+    };
+  };
+};
 
 function renderBadges(){
   var d=getData(), ud=d[userKey];
@@ -1505,6 +1783,45 @@ function renderBadges(){
   var clutchEarned=!!badges['clutch'];
   html+=makeRoundBadge('clutch', clutchEarned, '#9b59b6', '🧊', clutchEarned?'ICE':'?', clutchEarned?'CLUTCH':'???');
 
+  // Untouchable — last session 0 wrong + avg < 2s (expiring)
+  var untouchEarned=!!badges['untouchable'];
+  html+=makeRoundBadge('untouchable', untouchEarned, '#06d6a0', '🛡️', untouchEarned?'CLEAN':'?', untouchEarned?'UNTOUCHABLE':'???');
+
+  // Ghost Mode — 5-min session 100% (expiring)
+  var ghostEarned=!!badges['ghost'];
+  html+=makeRoundBadge('ghost', ghostEarned, '#b89fd4', '👻', ghostEarned?'BOO':'?', ghostEarned?'GHOST':'???');
+
+  // Redline — 5 in a row sub-0.8s
+  var redlineEarned=!!badges['redline'];
+  html+=makeRoundBadge('redline', redlineEarned, '#ef476f', '🏎️', redlineEarned?'FAST':'?', redlineEarned?'REDLINE':'???');
+
+  html+='</div></div>';
+
+  // ── Row 4: Grind / Quirky badges ──
+  html+='<div class="badge-section"><div class="badge-row">';
+
+  // Veteran — 50 sessions
+  var vetEarned=!!badges['veteran'];
+  html+=makeRoundBadge('veteran', vetEarned, '#7a8fb5', '💀', vetEarned?String(sessions.length):'?', vetEarned?'VETERAN':'???');
+
+  // Iron Will — 60 min total
+  var totalMins=Math.floor(sessions.reduce(function(s,ss){return s+(ss.dur||0);},0)/60);
+  var ironEarned=!!badges['ironWill'];
+  html+=makeRoundBadge('ironWill', ironEarned, '#aaaaaa', '🔩', ironEarned?totalMins+'m':'?', ironEarned?'IRON WILL':'???');
+
+  // Consistent — 5 different days
+  var consDays={}; sessions.forEach(function(ss){if(ss.date)consDays[ss.date.slice(0,10)]=true;});
+  var consEarned=!!badges['consistent'];
+  html+=makeRoundBadge('consistent', consEarned, '#118ab2', '📅', consEarned?Object.keys(consDays).length+'d':'?', consEarned?'CONSISTENT':'???');
+
+  // Turtle — slow answer, badge expires in 3 min
+  var turtleEarned=!!badges['turtle'];
+  html+=makeRoundBadge('turtle', turtleEarned, '#06d6a0', '🐢', turtleEarned?'SLOW':'?', turtleEarned?'TURTLE':'???');
+
+  // Stubborn — same wrong answer twice, expires in 3 min
+  var stubbornEarned=!!badges['stubborn'];
+  html+=makeRoundBadge('stubborn', stubbornEarned, '#ffd700', '🔄', stubbornEarned?'SMH':'?', stubbornEarned?'STUBBORN':'???');
+
   // Giver-upper
   var quits=ud.earlyQuits||0;
   var grank=getGiverUpRank(quits);
@@ -1517,6 +1834,7 @@ function renderBadges(){
   html+='</div></div>';
 
   document.getElementById('badgeArea').innerHTML=html;
+  renderFireBadge();
 }
 
 function makeShieldBadge(id, locked, color, label, sublabel, tier){
@@ -1525,7 +1843,7 @@ function makeShieldBadge(id, locked, color, label, sublabel, tier){
   if(tier){
     tierDot='<div style="position:absolute;top:-1px;right:1px;width:9px;height:9px;border-radius:50%;background:'+color+';border:1.5px solid #0a0e1a;box-shadow:0 0 5px '+color+';z-index:2;"></div>';
   }
-  return '<div class="shield-badge '+(locked?'locked':'earned')+'" id="sb-'+id+'" style="--sc:'+color+';background:'+outerBg+';" title="'+(locked?'???':(tier?tier.toUpperCase()+' — '+label+'×':label+'×all'))+'">'+
+  return '<div class="shield-badge '+(locked?'locked':'earned')+'" id="sb-'+id+'" style="--sc:'+color+';background:'+outerBg+';cursor:pointer;" onclick="showBadgeTip(\''+id+'\','+(!locked)+')" title="Click for info">'+
     '<div class="sb-inner">'+
       '<div class="sb-content" style="color:'+(locked?'rgba(255,255,255,0.2)':color)+';">'+(locked?'?':label)+'</div>'+
       (!locked&&sublabel?'<div class="sb-sub" style="color:'+color+';">'+sublabel+'</div>':'')+
@@ -1535,7 +1853,7 @@ function makeShieldBadge(id, locked, color, label, sublabel, tier){
 }
 
 function makeRoundBadge(id, earned, color, icon, num, sub){
-  return '<div class="round-badge '+(earned?'earned':'')+'" id="rb-'+id+'" style="--bc:'+color+';" title="'+(earned?sub:'???')+'">'+
+  return '<div class="round-badge '+(earned?'earned':'')+'" id="rb-'+id+'" style="--bc:'+color+';cursor:pointer;" onclick="showBadgeTip(\''+id+'\','+earned+')" title="'+(earned?sub:'Click to see how to unlock')+'">'+
     '<div class="rb-icon">'+icon+'</div>'+
     (earned?'':'<span class="rb-qmark">?</span>')+
     (earned&&num?'<div class="rb-num">'+num+'</div>':'')+
@@ -2090,7 +2408,9 @@ function submitAnswer(){
   if(isNaN(val)) return;
   var ab=problems[qIdx], ms=Date.now()-qStart;
   if(val===ab[0]*ab[1]){
-    // Check for clutch badge (correct after 3+ wrong guesses on this problem)
+    // Turtle — took > 10s
+    if(ms>10000){ var td=getData(); if(td[userKey]){ td[userKey].turtleTime=Date.now(); saveData(td); } }
+    // Clutch badge (correct after 3+ wrong guesses on this problem)
     if(wrongGuesses.length>=3){
       var cd=getData(); if(cd[userKey]){ cd[userKey].clutchUnlocked=true; saveData(cd); }
     }
@@ -2107,6 +2427,10 @@ function submitAnswer(){
     qTotal++; qStreak=0; updateStats();
     // Store wrong guess
     var guessVal=val;
+    // Stubborn — typed same wrong answer twice in a row
+    if(wrongGuesses.length>0&&wrongGuesses[wrongGuesses.length-1]===guessVal){
+      var sd=getData(); if(sd[userKey]){ sd[userKey].stubbornTime=Date.now(); saveData(sd); }
+    }
     wrongGuesses.push(guessVal);
     var gl=document.getElementById('wrongGuessList');
     var tag=document.createElement('span');
