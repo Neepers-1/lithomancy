@@ -694,12 +694,14 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <p class="subtitle" style="text-align:left;margin-bottom:0;">Choose how long to practice:</p>
       </div>
       <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
-      <button class="btn" id="myPlaceBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Place</button>
+      <button class="btn" id="myPlaceBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
     </div>
-    <!-- Badge rows -->
-    <div id="badgeArea" style="margin:6px 0 4px;"></div>
-    <!-- Fire badge -->
-    <div id="fireBadgeArea" style="margin:0 0 8px;"></div>
+    <!-- Badge + Fire layout: badges on sides, big fire in center -->
+    <div id="badgeFireRow" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0 10px;">
+      <div id="badgeAreaLeft" style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:4px;"></div>
+      <div id="fireBadgeArea" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;"></div>
+      <div id="badgeAreaRight" style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;"></div>
+    </div>
     <div class="mode-level-layout">
       <!-- Left timers -->
       <div class="mode-left">
@@ -790,7 +792,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div id="wrongSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x274C; Most Wrong This Session</div><div class="tag-grid" id="wrongGrid"></div></div>
     <div id="fastSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x26A1; Fastest This Session</div><div class="tag-grid" id="fastGrid"></div></div>
     <div class="btn-row">
-      <button class="btn" id="resMyPlaceBtn" style="background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Place</button>
+      <button class="btn" id="resMyPlaceBtn" style="background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
       <button class="btn btn-gray"   id="resMyInfoBtn">&#x1F4CA; My Info</button>
       <button class="btn btn-yellow" id="resReturnBtn">&#x1F3E0; Return Home</button>
     </div>
@@ -949,33 +951,30 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <button onclick="document.getElementById('giverUpOverlay').style.display='none'" style="background:linear-gradient(135deg,#ff8c00,#ff4500);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;">I Deserve This 🏃</button>
   </div>
 </div>
-<!-- ══ MY PLACE ══ -->
+<!-- ══ MY CASTLE ══ -->
 <div id="myPlaceScreen" class="screen" style="padding:0;">
   <div class="card myplace-screen" style="padding:0;overflow:hidden;">
     <div class="myplace-topbar">
       <button class="back-link" id="myPlaceBackBtn" style="margin:0;">&larr; Back</button>
-      <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Battle Base</div>
+      <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Castle</div>
       <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
     </div>
     <div class="myplace-tabs">
-      <button class="myplace-tab active" id="mptab-base" onclick="switchMPTab('base')">🏰 Base</button>
-      <button class="myplace-tab" id="mptab-inv" onclick="switchMPTab('inv')">🎒 Inventory</button>
+      <button class="myplace-tab active" id="mptab-base" onclick="switchMPTab('base')">🏰 Build</button>
       <button class="myplace-tab" id="mptab-shop" onclick="switchMPTab('shop')">🛒 Shop</button>
     </div>
-    <!-- Base view -->
-    <div id="mp-base-view" class="base-grid-wrap">
-      <div style="font-size:0.7rem;color:#3a4f6b;font-weight:600;margin-bottom:6px;text-align:center;">Drag items from Inventory to place them. Tap a placed item to remove it.</div>
-      <div class="base-canvas" id="baseCanvas"></div>
-      <div style="font-size:0.65rem;color:#3a4f6b;margin-top:8px;text-align:center;" id="mpLastSeen"></div>
-    </div>
-    <!-- Inventory view -->
-    <div id="mp-inv-view" class="inv-wrap" style="display:none;">
-      <div style="font-size:0.72rem;color:#7a8fb5;font-weight:600;margin-bottom:8px;">Drag items onto your base to place them!</div>
-      <div id="invGrid" class="inv-grid"></div>
-      <div style="font-size:0.65rem;color:#3a4f6b;margin-top:4px;">Items can be placed unlimited times once owned.</div>
+    <!-- Build view: grid + inventory together, scrollable -->
+    <div id="mp-base-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;">
+      <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
+      <div class="base-canvas" id="baseCanvas" style="margin:0 auto;"></div>
+      <div style="font-size:0.62rem;color:#3a4f6b;margin:4px 0 10px;text-align:center;" id="mpLastSeen"></div>
+      <!-- Inventory inline -->
+      <div style="font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin-bottom:5px;">🎒 Tap an item to select it, then tap a grid cell</div>
+      <div id="invGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;"></div>
+      <div style="font-size:0.6rem;color:#3a4f6b;text-align:center;">Tap a placed item on the grid to remove it.</div>
     </div>
     <!-- Shop view -->
-    <div id="mp-shop-view" class="shop-wrap" style="display:none;">
+    <div id="mp-shop-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;display:none;">
       <div id="shopContent"></div>
     </div>
   </div>
@@ -1905,26 +1904,30 @@ function showMPToast(msg){
 
 // ── INVENTORY ──
 function renderInventory(){
-  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) {
-    document.getElementById('invGrid').innerHTML='<div style="color:#3a4f6b;font-size:0.82rem;text-align:center;padding:30px 0;">No items yet!<br>Visit the Shop to buy your first item.</div>';
+  var d=getData(), ud=d[userKey];
+  var el=document.getElementById('invGrid'); if(!el) return;
+  if(!ud||!ud.mp||!ud.mp.inventory){
+    el.innerHTML='<div style="color:#3a4f6b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:16px 0;">No items yet — visit the Shop!</div>';
     return;
   }
-  var inv=ud.mp.inventory||{};
+  var inv=ud.mp.inventory;
   var owned=Object.keys(inv).filter(function(k){ return inv[k]>0; });
-  var html='';
   if(!owned.length){
-    html='<div style="color:#3a4f6b;font-size:0.82rem;text-align:center;padding:30px 0;">No items yet!<br>Visit the Shop to buy your first item.</div>';
-  } else {
-    owned.forEach(function(id){
-      var item=SHOP_ITEMS.find(function(x){return x.id===id;});
-      if(!item) return;
-      html+='<div class="inv-item" draggable="true" data-item-id="'+id+'" onmousedown="startInvDrag(event,\''+id+'\')" ontouchstart="startInvDrag(event,\''+id+'\')">'
-        +'<div class="ii-emoji">'+item.emoji+'</div>'
-        +'<div class="ii-name">'+item.name+'</div>'
-        +'</div>';
-    });
+    el.innerHTML='<div style="color:#3a4f6b;font-size:0.8rem;grid-column:1/-1;text-align:center;padding:16px 0;">No items yet — visit the Shop!</div>';
+    return;
   }
-  document.getElementById('invGrid').innerHTML=html;
+  var html='';
+  owned.forEach(function(id){
+    var item=SHOP_ITEMS.find(function(x){return x.id===id;});
+    if(!item) return;
+    var selected=_selectedItemId===id;
+    html+='<div class="inv-item'+(selected?' selected':'')+'" onclick="startInvDrag(event,\''+id+'\')" '
+      +'style="'+(selected?'border-color:#ffd700;background:rgba(255,209,102,0.18);box-shadow:0 0 10px rgba(255,209,102,0.4);':'')+'">'
+      +'<div class="ii-emoji">'+item.emoji+'</div>'
+      +'<div class="ii-name">'+item.name+'</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
 }
 
 // ── BASE GRID ──
@@ -1957,75 +1960,48 @@ function renderBaseGrid(){
   if(lsEl) lsEl.textContent=hrs<1?'Last visit: just now':'Last visit: '+hrs+' hour'+(hrs!==1?'s':'')+' ago';
 }
 
-// ── DRAG AND DROP ──
-var _dragItemId=null;
-var _dragFromCell=null;
+// ── TAP TO PLACE (replaces drag-and-drop) ──
+var _selectedItemId=null;
+
+function setSelectedItem(id){
+  _selectedItemId=id;
+  var label=document.getElementById('mpSelectedItem');
+  if(label){
+    if(id){
+      var item=SHOP_ITEMS.find(function(x){return x.id===id;});
+      label.textContent=item?'Selected: '+item.emoji+' '+item.name+' — tap a cell to place':'';
+    } else {
+      label.textContent='';
+    }
+  }
+  renderInventory(); // re-render to show highlight
+}
 
 window.startInvDrag=function(e, itemId){
-  _dragItemId=itemId;
-  _dragFromCell=null;
-  var ghost=document.getElementById('dragGhost');
-  var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
-  ghost.textContent=item?item.emoji:'?';
-  ghost.style.display='block';
-  moveDragGhost(e);
-  e.preventDefault();
+  setSelectedItem(_selectedItemId===itemId?null:itemId);
 };
 
-function moveDragGhost(e){
-  var ghost=document.getElementById('dragGhost');
-  var cx=e.touches?e.touches[0].clientX:e.clientX;
-  var cy=e.touches?e.touches[0].clientY:e.clientY;
-  ghost.style.left=cx+'px'; ghost.style.top=cy+'px';
-}
-
-document.addEventListener('mousemove',function(e){ if(_dragItemId) moveDragGhost(e); });
-document.addEventListener('touchmove',function(e){ if(_dragItemId){ moveDragGhost(e); e.preventDefault(); } },{passive:false});
-document.addEventListener('mouseup',function(){ endDrag(); });
-document.addEventListener('touchend',function(e){ 
-  if(!_dragItemId) return;
-  // Find cell under touch point
-  var t=e.changedTouches[0];
-  var el=document.elementFromPoint(t.clientX,t.clientY);
-  var cell=el?el.closest('[data-key]'):null;
-  if(cell){ cellDrop(e, cell.dataset.key); }
-  endDrag();
-});
-
-function endDrag(){
-  _dragItemId=null; _dragFromCell=null;
-  document.getElementById('dragGhost').style.display='none';
-  // Remove drag-over highlights
-  document.querySelectorAll('.base-cell.drag-over').forEach(function(c){ c.classList.remove('drag-over'); });
-}
-
-window.cellDragOver=function(e){
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-};
-window.cellDragLeave=function(e){
-  e.currentTarget.classList.remove('drag-over');
-};
-
-window.cellDrop=function(e, key){
-  e.preventDefault();
-  if(!_dragItemId) return;
-  var d=getData(), ud=d[userKey]; if(!ud) return;
-  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
-  ud.mp.baseGrid[key]={ id:_dragItemId };
-  saveData(d);
-  renderBaseGrid();
-  endDrag();
-};
+window.cellDragOver=function(e){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); };
+window.cellDragLeave=function(e){ e.currentTarget.classList.remove('drag-over'); };
+window.cellDrop=function(e,key){ e.preventDefault(); }; // no-op, using tap
 
 window.cellClick=function(key){
-  if(_dragItemId) return;
   var d=getData(), ud=d[userKey]; if(!ud) return;
-  if(!ud.mp||!ud.mp.baseGrid) return;
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
   var cell=ud.mp.baseGrid[key];
+
+  if(_selectedItemId){
+    // Place selected item
+    ud.mp.baseGrid[key]={ id:_selectedItemId };
+    saveData(d);
+    renderBaseGrid();
+    // Keep item selected for rapid placement
+    return;
+  }
+
   if(!cell) return;
+
   if(cell.damaged){
-    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
     var cost=cell.repairCost||10;
     if((ud.mp.credits||0)>=cost){
       ud.mp.credits-=cost;
@@ -2035,29 +2011,30 @@ window.cellClick=function(key){
       showMPToast('Repaired! 🔨');
       renderBaseGrid();
     } else {
-      showMPToast('Need 🪙'+cost+' to repair! (you have '+(ud.mp.credits||0)+')');
+      showMPToast('Need 🪙'+cost+' to repair!');
     }
   } else {
     delete ud.mp.baseGrid[key];
     saveData(d);
     renderBaseGrid();
-    showMPToast('Item removed');
+    showMPToast('Removed');
   }
 };
 
-// ── MY PLACE SCREEN ──
 function switchMPTab(tab){
-  ['base','inv','shop'].forEach(function(t){
-    document.getElementById('mp-'+t+'-view').style.display=t===tab?'':'none';
-    document.getElementById('mptab-'+t).classList.toggle('active',t===tab);
+  ['base','shop'].forEach(function(t){
+    var el=document.getElementById('mp-'+t+'-view');
+    if(el) el.style.display=t===tab?'':'none';
+    var btn=document.getElementById('mptab-'+t);
+    if(btn) btn.classList.toggle('active',t===tab);
   });
   if(tab==='shop') renderShop();
-  else if(tab==='inv') renderInventory();
-  else renderBaseGrid();
+  else { renderBaseGrid(); renderInventory(); }
 }
 window.switchMPTab=switchMPTab;
 
 function showMyPlace(){
+  _selectedItemId=null;
   checkDailyLoginBonus();
   checkGoblinAttack();
   var d=getData(), ud=d[userKey];
@@ -2100,46 +2077,51 @@ function renderFireBadge(){
   var area=document.getElementById('fireBadgeArea');
   if(!area) return;
 
-  var msgs=[
-    'The fire is cold! ❄️\nTime to heat it up!',
-    'Just a spark... 🔥\nKeep practicing!',
-    'Getting warmer! 🔥🔥\nPush it!',
-    'ON FIRE! 🔥🔥🔥\nYou\'re cooking!',
-    'YOU\'RE BLAZING FAST!! 🔥🔥🔥🔥\nAbsolute legend!'
-  ];
-  var fireMsg=msgs[level];
   var avgLabel=avg?'Avg: '+(avg/1000).toFixed(1)+'s':'Keep practicing!';
 
-  // Fire colors by level
   var colors=[
-    ['#334','#445','#223'],            // cold/grey
-    ['#ff6600','#cc3300','#ff9900'],   // small
-    ['#ff6600','#ff3300','#ffaa00'],   // medium
-    ['#ff4400','#ff0000','#ffcc00'],   // big
-    ['#ff2200','#ff6600','#ffff00']    // blazing
+    ['#556','#667','#445'],
+    ['#ff6600','#cc3300','#ff9900'],
+    ['#ff6600','#ff3300','#ffaa00'],
+    ['#ff4400','#ff0000','#ffcc00'],
+    ['#ff2200','#ff6600','#ffff00']
   ];
   var c=colors[level];
 
-  // SVG flame — grows with level
-  var flameH=[30,44,56,68,80][level];
-  var flameW=[24,32,40,52,64][level];
-  var glow=level>=3?'filter:drop-shadow(0 0 '+(level*4)+'px '+c[0]+');':'';
+  // 3x bigger than before
+  var flameH=[90,132,168,204,240][level];
+  var flameW=[72,96,120,156,192][level];
 
-  var flameSvg='<svg width="'+flameW+'" height="'+flameH+'" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" style="'+glow+'">'
+  // Glow layers — stronger at higher levels
+  var glowColor=c[0];
+  var glowSize=[0,8,16,28,42][level];
+  var glowStyle=level>=1
+    ?'filter:drop-shadow(0 0 '+glowSize+'px '+glowColor+') drop-shadow(0 0 '+(glowSize*0.5)+'px '+c[2]+');'
+    :'filter:opacity(0.4);';
+
+  // Ambient glow behind flame for higher levels
+  var ambientGlow=level>=3
+    ?'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:'+(flameW*1.4)+'px;height:'+(flameH*0.6)+'px;background:radial-gradient(ellipse at center bottom,'+glowColor+'55 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>'
+    :'';
+
+  var flameSvg='<svg width="'+flameW+'" height="'+flameH+'" viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" style="'+glowStyle+'">'
     +'<defs>'
     +'<radialGradient id="fg1" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="'+c[2]+'"/><stop offset="60%" stop-color="'+c[0]+'"/><stop offset="100%" stop-color="'+c[1]+'" stop-opacity="0.3"/></radialGradient>'
-    +(level>=2?'<radialGradient id="fg2" cx="50%" cy="70%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.8"/><stop offset="100%" stop-color="'+c[2]+'" stop-opacity="0"/></radialGradient>':'')
+    +(level>=2?'<radialGradient id="fg2" cx="50%" cy="70%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.9"/><stop offset="100%" stop-color="'+c[2]+'" stop-opacity="0"/></radialGradient>':'')
+    +(level>=4?'<radialGradient id="fg3" cx="50%" cy="60%" r="30%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/><stop offset="100%" stop-color="'+c[2]+'" stop-opacity="0"/></radialGradient>':'')
     +'</defs>'
     +'<path d="M32,78 C10,78 4,60 8,46 C12,32 20,28 18,14 C26,22 24,34 30,38 C30,28 36,16 44,8 C44,24 38,30 42,42 C46,34 52,30 56,36 C62,46 58,78 32,78 Z" fill="url(#fg1)"/>'
-    +(level>=2?'<path d="M32,70 C20,70 18,58 22,50 C26,42 30,40 32,32 C34,40 36,46 40,52 C42,56 40,70 32,70 Z" fill="url(#fg2)" opacity="0.6"/>':'')
-    +(level>=4?'<circle cx="32" cy="55" r="8" fill="#fff" opacity="0.25"/>':'')
+    +(level>=2?'<path d="M32,70 C20,70 18,58 22,50 C26,42 30,40 32,32 C34,40 36,46 40,52 C42,56 40,70 32,70 Z" fill="url(#fg2)" opacity="0.7"/>':'')
+    +(level>=3?'<path d="M32,65 C26,65 24,57 27,51 C29,47 31,45 32,40 C33,45 35,49 37,53 C39,57 38,65 32,65 Z" fill="#fff" opacity="0.3"/>':'')
+    +(level>=4?'<circle cx="32" cy="55" r="10" fill="url(#fg3)"/>':'')
     +'</svg>';
 
-  var animStyle=level>=3?'animation:fireFlicker '+(1.2-level*0.15).toFixed(1)+'s ease-in-out infinite alternate;':'';
+  var animStyle=level>=2?'animation:fireFlicker '+(1.0-level*0.12).toFixed(2)+'s ease-in-out infinite alternate;':'';
 
-  area.innerHTML='<div class="fire-badge-wrap" onclick="showFireMsg()" title="Click to see your fire level">'
-    +'<div class="fire-svg-wrap" style="'+animStyle+'width:'+flameW+'px;height:'+flameH+'px;">'+flameSvg+'</div>'
-    +'<div class="fire-label" style="color:'+c[0]+';">'+avgLabel+'</div>'
+  area.innerHTML='<div onclick="showFireMsg()" title="Click to see your fire level" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;position:relative;">'
+    +ambientGlow
+    +'<div style="position:relative;'+animStyle+'width:'+flameW+'px;height:'+flameH+'px;">'+flameSvg+'</div>'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-top:2px;color:'+c[0]+';'+(level>=3?'text-shadow:0 0 8px '+c[0]+';':'')+'">'+avgLabel+'</div>'
     +'</div>';
 }
 
@@ -2216,126 +2198,82 @@ window.quitterNoBtnClick=function(){
 
 function renderBadges(){
   var d=getData(), ud=d[userKey];
-  if(!ud){ document.getElementById('badgeArea').innerHTML=''; return; }
+  var leftEl=document.getElementById('badgeAreaLeft');
+  var rightEl=document.getElementById('badgeAreaRight');
+  if(!leftEl||!rightEl) return;
+  if(!ud){ leftEl.innerHTML=''; rightEl.innerHTML=''; renderFireBadge(); return; }
   var badges=ud.badges||{};
   var facts=ud.facts||{};
   var sessions=ud.sessions||[];
-  var html='';
 
-  // ── Row 1: Number badges 2-9 ──
-  html+='<div class="badge-section"><div class="badge-row">';
+  // ── Build all badge rows ──
+  // Row 1: Number badges 2-9
+  var row1='<div class="badge-row" style="gap:3px;">';
   for(var n=2;n<=9;n++){
     var tier=badges['num'+n]||null;
     var col=tier?ZONE_COLORS[tier]:'rgba(255,255,255,0.08)';
-    var locked=!tier;
-    html+=makeShieldBadge('nb'+n, locked, col, locked?'?':String(n), locked?'':'×all', tier);
+    row1+=makeShieldBadge('nb'+n, !tier, col, tier?String(n):'?', tier?'×all':'', tier);
   }
-  html+='</div></div>';
+  row1+='</div>';
 
-  // ── Row 2: ONE unified Squares badge ──
-  html+='<div class="badge-section"><div class="badge-row">';
-  // Find best tier achieved across ALL squares (2x2 through 9x9)
+  // Row 2: Squares + special perf badges
   var squaresUnified=null;
-  for(var t=0;t<BADGE_TIERS.length;t++){
-    var stierCheck=BADGE_TIERS[t];
+  var tiersHF=['gold','green','blue'];
+  for(var ti=0;ti<tiersHF.length;ti++){
     var allSqMeet=true;
     for(var sqn=2;sqn<=9;sqn++){
       var sqtier=getSquareBadgeTier(sqn,facts);
-      if(!sqtier){ allSqMeet=false; break; }
-      // Check this square meets at least this tier
-      if(BADGE_TIERS.indexOf(sqtier)<t){ allSqMeet=false; break; }
+      if(!sqtier||tiersHF.indexOf(sqtier)>ti){ allSqMeet=false; break; }
     }
-    if(allSqMeet){ squaresUnified=stierCheck; break; }
+    if(allSqMeet){ squaresUnified=tiersHF[ti]; break; }
   }
-  // Also check partial: if ANY squares are done, show partial progress
-  var sqDoneCount=0;
-  for(var sqn2=2;sqn2<=9;sqn2++){
-    if(getSquareBadgeTier(sqn2,facts)){ sqDoneCount++; }
-  }
-  var sqLocked=squaresUnified===null;
-  var sqColor=squaresUnified?ZONE_COLORS[squaresUnified]:'rgba(255,255,255,0.08)';
-  var sqLabel=sqLocked?(sqDoneCount>0?sqDoneCount+'/8':'?'):'x²';
-  var sqSub=sqLocked?(sqDoneCount>0?'squares':''):'all';
-  html+=makeShieldBadge('sq-all', sqLocked, sqColor, sqLocked?sqLabel:'x²', sqSub, squaresUnified);
-  html+='</div></div>';
+  var sqDone=0; for(var sqn2=2;sqn2<=9;sqn2++){ if(getSquareBadgeTier(sqn2,facts)) sqDone++; }
+  var sqLocked=!squaresUnified, sqColor=squaresUnified?ZONE_COLORS[squaresUnified]:'rgba(255,255,255,0.08)';
 
-  // ── Row 3: Special badges ──
-  html+='<div class="badge-section"><div class="badge-row">';
-
-  // Legendary
-  var legEarned=!!(ud.legendaryDefeats&&ud.legendaryDefeats>=1);
-  var legCount=ud.legendaryDefeats||0;
-  html+=makeRoundBadge('leg', legEarned, '#9b59b6', '👑', legEarned?String(legCount):'?', legEarned?'LEGEND':'???');
-
-  // Inferno streak — show after best streak ≥ 50
-  var bestStr=ud.bestStreak||0;
-  var curStr=getCurrentStreak();
-  var infernoEarned=bestStr>=50;
-  html+=makeInfernoBadge(infernoEarned, bestStr, curStr);
-
-  // Perfectionist — 100% accuracy session
-  var perfEarned=!!badges['perfectionist'];
-  html+=makeRoundBadge('perfectionist', perfEarned, '#06d6a0', '🎯', perfEarned?'100%':'?', perfEarned?'PERFECT':'???');
-
-  // Speed Blitz — 10 correct sub-1.5s in a row
-  var blitzEarned=!!badges['speedBlitz'];
-  html+=makeRoundBadge('speedBlitz', blitzEarned, '#118ab2', '⚡', blitzEarned?'x10':'?', blitzEarned?'BLITZ':'???');
-
-  // Clutch — correct after 3+ wrong guesses on same problem
-  var clutchEarned=!!badges['clutch'];
-  html+=makeRoundBadge('clutch', clutchEarned, '#9b59b6', '🧊', clutchEarned?'ICE':'?', clutchEarned?'CLUTCH':'???');
-
-  // Untouchable — last session 0 wrong + avg < 2s (expiring)
-  var untouchEarned=!!badges['untouchable'];
-  html+=makeRoundBadge('untouchable', untouchEarned, '#06d6a0', '🛡️', untouchEarned?'CLEAN':'?', untouchEarned?'UNTOUCHABLE':'???');
-
-  // Ghost Mode — 5-min session 100% (expiring)
-  var ghostEarned=!!badges['ghost'];
-  html+=makeRoundBadge('ghost', ghostEarned, '#b89fd4', '👻', ghostEarned?'BOO':'?', ghostEarned?'GHOST':'???');
-
-  // Redline — 5 in a row sub-0.8s
-  var redlineEarned=!!badges['redline'];
-  html+=makeRoundBadge('redline', redlineEarned, '#ef476f', '🏎️', redlineEarned?'FAST':'?', redlineEarned?'REDLINE':'???');
-
-  html+='</div></div>';
-
-  // ── Row 4: Grind / Quirky badges ──
-  html+='<div class="badge-section"><div class="badge-row">';
-
-  // Veteran — 50 sessions
-  var vetEarned=!!badges['veteran'];
-  html+=makeRoundBadge('veteran', vetEarned, '#7a8fb5', '💀', vetEarned?String(sessions.length):'?', vetEarned?'VETERAN':'???');
-
-  // Iron Will — 60 min total
+  var legEarned=!!(ud.legendaryDefeats&&ud.legendaryDefeats>=1), legCount=ud.legendaryDefeats||0;
+  var bestStr=ud.bestStreak||0, infernoEarned=bestStr>=50;
+  var perfEarned=!!badges['perfectionist'], blitzEarned=!!badges['speedBlitz'];
+  var clutchEarned=!!badges['clutch'], untouchEarned=!!badges['untouchable'];
+  var ghostEarned=!!badges['ghost'], redlineEarned=!!badges['redline'];
+  var vetEarned=!!badges['veteran'], ironEarned=!!badges['ironWill'];
   var totalMins=Math.floor(sessions.reduce(function(s,ss){return s+(ss.dur||0);},0)/60);
-  var ironEarned=!!badges['ironWill'];
-  html+=makeRoundBadge('ironWill', ironEarned, '#aaaaaa', '🔩', ironEarned?totalMins+'m':'?', ironEarned?'IRON WILL':'???');
-
-  // Consistent — 5 different days
   var consDays={}; sessions.forEach(function(ss){if(ss.date)consDays[ss.date.slice(0,10)]=true;});
-  var consEarned=!!badges['consistent'];
-  html+=makeRoundBadge('consistent', consEarned, '#118ab2', '📅', consEarned?Object.keys(consDays).length+'d':'?', consEarned?'CONSISTENT':'???');
-
-  // Turtle — slow answer, badge expires in 3 min
-  var turtleEarned=!!badges['turtle'];
-  html+=makeRoundBadge('turtle', turtleEarned, '#06d6a0', '🐢', turtleEarned?'SLOW':'?', turtleEarned?'TURTLE':'???');
-
-  // Stubborn — same wrong answer twice, expires in 3 min
+  var consEarned=!!badges['consistent'], turtleEarned=!!badges['turtle'];
   var stubbornEarned=!!badges['stubborn'];
-  html+=makeRoundBadge('stubborn', stubbornEarned, '#ffd700', '🔄', stubbornEarned?'SMH':'?', stubbornEarned?'STUBBORN':'???');
-
-  // Giver-upper
-  var quits=ud.earlyQuits||0;
-  var grank=getGiverUpRank(quits);
-  var giverEarned=grank!==null;
+  var quits=ud.earlyQuits||0, grank=getGiverUpRank(quits), giverEarned=grank!==null;
   var giverEmojis=['🏃','🚪','💨','🌪️','👑'];
-  var giverIcon=giverEarned?giverEmojis[grank]:'🏃';
-  var giverCount=giverEarned?String(quits):'?';
-  html+=makeRoundBadge('giverUp', giverEarned, '#ff8c00', giverIcon, giverCount, giverEarned?'QUITTER':'???');
 
-  html+='</div></div>';
+  var row2='<div class="badge-row" style="gap:3px;">'
+    +makeShieldBadge('sq-all', sqLocked, sqColor, sqLocked?(sqDone>0?sqDone+'/8':'?'):'x²', sqLocked?(sqDone>0?'sq':''):'all', squaresUnified)
+    +makeRoundBadge('leg', legEarned, '#9b59b6', '👑', legEarned?String(legCount):'?', legEarned?'LEGEND':'???')
+    +makeInfernoBadge(infernoEarned, bestStr, getCurrentStreak())
+    +makeRoundBadge('perfectionist', perfEarned, '#06d6a0', '🎯', perfEarned?'100%':'?', perfEarned?'PERFECT':'???')
+    +'</div>';
 
-  document.getElementById('badgeArea').innerHTML=html;
+  var row3='<div class="badge-row" style="gap:3px;">'
+    +makeRoundBadge('speedBlitz', blitzEarned, '#118ab2', '⚡', blitzEarned?'x10':'?', blitzEarned?'BLITZ':'???')
+    +makeRoundBadge('clutch', clutchEarned, '#9b59b6', '🧊', clutchEarned?'ICE':'?', clutchEarned?'CLUTCH':'???')
+    +makeRoundBadge('untouchable', untouchEarned, '#06d6a0', '🛡️', untouchEarned?'CLEAN':'?', untouchEarned?'UNTOUCHABLE':'???')
+    +makeRoundBadge('ghost', ghostEarned, '#b89fd4', '👻', ghostEarned?'BOO':'?', ghostEarned?'GHOST':'???')
+    +'</div>';
+
+  var row4='<div class="badge-row" style="gap:3px;">'
+    +makeRoundBadge('redline', redlineEarned, '#ef476f', '🏎️', redlineEarned?'FAST':'?', redlineEarned?'REDLINE':'???')
+    +makeRoundBadge('veteran', vetEarned, '#7a8fb5', '💀', vetEarned?String(sessions.length):'?', vetEarned?'VETERAN':'???')
+    +makeRoundBadge('ironWill', ironEarned, '#aaaaaa', '🔩', ironEarned?totalMins+'m':'?', ironEarned?'IRON WILL':'???')
+    +makeRoundBadge('consistent', consEarned, '#118ab2', '📅', consEarned?Object.keys(consDays).length+'d':'?', consEarned?'CONSISTENT':'???')
+    +'</div>';
+
+  var row5='<div class="badge-row" style="gap:3px;">'
+    +makeRoundBadge('turtle', turtleEarned, '#06d6a0', '🐢', turtleEarned?'SLOW':'?', turtleEarned?'TURTLE':'???')
+    +makeRoundBadge('stubborn', stubbornEarned, '#ffd700', '🔄', stubbornEarned?'SMH':'?', stubbornEarned?'STUBBORN':'???')
+    +makeRoundBadge('giverUp', giverEarned, '#ff8c00', giverEarned?giverEmojis[grank]:'🏃', giverEarned?String(quits):'?', giverEarned?'QUITTER':'???')
+    +'</div>';
+
+  // Left column: rows 1, 2, 3  |  Right column: rows 4, 5 + row1 overflow
+  leftEl.innerHTML=row1+row2+row3;
+  rightEl.innerHTML=row4+row5;
+
   renderFireBadge();
 }
 
