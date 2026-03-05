@@ -388,6 +388,51 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .round-badge .rb-num { font-size: 0.5rem; font-weight: 900; color: var(--bc,#888); line-height: 1; margin-top: 1px; }
 .round-badge .rb-sub { font-size: 0.42rem; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.2px; }
 
+/* ── MY PLACE ── */
+.myplace-screen { display:flex;flex-direction:column;height:100%;overflow:hidden; }
+.myplace-topbar { display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;flex-shrink:0; }
+.myplace-credits { display:flex;align-items:center;gap:6px;background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.35);border-radius:20px;padding:5px 12px;font-size:0.85rem;font-weight:900;color:#ffd700; }
+.myplace-tabs { display:flex;gap:6px;padding:0 14px 8px;flex-shrink:0; }
+.myplace-tab { flex:1;padding:7px 4px;border:none;border-radius:8px;font-family:inherit;font-weight:800;font-size:0.78rem;cursor:pointer;background:rgba(255,255,255,0.06);color:#7a8fb5;transition:all 0.2s; }
+.myplace-tab.active { background:rgba(17,138,178,0.25);color:#118ab2;border:1.5px solid #118ab2; }
+/* Base grid */
+.base-grid-wrap { flex:1;overflow:auto;padding:0 14px 10px;display:flex;flex-direction:column;align-items:center; }
+.base-canvas { display:grid;grid-template-columns:repeat(10,44px);grid-template-rows:repeat(8,44px);gap:2px;background:#0a1520;border:2px solid #1e3a5f;border-radius:10px;padding:6px;position:relative; }
+.base-cell { width:44px;height:44px;border-radius:5px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:background 0.15s;position:relative;user-select:none; }
+.base-cell:hover { background:rgba(255,255,255,0.08); }
+.base-cell.drag-over { background:rgba(17,138,178,0.3);border-color:#118ab2; }
+.base-cell.has-item { cursor:grab; }
+.base-cell .item-emoji { font-size:1.5rem;line-height:1;pointer-events:none; }
+.base-cell .item-dmg { position:absolute;top:1px;right:2px;font-size:0.55rem;color:#ef476f;font-weight:900; }
+/* Shop */
+.shop-wrap { flex:1;overflow-y:auto;padding:0 14px 80px; }
+.shop-section-title { font-size:0.6rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin:12px 0 6px; }
+.shop-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px; }
+.shop-item { background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 6px 8px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative; }
+.shop-item:hover:not(.locked) { border-color:#ffd700;background:rgba(255,209,102,0.08); }
+.shop-item.locked { opacity:0.45;cursor:not-allowed; }
+.shop-item.owned { border-color:#06d6a0;background:rgba(6,214,160,0.06); }
+.shop-item .si-emoji { font-size:1.8rem;margin-bottom:4px; }
+.shop-item .si-name { font-size:0.7rem;font-weight:800;color:#e8f0fe;margin-bottom:3px;line-height:1.2; }
+.shop-item .si-cost { font-size:0.68rem;font-weight:900;color:#ffd700; }
+.shop-item .si-lock { font-size:0.58rem;color:#7a8fb5;margin-top:2px;line-height:1.3; }
+.shop-item .si-owned-tag { position:absolute;top:4px;right:4px;background:#06d6a0;color:#0a1520;font-size:0.5rem;font-weight:900;padding:1px 4px;border-radius:4px; }
+/* Inventory panel */
+.inv-wrap { flex:1;overflow-y:auto;padding:0 14px 80px; }
+.inv-grid { display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px; }
+.inv-item { background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 4px 6px;text-align:center;cursor:grab;transition:all 0.2s; }
+.inv-item:hover { border-color:#ffd700;transform:scale(1.05); }
+.inv-item.dragging { opacity:0.4; }
+.inv-item .ii-emoji { font-size:1.6rem; }
+.inv-item .ii-name { font-size:0.58rem;color:#7a8fb5;font-weight:700;margin-top:2px; }
+.inv-item .ii-qty { font-size:0.6rem;font-weight:900;color:#ffd700; }
+/* Goblin popup */
+.goblin-overlay { position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center; }
+.goblin-card { background:linear-gradient(160deg,#1a0500,#0d0800);border:2px solid #ef476f;border-radius:22px;padding:28px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 0 60px rgba(239,71,111,0.4);animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+.goblin-dmg-list { text-align:left;margin:10px 0 16px;padding:0 8px; }
+.goblin-dmg-item { font-size:0.82rem;color:#ffb3b3;font-weight:600;padding:3px 0;border-bottom:1px solid rgba(239,71,111,0.15); }
+/* Dragging ghost */
+#dragGhost { position:fixed;pointer-events:none;z-index:9999;font-size:2rem;transform:translate(-50%,-50%);opacity:0.8;display:none; }
 /* Badge tooltip popup */
 .badge-tip-overlay { position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7); }
 .badge-tip-card { background:linear-gradient(160deg,#0d1b2e,#0a0e1a);border:2px solid #1e3a5f;border-radius:18px;padding:22px 24px;text-align:center;max-width:300px;width:88%;box-shadow:0 0 40px rgba(0,0,0,0.6);animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
@@ -649,6 +694,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <p class="subtitle" style="text-align:left;margin-bottom:0;">Choose how long to practice:</p>
       </div>
       <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
+      <button class="btn" id="myPlaceBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Place</button>
     </div>
     <!-- Badge rows -->
     <div id="badgeArea" style="margin:6px 0 4px;"></div>
@@ -744,6 +790,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div id="wrongSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x274C; Most Wrong This Session</div><div class="tag-grid" id="wrongGrid"></div></div>
     <div id="fastSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x26A1; Fastest This Session</div><div class="tag-grid" id="fastGrid"></div></div>
     <div class="btn-row">
+      <button class="btn" id="resMyPlaceBtn" style="background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Place</button>
       <button class="btn btn-gray"   id="resMyInfoBtn">&#x1F4CA; My Info</button>
       <button class="btn btn-yellow" id="resReturnBtn">&#x1F3E0; Return Home</button>
     </div>
@@ -902,6 +949,53 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <button onclick="document.getElementById('giverUpOverlay').style.display='none'" style="background:linear-gradient(135deg,#ff8c00,#ff4500);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;">I Deserve This 🏃</button>
   </div>
 </div>
+<!-- ══ MY PLACE ══ -->
+<div id="myPlaceScreen" class="screen" style="padding:0;">
+  <div class="card myplace-screen" style="padding:0;overflow:hidden;">
+    <div class="myplace-topbar">
+      <button class="back-link" id="myPlaceBackBtn" style="margin:0;">&larr; Back</button>
+      <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Battle Base</div>
+      <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
+    </div>
+    <div class="myplace-tabs">
+      <button class="myplace-tab active" id="mptab-base" onclick="switchMPTab('base')">🏰 Base</button>
+      <button class="myplace-tab" id="mptab-inv" onclick="switchMPTab('inv')">🎒 Inventory</button>
+      <button class="myplace-tab" id="mptab-shop" onclick="switchMPTab('shop')">🛒 Shop</button>
+    </div>
+    <!-- Base view -->
+    <div id="mp-base-view" class="base-grid-wrap">
+      <div style="font-size:0.7rem;color:#3a4f6b;font-weight:600;margin-bottom:6px;text-align:center;">Drag items from Inventory to place them. Tap a placed item to remove it.</div>
+      <div class="base-canvas" id="baseCanvas"></div>
+      <div style="font-size:0.65rem;color:#3a4f6b;margin-top:8px;text-align:center;" id="mpLastSeen"></div>
+    </div>
+    <!-- Inventory view -->
+    <div id="mp-inv-view" class="inv-wrap" style="display:none;">
+      <div style="font-size:0.72rem;color:#7a8fb5;font-weight:600;margin-bottom:8px;">Drag items onto your base to place them!</div>
+      <div id="invGrid" class="inv-grid"></div>
+      <div style="font-size:0.65rem;color:#3a4f6b;margin-top:4px;">Items can be placed unlimited times once owned.</div>
+    </div>
+    <!-- Shop view -->
+    <div id="mp-shop-view" class="shop-wrap" style="display:none;">
+      <div id="shopContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Goblin attack popup -->
+<div id="goblinOverlay" class="goblin-overlay" style="display:none;">
+  <div class="goblin-card">
+    <div style="font-size:3.5rem;margin-bottom:6px;">👹</div>
+    <div style="font-size:0.65rem;font-weight:900;letter-spacing:3px;color:#ef476f;text-transform:uppercase;margin-bottom:4px;">GRUMBLAX ATTACKED!</div>
+    <div style="font-size:1.2rem;font-weight:900;color:#ffb3b3;margin-bottom:8px;" id="goblinTitle">While you were gone...</div>
+    <div style="font-size:0.85rem;color:#ff8888;font-weight:600;margin-bottom:10px;line-height:1.5;" id="goblinMsg"></div>
+    <div class="goblin-dmg-list" id="goblinDmgList"></div>
+    <button onclick="closeGoblinPopup()" style="background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;padding:11px 28px;font-family:inherit;font-weight:900;font-size:0.92rem;cursor:pointer;">Fix My Base! 💪</button>
+  </div>
+</div>
+
+<!-- Drag ghost -->
+<div id="dragGhost"></div>
+
 <!-- Badge tooltip popup -->
 <div id="badgeTipOverlay" class="badge-tip-overlay" style="display:none;" onclick="if(event.target===this)closeBadgeTip()">
   <div class="badge-tip-card">
@@ -1568,6 +1662,411 @@ window.showBadgeTip=function(id, earned){
 window.closeBadgeTip=function(){
   document.getElementById('badgeTipOverlay').style.display='none';
 };
+
+// ══════════════════════════════════════════
+// MY PLACE — BATTLE BASE BUILDER
+// ══════════════════════════════════════════
+
+var MP_GRID_COLS=10, MP_GRID_ROWS=8;
+
+// All shop items
+var SHOP_ITEMS=[
+  // Structures
+  { id:'wood_wall',   emoji:'🪵', name:'Wood Plank',    cost:10,  leg:0, section:'Structures',    desc:'Basic wall material' },
+  { id:'stone_wall',  emoji:'🧱', name:'Stone Block',   cost:35,  leg:0, section:'Structures',    desc:'Sturdy stone' },
+  { id:'crystal',     emoji:'💎', name:'Crystal Brick', cost:90,  leg:0, section:'Structures',    desc:'Shimmering crystal' },
+  { id:'gold_wall',   emoji:'🏅', name:'Gold Wall',     cost:250, leg:0, section:'Structures',    desc:'Gleaming gold' },
+  { id:'door',        emoji:'🚪', name:'Castle Door',   cost:40,  leg:0, section:'Structures',    desc:'Grand entrance' },
+  { id:'window',      emoji:'🪟', name:'Window',        cost:20,  leg:0, section:'Structures',    desc:'Let in the light' },
+  { id:'tower',       emoji:'🗼', name:'Tower',         cost:80,  leg:0, section:'Structures',    desc:'Round turret' },
+  { id:'battlement',  emoji:'🏯', name:'Battlement',    cost:60,  leg:0, section:'Structures',    desc:'Castle top' },
+  // Decorations
+  { id:'torch',       emoji:'🔦', name:'Torch',         cost:10,  leg:0, section:'Decorations',   desc:'Flickering light' },
+  { id:'tree',        emoji:'🌲', name:'Tree',          cost:15,  leg:0, section:'Decorations',   desc:'Pine tree' },
+  { id:'banner',      emoji:'🚩', name:'Banner',        cost:20,  leg:0, section:'Decorations',   desc:'Your flag' },
+  { id:'chest',       emoji:'📦', name:'Treasure Chest',cost:50,  leg:0, section:'Decorations',   desc:'Full of loot' },
+  { id:'catapult',    emoji:'⚙️', name:'Catapult',      cost:75,  leg:0, section:'Decorations',   desc:'Launch stuff' },
+  { id:'moat',        emoji:'🌊', name:'Moat',          cost:25,  leg:0, section:'Decorations',   desc:'Water barrier' },
+  { id:'shield_dec',  emoji:'🛡️', name:'Shield',        cost:30,  leg:0, section:'Decorations',   desc:'Hang it proud' },
+  { id:'flower',      emoji:'🌸', name:'Garden',        cost:12,  leg:0, section:'Decorations',   desc:'Pretty flowers' },
+  // Legendary items
+  { id:'dragon',      emoji:'🐉', name:'Dragon Perch',  cost:500, leg:10, section:'Legendary',    desc:'A dragon on your roof' },
+  { id:'portal',      emoji:'🌀', name:'Magic Portal',  cost:800, leg:20, section:'Legendary',    desc:'Glowing magic vortex' },
+  { id:'throne',      emoji:'👑', name:'Gold Throne',   cost:600, leg:15, section:'Legendary',    desc:'Rule from here' },
+  { id:'big_sword',   emoji:'⚔️', name:'The Sword',     cost:200, leg:5,  section:'Legendary',    desc:'Stuck in the ground' },
+  { id:'wizard',      emoji:'🧙', name:'Wizard Tower',  cost:400, leg:8,  section:'Legendary',    desc:'Magic crackles here' },
+  { id:'unicorn',     emoji:'🦄', name:'Unicorn Stable',cost:350, leg:6,  section:'Legendary',    desc:'Magical beast' },
+];
+
+// Items that goblins can steal (lower tier, decorations)
+var GOBLIN_STEALABLE=['torch','tree','banner','flower','chest','shield_dec','moat'];
+// Items goblins can damage (structures)
+var GOBLIN_DAMAGEABLE=['wood_wall','stone_wall','crystal','battlement','tower','window'];
+
+function getMPData(){
+  var d=getData(), ud=d[userKey];
+  if(!ud) return null;
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
+  if(!ud.mp.credits) ud.mp.credits=0;
+  if(!ud.mp.inventory) ud.mp.inventory={};
+  if(!ud.mp.baseGrid) ud.mp.baseGrid={};
+  if(!ud.mp.lastLogin) ud.mp.lastLogin=Date.now();
+  return ud.mp;
+}
+
+function saveMPData(){
+  saveData(getData());
+}
+
+// Award credits — call this after sessions/badges
+function awardCredits(amount, reason){
+  var d=getData(), ud=d[userKey];
+  if(!ud) return;
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
+  ud.mp.credits=(ud.mp.credits||0)+amount;
+  saveData(d);
+  // Flash credit display if visible
+  var el=document.getElementById('mpCredits');
+  if(el){ el.textContent=ud.mp.credits; }
+}
+
+// Earn credits based on session performance
+function earnSessionCredits(session){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var earned=0;
+  // Accuracy bonus
+  var acc=session.total>0?session.correct/session.total:0;
+  if(acc>=1.0) earned+=15;
+  else if(acc>=0.9) earned+=8;
+  else if(acc>=0.75) earned+=3;
+  // Speed bonus
+  var okT=session.times?session.times.filter(function(t){return t.ok;}):[];
+  var avg=okT.length?okT.reduce(function(s,t){return s+t.ms;},0)/okT.length:9999;
+  if(avg<1000) earned+=20;
+  else if(avg<1500) earned+=12;
+  else if(avg<2000) earned+=6;
+  else if(avg<3000) earned+=2;
+  // Legendary bonus
+  if(session._legendaryCount) earned+=30*session._legendaryCount;
+  if(earned>0) awardCredits(earned);
+}
+
+// Daily login bonus
+function checkDailyLoginBonus(){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:0 };
+  var now=Date.now();
+  var last=ud.mp.lastLogin||0;
+  var dayMs=86400000;
+  if(now-last>dayMs){
+    awardCredits(5);
+  }
+}
+
+// Check for goblin attack based on time away
+function checkGoblinAttack(){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var mp=getMPData(); if(!mp) return;
+  var now=Date.now();
+  var last=mp.lastLogin||now;
+  var hoursAway=Math.floor((now-last)/3600000);
+  mp.lastLogin=now;
+  saveData(d);
+
+  if(hoursAway<24) return; // No attack under 24h
+
+  // Find what's on the base to potentially damage
+  var placedItems=Object.keys(mp.baseGrid).filter(function(k){ return mp.baseGrid[k]&&!mp.baseGrid[k].damaged; });
+  if(placedItems.length===0) return; // Nothing to steal
+
+  var damages=[];
+  var stealCount= hoursAway>=168?4 : hoursAway>=72?3 : hoursAway>=48?2 : 1;
+
+  // Steal/damage items
+  for(var i=0;i<stealCount&&placedItems.length>0;i++){
+    var idx=Math.floor(Math.random()*placedItems.length);
+    var cellKey=placedItems[idx];
+    var itemId=mp.baseGrid[cellKey].id;
+    var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
+    placedItems.splice(idx,1);
+
+    if(GOBLIN_STEALABLE.indexOf(itemId)!==-1){
+      // Stolen — remove from grid, add back to inventory at half
+      delete mp.baseGrid[cellKey];
+      damages.push({ type:'stolen', emoji:item?item.emoji:'📦', name:item?item.name:'Item', cell:cellKey });
+    } else {
+      // Damaged — mark as damaged, needs repair
+      mp.baseGrid[cellKey].damaged=true;
+      var repairCost=item?Math.ceil(item.cost*0.4):10;
+      mp.baseGrid[cellKey].repairCost=repairCost;
+      damages.push({ type:'damaged', emoji:item?item.emoji:'🧱', name:item?item.name:'Structure', cost:repairCost });
+    }
+  }
+
+  saveData(d);
+
+  if(damages.length>0){
+    showGoblinPopup(hoursAway, damages);
+  }
+}
+
+function showGoblinPopup(hoursAway, damages){
+  var titles=[
+    'While you were gone...',
+    'Grumblax struck AGAIN!',
+    'Your base was raided!',
+  ];
+  var msgs={
+    24:'Grumblax snuck in while you were sleeping. Typical.',
+    48:'Two days gone?! Grumblax had a PARTY in your base.',
+    72:'Three days?! Grumblax invited his WHOLE FAMILY.',
+    168:'A WEEK?! Grumblax MOVED IN. He put up curtains.'
+  };
+  var msgKey=hoursAway>=168?168:hoursAway>=72?72:hoursAway>=48?48:24;
+  document.getElementById('goblinTitle').textContent=titles[Math.floor(Math.random()*titles.length)];
+  document.getElementById('goblinMsg').textContent=msgs[msgKey];
+  var listHtml=damages.map(function(d){
+    if(d.type==='stolen') return '<div class="goblin-dmg-item">'+d.emoji+' <b>'+d.name+'</b> was STOLEN! 😤</div>';
+    return '<div class="goblin-dmg-item">'+d.emoji+' <b>'+d.name+'</b> damaged — costs 🪙'+d.cost+' to repair</div>';
+  }).join('');
+  document.getElementById('goblinDmgList').innerHTML=listHtml;
+  document.getElementById('goblinOverlay').style.display='flex';
+}
+
+window.closeGoblinPopup=function(){
+  document.getElementById('goblinOverlay').style.display='none';
+};
+
+// ── SHOP ──
+function renderShop(){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var mp=getMPData();
+  var legDefeats=ud.legendaryDefeats||0;
+  var sections={};
+  SHOP_ITEMS.forEach(function(item){
+    if(!sections[item.section]) sections[item.section]=[];
+    sections[item.section].push(item);
+  });
+  var html='';
+  Object.keys(sections).forEach(function(sec){
+    html+='<div class="shop-section-title">'+sec+'</div><div class="shop-grid">';
+    sections[sec].forEach(function(item){
+      var owned=!!(mp.inventory[item.id]&&mp.inventory[item.id]>0);
+      var canAfford=mp.credits>=item.cost;
+      var hasLeg=legDefeats>=item.leg;
+      var locked=!canAfford||!hasLeg;
+      var lockMsg='';
+      if(!hasLeg) lockMsg='Need '+item.leg+' legendary defeats (you have '+legDefeats+')';
+      else if(!canAfford) lockMsg='Need 🪙'+item.cost+' (you have '+mp.credits+')';
+      html+='<div class="shop-item'+(locked?' locked':'')+(owned?' owned':'')+'" onclick="buyItem(\''+item.id+'\')">'
+        +(owned?'<div class="si-owned-tag">OWNED</div>':'')
+        +'<div class="si-emoji">'+item.emoji+'</div>'
+        +'<div class="si-name">'+item.name+'</div>'
+        +'<div class="si-cost">🪙 '+item.cost+(item.leg?' + '+item.leg+'⚔️':' credits')+'</div>'
+        +(locked&&lockMsg?'<div class="si-lock">'+lockMsg+'</div>':'')
+        +'</div>';
+    });
+    html+='</div>';
+  });
+  document.getElementById('shopContent').innerHTML=html;
+}
+
+window.buyItem=function(itemId){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var mp=getMPData();
+  var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
+  if(!item) return;
+  var legDefeats=ud.legendaryDefeats||0;
+  if(mp.credits<item.cost){ showMPToast('Not enough credits! 🪙'); return; }
+  if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
+  if(mp.inventory[item.id]&&mp.inventory[item.id]>0){ showMPToast('Already owned!'); return; }
+  mp.credits-=item.cost;
+  mp.inventory[item.id]=(mp.inventory[item.id]||0)+1;
+  saveData(d);
+  document.getElementById('mpCredits').textContent=mp.credits;
+  showMPToast(item.emoji+' '+item.name+' added to inventory!');
+  renderShop();
+};
+
+function showMPToast(msg){
+  var t=document.getElementById('mpToast');
+  if(!t){
+    t=document.createElement('div');
+    t.id='mpToast';
+    t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#e8f0fe;border:1.5px solid #118ab2;border-radius:10px;padding:8px 18px;font-size:0.82rem;font-weight:800;z-index:5000;transition:opacity 0.4s;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._to);
+  t._to=setTimeout(function(){ t.style.opacity='0'; },1800);
+}
+
+// ── INVENTORY ──
+function renderInventory(){
+  var mp=getMPData(); if(!mp) return;
+  var owned=Object.keys(mp.inventory).filter(function(k){ return mp.inventory[k]>0; });
+  var html='';
+  if(!owned.length){
+    html='<div style="color:#3a4f6b;font-size:0.82rem;text-align:center;padding:30px 0;">No items yet!<br>Visit the Shop to buy your first item.</div>';
+  } else {
+    owned.forEach(function(id){
+      var item=SHOP_ITEMS.find(function(x){return x.id===id;});
+      if(!item) return;
+      html+='<div class="inv-item" draggable="true" data-item-id="'+id+'" onmousedown="startInvDrag(event,\''+id+'\')" ontouchstart="startInvDrag(event,\''+id+'\')">'
+        +'<div class="ii-emoji">'+item.emoji+'</div>'
+        +'<div class="ii-name">'+item.name+'</div>'
+        +'</div>';
+    });
+  }
+  document.getElementById('invGrid').innerHTML=html;
+}
+
+// ── BASE GRID ──
+function renderBaseGrid(){
+  var mp=getMPData(); if(!mp) return;
+  var canvas=document.getElementById('baseCanvas'); if(!canvas) return;
+  var html='';
+  for(var r=0;r<MP_GRID_ROWS;r++){
+    for(var c=0;c<MP_GRID_COLS;c++){
+      var key=r+'_'+c;
+      var cell=mp.baseGrid[key];
+      var inner='';
+      if(cell){
+        var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+        var emoji=item?item.emoji:'?';
+        inner='<span class="item-emoji">'+emoji+'</span>';
+        if(cell.damaged) inner+='<span class="item-dmg">🔨'+cell.repairCost+'</span>';
+      }
+      html+='<div class="base-cell'+(cell?' has-item':'')+'" data-key="'+key+'" '
+        +'ondragover="cellDragOver(event)" ondragleave="cellDragLeave(event)" ondrop="cellDrop(event,\''+key+'\')" '
+        +'onclick="cellClick(\''+key+'\')">'
+        +inner+'</div>';
+    }
+  }
+  canvas.innerHTML=html;
+  // Update last seen
+  var mp2=getMPData();
+  if(mp2&&mp2.lastLogin){
+    var hrs=Math.floor((Date.now()-mp2.lastLogin)/3600000);
+    var lsEl=document.getElementById('mpLastSeen');
+    if(lsEl) lsEl.textContent=hrs<1?'Last visit: just now':'Last visit: '+hrs+' hour'+(hrs!==1?'s':'')+' ago';
+  }
+}
+
+// ── DRAG AND DROP ──
+var _dragItemId=null;
+var _dragFromCell=null;
+
+window.startInvDrag=function(e, itemId){
+  _dragItemId=itemId;
+  _dragFromCell=null;
+  var ghost=document.getElementById('dragGhost');
+  var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
+  ghost.textContent=item?item.emoji:'?';
+  ghost.style.display='block';
+  moveDragGhost(e);
+  e.preventDefault();
+};
+
+function moveDragGhost(e){
+  var ghost=document.getElementById('dragGhost');
+  var cx=e.touches?e.touches[0].clientX:e.clientX;
+  var cy=e.touches?e.touches[0].clientY:e.clientY;
+  ghost.style.left=cx+'px'; ghost.style.top=cy+'px';
+}
+
+document.addEventListener('mousemove',function(e){ if(_dragItemId) moveDragGhost(e); });
+document.addEventListener('touchmove',function(e){ if(_dragItemId){ moveDragGhost(e); e.preventDefault(); } },{passive:false});
+document.addEventListener('mouseup',function(){ endDrag(); });
+document.addEventListener('touchend',function(e){ 
+  if(!_dragItemId) return;
+  // Find cell under touch point
+  var t=e.changedTouches[0];
+  var el=document.elementFromPoint(t.clientX,t.clientY);
+  var cell=el?el.closest('[data-key]'):null;
+  if(cell){ cellDrop(e, cell.dataset.key); }
+  endDrag();
+});
+
+function endDrag(){
+  _dragItemId=null; _dragFromCell=null;
+  document.getElementById('dragGhost').style.display='none';
+  // Remove drag-over highlights
+  document.querySelectorAll('.base-cell.drag-over').forEach(function(c){ c.classList.remove('drag-over'); });
+}
+
+window.cellDragOver=function(e){
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+};
+window.cellDragLeave=function(e){
+  e.currentTarget.classList.remove('drag-over');
+};
+
+window.cellDrop=function(e, key){
+  e.preventDefault();
+  if(!_dragItemId) return;
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var mp=getMPData();
+  // Place item
+  mp.baseGrid[key]={ id:_dragItemId };
+  saveData(d);
+  renderBaseGrid();
+  endDrag();
+};
+
+window.cellClick=function(key){
+  if(_dragItemId) return; // Placing, not clicking
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var mp=getMPData();
+  var cell=mp.baseGrid[key];
+  if(!cell) return;
+  if(cell.damaged){
+    // Repair prompt
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    var cost=cell.repairCost||10;
+    if(mp.credits>=cost){
+      mp.credits-=cost;
+      delete cell.damaged; delete cell.repairCost;
+      saveData(d);
+      document.getElementById('mpCredits').textContent=mp.credits;
+      showMPToast('Repaired! 🔨');
+      renderBaseGrid();
+    } else {
+      showMPToast('Need 🪙'+cost+' to repair! (you have '+mp.credits+')');
+    }
+  } else {
+    // Remove item
+    delete mp.baseGrid[key];
+    saveData(d);
+    renderBaseGrid();
+    showMPToast('Item removed');
+  }
+};
+
+// ── MY PLACE SCREEN ──
+function switchMPTab(tab){
+  ['base','inv','shop'].forEach(function(t){
+    document.getElementById('mp-'+t+'-view').style.display=t===tab?'':'none';
+    document.getElementById('mptab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='shop') renderShop();
+  else if(tab==='inv') renderInventory();
+  else renderBaseGrid();
+}
+
+function showMyPlace(){
+  checkDailyLoginBonus();
+  checkGoblinAttack();
+  var mp=getMPData();
+  document.getElementById('mpCredits').textContent=mp?mp.credits:0;
+  switchMPTab('base');
+  show('myPlaceScreen');
+}
+
+document.getElementById('myPlaceBtnMode').addEventListener('click', showMyPlace);
+document.getElementById('resMyPlaceBtn').addEventListener('click', showMyPlace);
+document.getElementById('myPlaceBackBtn').addEventListener('click',function(){ show('modeScreen'); renderModeScreen(); });
 
 // ── FIRE BADGE (overall speed indicator) ──
 function getOverallAvgMs(){
@@ -2491,7 +2990,7 @@ function endQuiz(){
   var avgMs=okTimes.length?Math.round(okTimes.reduce(function(s,t){return s+t.ms;},0)/okTimes.length):0;
   var session={date:new Date().toISOString(),dur:totalTime,correct:qCorrect,total:qTotal,avgMs:avgMs,times:qTimes};
   try { saveSession(userKey,session); } catch(e){}
-  // Sync to Google Sheets (fire and forget — won't block the game)
+  try { earnSessionCredits(session); } catch(e){}
   try { sendToSheets(userKey, session); } catch(e){}
 
   var defeated=[];
