@@ -1711,6 +1711,7 @@ function getMPData(){
   if(!ud.mp.inventory) ud.mp.inventory={};
   if(!ud.mp.baseGrid) ud.mp.baseGrid={};
   if(!ud.mp.lastLogin) ud.mp.lastLogin=Date.now();
+  saveData(d); // write back any initialization
   return ud.mp;
 }
 
@@ -1840,7 +1841,8 @@ window.closeGoblinPopup=function(){
 // ── SHOP ──
 function renderShop(){
   var d=getData(), ud=d[userKey]; if(!ud) return;
-  var mp=getMPData();
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
+  var mp=ud.mp;
   var legDefeats=ud.legendaryDefeats||0;
   var sections={};
   SHOP_ITEMS.forEach(function(item){
@@ -1873,17 +1875,17 @@ function renderShop(){
 
 window.buyItem=function(itemId){
   var d=getData(), ud=d[userKey]; if(!ud) return;
-  var mp=getMPData();
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
   var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
   if(!item) return;
   var legDefeats=ud.legendaryDefeats||0;
-  if(mp.credits<item.cost){ showMPToast('Not enough credits! 🪙'); return; }
+  if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! 🪙'); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
-  if(mp.inventory[item.id]&&mp.inventory[item.id]>0){ showMPToast('Already owned!'); return; }
-  mp.credits-=item.cost;
-  mp.inventory[item.id]=(mp.inventory[item.id]||0)+1;
+  if(ud.mp.inventory[item.id]&&ud.mp.inventory[item.id]>0){ showMPToast('Already owned!'); return; }
+  ud.mp.credits-=item.cost;
+  ud.mp.inventory[item.id]=1;
   saveData(d);
-  document.getElementById('mpCredits').textContent=mp.credits;
+  document.getElementById('mpCredits').textContent=ud.mp.credits;
   showMPToast(item.emoji+' '+item.name+' added to inventory!');
   renderShop();
 };
@@ -1903,8 +1905,12 @@ function showMPToast(msg){
 
 // ── INVENTORY ──
 function renderInventory(){
-  var mp=getMPData(); if(!mp) return;
-  var owned=Object.keys(mp.inventory).filter(function(k){ return mp.inventory[k]>0; });
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) {
+    document.getElementById('invGrid').innerHTML='<div style="color:#3a4f6b;font-size:0.82rem;text-align:center;padding:30px 0;">No items yet!<br>Visit the Shop to buy your first item.</div>';
+    return;
+  }
+  var inv=ud.mp.inventory||{};
+  var owned=Object.keys(inv).filter(function(k){ return inv[k]>0; });
   var html='';
   if(!owned.length){
     html='<div style="color:#3a4f6b;font-size:0.82rem;text-align:center;padding:30px 0;">No items yet!<br>Visit the Shop to buy your first item.</div>';
@@ -1923,13 +1929,14 @@ function renderInventory(){
 
 // ── BASE GRID ──
 function renderBaseGrid(){
-  var mp=getMPData(); if(!mp) return;
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var baseGrid=(ud.mp&&ud.mp.baseGrid)||{};
   var canvas=document.getElementById('baseCanvas'); if(!canvas) return;
   var html='';
   for(var r=0;r<MP_GRID_ROWS;r++){
     for(var c=0;c<MP_GRID_COLS;c++){
       var key=r+'_'+c;
-      var cell=mp.baseGrid[key];
+      var cell=baseGrid[key];
       var inner='';
       if(cell){
         var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
@@ -1944,13 +1951,10 @@ function renderBaseGrid(){
     }
   }
   canvas.innerHTML=html;
-  // Update last seen
-  var mp2=getMPData();
-  if(mp2&&mp2.lastLogin){
-    var hrs=Math.floor((Date.now()-mp2.lastLogin)/3600000);
-    var lsEl=document.getElementById('mpLastSeen');
-    if(lsEl) lsEl.textContent=hrs<1?'Last visit: just now':'Last visit: '+hrs+' hour'+(hrs!==1?'s':'')+' ago';
-  }
+  var lastLogin=(ud.mp&&ud.mp.lastLogin)||Date.now();
+  var hrs=Math.floor((Date.now()-lastLogin)/3600000);
+  var lsEl=document.getElementById('mpLastSeen');
+  if(lsEl) lsEl.textContent=hrs<1?'Last visit: just now':'Last visit: '+hrs+' hour'+(hrs!==1?'s':'')+' ago';
 }
 
 // ── DRAG AND DROP ──
@@ -2007,37 +2011,34 @@ window.cellDrop=function(e, key){
   e.preventDefault();
   if(!_dragItemId) return;
   var d=getData(), ud=d[userKey]; if(!ud) return;
-  var mp=getMPData();
-  // Place item
-  mp.baseGrid[key]={ id:_dragItemId };
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
+  ud.mp.baseGrid[key]={ id:_dragItemId };
   saveData(d);
   renderBaseGrid();
   endDrag();
 };
 
 window.cellClick=function(key){
-  if(_dragItemId) return; // Placing, not clicking
+  if(_dragItemId) return;
   var d=getData(), ud=d[userKey]; if(!ud) return;
-  var mp=getMPData();
-  var cell=mp.baseGrid[key];
+  if(!ud.mp||!ud.mp.baseGrid) return;
+  var cell=ud.mp.baseGrid[key];
   if(!cell) return;
   if(cell.damaged){
-    // Repair prompt
     var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
     var cost=cell.repairCost||10;
-    if(mp.credits>=cost){
-      mp.credits-=cost;
+    if((ud.mp.credits||0)>=cost){
+      ud.mp.credits-=cost;
       delete cell.damaged; delete cell.repairCost;
       saveData(d);
-      document.getElementById('mpCredits').textContent=mp.credits;
+      document.getElementById('mpCredits').textContent=ud.mp.credits;
       showMPToast('Repaired! 🔨');
       renderBaseGrid();
     } else {
-      showMPToast('Need 🪙'+cost+' to repair! (you have '+mp.credits+')');
+      showMPToast('Need 🪙'+cost+' to repair! (you have '+(ud.mp.credits||0)+')');
     }
   } else {
-    // Remove item
-    delete mp.baseGrid[key];
+    delete ud.mp.baseGrid[key];
     saveData(d);
     renderBaseGrid();
     showMPToast('Item removed');
@@ -2059,8 +2060,9 @@ window.switchMPTab=switchMPTab;
 function showMyPlace(){
   checkDailyLoginBonus();
   checkGoblinAttack();
-  var mp=getMPData();
-  document.getElementById('mpCredits').textContent=mp?mp.credits:0;
+  var d=getData(), ud=d[userKey];
+  var credits=(ud&&ud.mp&&ud.mp.credits)||0;
+  document.getElementById('mpCredits').textContent=credits;
   switchMPTab('base');
   show('myPlaceScreen');
 }
