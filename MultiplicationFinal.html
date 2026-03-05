@@ -1318,10 +1318,11 @@ var GIVERRANKS=[
 ];
 
 function getTableBadgeTier(tableNum, facts){
-  // Returns 'gold','green','blue' or null based on best tier ALL facts in table achieve
+  // Check best tier first (gold→green→blue) so we return the highest earned
   var tableFacts=ALL_FACTS.filter(function(ab){ return ab[0]===tableNum||ab[1]===tableNum; });
-  for(var t=0;t<BADGE_TIERS.length;t++){
-    var tier=BADGE_TIERS[t];
+  var tiersHighFirst=['gold','green','blue'];
+  for(var t=0;t<tiersHighFirst.length;t++){
+    var tier=tiersHighFirst[t];
     var threshold=BADGE_TIER_MS[tier];
     var allMeet=tableFacts.every(function(ab){
       var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
@@ -1335,8 +1336,9 @@ function getTableBadgeTier(tableNum, facts){
 function getSquareBadgeTier(n, facts){
   var k=fkey(n,n), f=facts[k], avg=factAvg(f);
   if(avg===null) return null;
-  for(var t=0;t<BADGE_TIERS.length;t++){
-    var tier=BADGE_TIERS[t];
+  var tiersHighFirst=['gold','green','blue'];
+  for(var t=0;t<tiersHighFirst.length;t++){
+    var tier=tiersHighFirst[t];
     if(avg<BADGE_TIER_MS[tier]) return tier;
   }
   return null;
@@ -1373,14 +1375,13 @@ function checkAndSaveBadges(){
   var changed=false;
 
   // Table badges 2-9
+  var TIER_RANK={blue:0,green:1,gold:2};
   for(var n=2;n<=9;n++){
     var tier=getTableBadgeTier(n,facts);
     var key='num'+n;
-    if(tier && ud.badges[key]!==tier){
-      // Only upgrade (blue→green→gold), never downgrade
+    if(tier){
       var old=ud.badges[key];
-      var oldIdx=BADGE_TIERS.indexOf(old), newIdx=BADGE_TIERS.indexOf(tier);
-      if(newIdx>oldIdx||old===undefined){
+      if(!old || TIER_RANK[tier]>TIER_RANK[old]){
         ud.badges[key]=tier; changed=true;
       }
     }
@@ -1392,8 +1393,7 @@ function checkAndSaveBadges(){
     var skey='sq'+sq;
     if(stier){
       var sold=ud.badges[skey];
-      var soldIdx=BADGE_TIERS.indexOf(sold), snewIdx=BADGE_TIERS.indexOf(stier);
-      if(snewIdx>soldIdx||sold===undefined){
+      if(!sold || TIER_RANK[stier]>TIER_RANK[sold]){
         ud.badges[skey]=stier; changed=true;
       }
     }
