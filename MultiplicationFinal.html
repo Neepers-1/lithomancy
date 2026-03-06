@@ -438,6 +438,19 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .goblin-card { background:linear-gradient(160deg,#1a0500,#0d0800);border:2px solid #ef476f;border-radius:22px;padding:28px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 0 60px rgba(239,71,111,0.4);animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
 .goblin-dmg-list { text-align:left;margin:10px 0 16px;padding:0 8px; }
 .goblin-dmg-item { font-size:0.82rem;color:#ffb3b3;font-weight:600;padding:3px 0;border-bottom:1px solid rgba(239,71,111,0.15); }
+/* Battle system */
+.def-card { background:rgba(6,214,160,0.08);border:1.5px solid rgba(6,214,160,0.25);border-radius:8px;padding:6px 8px;transition:border-color 0.2s; }
+.def-card.dead { opacity:0.3;border-color:rgba(239,71,111,0.2); }
+.mon-card { background:rgba(239,71,111,0.08);border:1.5px solid rgba(239,71,111,0.25);border-radius:8px;padding:6px 8px; }
+.mon-card.dead { opacity:0.3;border-color:rgba(100,100,100,0.2); }
+.battle-hp-bar { width:100%;height:6px;background:#1e3a5f;border-radius:3px;margin-top:3px;overflow:hidden; }
+.battle-hp-fill { height:100%;border-radius:3px;transition:width 0.4s; }
+.battle-roll-btn { width:100%;padding:12px 4px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:900;font-size:0.85rem;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 15px rgba(239,71,111,0.4);transition:transform 0.1s; }
+.battle-roll-btn:active { transform:scale(0.96); }
+.attack-warning-overlay { position:fixed;inset:0;z-index:5500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);flex-direction:column;gap:16px; }
+@keyframes attackPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+@keyframes battleShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+.shop-def-stats { font-size:0.5rem;color:#06d6a0;margin-top:2px;font-weight:700; }
 /* Dragging ghost */
 #dragGhost { position:fixed;pointer-events:none;z-index:9999;font-size:2rem;transform:translate(-50%,-50%);opacity:0.8;display:none; }
 /* Badge tooltip popup */
@@ -625,6 +638,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 <!-- ══ LOGIN ══ -->
 <div id="loginScreen" class="screen active">
   <div class="card" style="padding:0;overflow:hidden;background:linear-gradient(160deg,#0d0d1f 0%,#16213e 50%,#0a0e1a 100%);border:1px solid rgba(255,215,0,0.15);position:relative;">
+    <div style="position:absolute;top:8px;right:10px;font-size:0.55rem;color:rgba(255,255,255,0.2);font-weight:700;letter-spacing:1px;z-index:2;">v1.4.2</div>
     <!-- Star field background -->
     <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;" id="starField"></div>
     <!-- Epic header art -->
@@ -978,6 +992,9 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <!-- Build view: grid + inventory together, scrollable -->
     <div id="mp-base-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;">
       <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
+      <div id="godBattleTestBtn" style="display:none;text-align:center;margin-bottom:6px;">
+        <button onclick="startBattle(true)" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:8px;padding:6px 16px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">🧪 TEST BATTLE (GOD)</button>
+      </div>
       <div class="base-canvas" id="baseCanvas" style="margin:0 auto;" oncontextmenu="return false;"></div>
       <div style="font-size:0.62rem;color:#3a4f6b;margin:4px 0 10px;text-align:center;" id="mpLastSeen"></div>
       <!-- Inventory inline -->
@@ -1006,6 +1023,58 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 <!-- Drag ghost -->
 <div id="dragGhost"></div>
+
+<!-- ══ ATTACK WARNING SPLASH ══ -->
+<div id="attackWarningOverlay" class="attack-warning-overlay" style="display:none;">
+  <div style="font-size:5rem;animation:attackPulse 0.6s ease-in-out infinite;" id="attackWarningEmoji">👹</div>
+  <div style="font-size:1.8rem;font-weight:900;color:#ef476f;letter-spacing:3px;text-align:center;animation:battleShake 0.4s ease-in-out infinite;">DARK FORCES</div>
+  <div style="font-size:1.8rem;font-weight:900;color:#ff8c00;letter-spacing:3px;text-align:center;">ARE ATTACKING!</div>
+  <div style="font-size:0.85rem;color:#ffb3b3;font-weight:600;text-align:center;margin-top:4px;" id="attackWarningMsg">Prepare your defenders!</div>
+  <div style="margin-top:16px;display:flex;gap:12px;">
+    <button onclick="dismissAttackWarning()" style="padding:12px 28px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;letter-spacing:1px;">⚔️ DEFEND!</button>
+  </div>
+  <div id="attackMonsterPreview" style="display:flex;gap:8px;margin-top:12px;font-size:1.8rem;"></div>
+</div>
+
+<!-- ══ BATTLE OVERLAY ══ -->
+<div id="battleOverlay" style="display:none;position:fixed;inset:0;z-index:6000;background:#000;flex-direction:column;align-items:stretch;font-family:inherit;">
+  <!-- Header -->
+  <div id="battleHeader" style="background:linear-gradient(135deg,#1a0505,#2d0a0a);border-bottom:2px solid #ef476f;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="font-size:1.1rem;font-weight:900;color:#ef476f;letter-spacing:2px;" id="battleTitle">⚔️ DARK FORCES ATTACK!</div>
+    <div style="font-size:0.72rem;color:#ffb3b3;font-weight:700;" id="battlePhaseLabel">Round 1</div>
+  </div>
+  <!-- Battlefield -->
+  <div style="flex:1;display:flex;gap:0;overflow:hidden;min-height:0;">
+    <!-- Left: Your Defenders -->
+    <div style="flex:1;background:linear-gradient(180deg,#0a1a0a,#0d1520);border-right:1px solid #1e3a2a;display:flex;flex-direction:column;padding:8px;gap:6px;overflow-y:auto;">
+      <div style="font-size:0.6rem;font-weight:900;letter-spacing:2px;color:#06d6a0;text-align:center;margin-bottom:2px;">YOUR DEFENDERS</div>
+      <div id="defendersList" style="display:flex;flex-direction:column;gap:5px;flex:1;"></div>
+    </div>
+    <!-- Center: battle log + action -->
+    <div style="width:130px;flex-shrink:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;padding:6px;gap:4px;overflow:hidden;">
+      <div style="font-size:1.6rem;" id="battleVsEmoji">⚔️</div>
+      <div id="battleLog" style="flex:1;width:100%;overflow-y:auto;font-size:0.58rem;color:#7a8fb5;line-height:1.6;text-align:center;"></div>
+      <button id="battleRollBtn" onclick="battleRoll()" style="width:100%;padding:10px 4px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;font-size:0.8rem;cursor:pointer;letter-spacing:1px;">⚔️ ATTACK!</button>
+    </div>
+    <!-- Right: Monsters -->
+    <div style="flex:1;background:linear-gradient(180deg,#1a0a0a,#0d1520);border-left:1px solid #3a1a1a;display:flex;flex-direction:column;padding:8px;gap:6px;overflow-y:auto;">
+      <div style="font-size:0.6rem;font-weight:900;letter-spacing:2px;color:#ef476f;text-align:center;margin-bottom:2px;">ENEMIES</div>
+      <div id="monstersList" style="display:flex;flex-direction:column;gap:5px;flex:1;"></div>
+    </div>
+  </div>
+  <!-- Footer status -->
+  <div id="battleFooter" style="background:#0a0e1a;border-top:1px solid #1e3a5f;padding:8px 16px;text-align:center;font-size:0.72rem;color:#7a8fb5;flex-shrink:0;" ></div>
+</div>
+
+<!-- Battle Result Overlay -->
+<div id="battleResultOverlay" style="display:none;position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#0d1520,#1e3a5f);border:2px solid #118ab2;border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%;">
+    <div style="font-size:4rem;margin-bottom:8px;" id="battleResultEmoji">🏆</div>
+    <div style="font-size:1.5rem;font-weight:900;margin-bottom:8px;" id="battleResultTitle">VICTORY!</div>
+    <div style="font-size:0.85rem;color:#b89fd4;margin-bottom:16px;line-height:1.5;" id="battleResultMsg"></div>
+    <button onclick="closeBattleResult()" style="background:linear-gradient(135deg,#06d6a0,#0a9a74);color:#0a1520;border:none;border-radius:12px;padding:12px 32px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;" id="battleResultBtn">Continue</button>
+  </div>
+</div>
 
 <!-- Badge tooltip popup -->
 <div id="badgeTipOverlay" class="badge-tip-overlay" style="display:none;" onclick="if(event.target===this)closeBadgeTip()">
@@ -1805,6 +1874,15 @@ var SHOP_ITEMS=[
   { id:'market',      emoji:'🏪', name:'Market Square', cost:70,  qty:1, leg:0, w:3,h:2, section:'Buildings',    desc:'Trade & bustle' },
   // Special unlock
   { id:'six_seven',   emoji:'😏', name:'6×7=42 Club',   cost:42,  qty:1, leg:0, w:2,h:2, section:'Special',      desc:'For those who know', unlock:'6x7' },
+  // Defenders (placed on grid, fight in battles)
+  { id:'guard',       emoji:'🗡️',  name:'Guard',         cost:20,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Melee fighter. Tough but slow.', defender:true, atk:8,  hp:30, range:1, speed:'melee' },
+  { id:'archer',      emoji:'🏹',  name:'Archer',        cost:25,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Shoots from range.', defender:true, atk:6,  hp:15, range:3, speed:'ranged' },
+  { id:'wizard_def',  emoji:'🧙',  name:'Wizard',        cost:40,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Magic attacks hit all enemies.', defender:true, atk:10, hp:12, range:3, speed:'ranged', aoe:true },
+  { id:'priest',      emoji:'⛪',  name:'Priest',        cost:30,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Heals your other defenders.', defender:true, atk:3,  hp:20, range:2, speed:'ranged', healer:true },
+  { id:'knight',      emoji:'⚔️',  name:'Knight',        cost:50,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Heavy armor. Very hard to kill.', defender:true, atk:12, hp:50, range:1, speed:'melee' },
+  { id:'eng_cat',     emoji:'🔩',  name:'Siege Engineer',cost:60,  qty:1, leg:0, w:2,h:1, section:'Defenders',    desc:'Launches boulders at enemies.', defender:true, atk:18, hp:10, range:4, speed:'ranged' },
+  { id:'ninja',       emoji:'🥷',  name:'Ninja',         cost:45,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Fast strikes. Dodges often.', defender:true, atk:9,  hp:18, range:1, speed:'melee', dodge:true },
+  { id:'paladin',     emoji:'🛡️',  name:'Paladin',       cost:80,  qty:1, leg:2, w:1,h:1, section:'Defenders',    desc:'Holy warrior. Stuns enemies.', defender:true, atk:14, hp:45, range:1, speed:'melee', stun:true },
   // Legendary items
   { id:'dragon',      emoji:'🐉', name:'Dragon Perch',  cost:500, qty:1, leg:10, w:3,h:2, section:'Legendary',   desc:'A dragon on your roof' },
   { id:'portal',      emoji:'🌀', name:'Magic Portal',  cost:800, qty:1, leg:20, w:2,h:3, section:'Legendary',   desc:'Glowing magic vortex' },
@@ -1893,39 +1971,10 @@ function checkGoblinAttack(){
 
   if(hoursAway<24) return; // No attack under 24h
 
-  // Find what's on the base to potentially damage
-  var placedItems=Object.keys(mp.baseGrid).filter(function(k){ return mp.baseGrid[k]&&!mp.baseGrid[k].damaged; });
-  if(placedItems.length===0) return; // Nothing to steal
-
-  var damages=[];
-  var stealCount= hoursAway>=168?4 : hoursAway>=72?3 : hoursAway>=48?2 : 1;
-
-  // Steal/damage items
-  for(var i=0;i<stealCount&&placedItems.length>0;i++){
-    var idx=Math.floor(Math.random()*placedItems.length);
-    var cellKey=placedItems[idx];
-    var itemId=mp.baseGrid[cellKey].id;
-    var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
-    placedItems.splice(idx,1);
-
-    if(GOBLIN_STEALABLE.indexOf(itemId)!==-1){
-      // Stolen — remove from grid, add back to inventory at half
-      delete mp.baseGrid[cellKey];
-      damages.push({ type:'stolen', emoji:item?item.emoji:'📦', name:item?item.name:'Item', cell:cellKey });
-    } else {
-      // Damaged — mark as damaged, needs repair
-      mp.baseGrid[cellKey].damaged=true;
-      var repairCost=item?Math.ceil(item.cost*0.4):10;
-      mp.baseGrid[cellKey].repairCost=repairCost;
-      damages.push({ type:'damaged', emoji:item?item.emoji:'🧱', name:item?item.name:'Structure', cost:repairCost });
-    }
-  }
-
-  saveData(d);
-
-  if(damages.length>0){
-    showGoblinPopup(hoursAway, damages);
-  }
+  // Trigger a battle!
+  setTimeout(function(){
+    showAttackWarning();
+  }, 800);
 }
 
 function showGoblinPopup(hoursAway, damages){
@@ -1955,6 +2004,321 @@ window.closeGoblinPopup=function(){
   document.getElementById('goblinOverlay').style.display='none';
 };
 
+// ══════════════════════════════════════════════════════════
+// BATTLE SYSTEM
+// ══════════════════════════════════════════════════════════
+
+var MONSTER_TYPES=[
+  { id:'goblin',    emoji:'👺', name:'Goblin',       hp:20,  atk:5,  range:1, speed:'melee',  reward:8  },
+  { id:'orc',       emoji:'👹', name:'Orc Warrior',  hp:40,  atk:10, range:1, speed:'melee',  reward:15 },
+  { id:'skeleton',  emoji:'💀', name:'Skeleton',     hp:15,  atk:4,  range:1, speed:'melee',  reward:6  },
+  { id:'troll',     emoji:'🧌', name:'Troll',        hp:70,  atk:14, range:1, speed:'melee',  reward:25 },
+  { id:'dark_archer',emoji:'🏴',name:'Dark Archer',  hp:18,  atk:8,  range:3, speed:'ranged', reward:12 },
+  { id:'witch',     emoji:'🧟', name:'Dark Witch',   hp:25,  atk:12, range:2, speed:'ranged', reward:18, aoe:true },
+  { id:'dragon_e',  emoji:'🐲', name:'Baby Dragon',  hp:60,  atk:18, range:2, speed:'ranged', reward:35 },
+  { id:'giant',     emoji:'🦣', name:'Giant',        hp:120, atk:20, range:1, speed:'melee',  reward:50 },
+];
+
+// Build a wave of monsters scaled to how many defenders the player has
+function buildWave(isTough){
+  var d=getData(), ud=d[userKey];
+  var mp=ud&&ud.mp?ud.mp:{};
+  var defCount=0;
+  Object.keys(mp.baseGrid||{}).forEach(function(k){
+    var cell=mp.baseGrid[k];
+    if(cell){ var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;}); if(item&&item.defender) defCount++; }
+  });
+  // Scale wave size and difficulty
+  var waveSize= isTough ? 5 : Math.max(2, Math.min(5, Math.ceil(defCount*0.8)+1));
+  var pool= defCount===0 ? [MONSTER_TYPES[0],MONSTER_TYPES[2],MONSTER_TYPES[2]] // easy if no defenders
+           : isTough     ? MONSTER_TYPES
+           : MONSTER_TYPES.slice(0,5);
+  var wave=[];
+  for(var i=0;i<waveSize;i++){
+    var mt=pool[Math.floor(Math.random()*pool.length)];
+    wave.push({ id:mt.id, emoji:mt.emoji, name:mt.name,
+      hp:mt.hp, maxHp:mt.hp, atk:mt.atk, range:mt.range,
+      speed:mt.speed, reward:mt.reward, aoe:mt.aoe||false,
+      stunned:false });
+  }
+  return wave;
+}
+
+// Build defenders list from placed items on grid
+function buildDefenders(){
+  var d=getData(), ud=d[userKey];
+  var mp=ud&&ud.mp?ud.mp:{};
+  var defs=[];
+  var seen={};
+  Object.keys(mp.baseGrid||{}).forEach(function(k){
+    var cell=mp.baseGrid[k]; if(!cell) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(!item||!item.defender) return;
+    if(seen[k]) return; seen[k]=true;
+    defs.push({ id:item.id, emoji:item.emoji, name:item.name,
+      hp:item.hp, maxHp:item.hp, atk:item.atk, range:item.range,
+      aoe:item.aoe||false, healer:item.healer||false,
+      dodge:item.dodge||false, stun:item.stun||false,
+      dead:false });
+  });
+  return defs;
+}
+
+// Battle state
+var _battle={
+  defenders:[], monsters:[], round:0,
+  monstersAdvanced:0, // how many turns monsters have moved (melee attack at 2+)
+  log:[], active:false, creditsEarned:0
+};
+
+function showAttackWarning(){
+  var wave=buildWave(false);
+  // Store pending wave on window so battle can use it
+  window._pendingWave=wave;
+  // Show monster preview
+  var prev=document.getElementById('attackMonsterPreview');
+  if(prev) prev.innerHTML=wave.map(function(m){return '<span title="'+m.name+'">'+m.emoji+'</span>';}).join('');
+  var msg=document.getElementById('attackWarningMsg');
+  if(msg){
+    var hasDefenders=buildDefenders().length>0;
+    msg.textContent=hasDefenders?'Your defenders stand ready! Roll to fight back!':'⚠️ You have no defenders! Visit the Shop to buy some!';
+    msg.style.color=hasDefenders?'#06d6a0':'#ef476f';
+  }
+  document.getElementById('attackWarningOverlay').style.display='flex';
+}
+
+window.dismissAttackWarning=function(){
+  document.getElementById('attackWarningOverlay').style.display='none';
+  // Start battle with the pre-built wave
+  startBattle(false, window._pendingWave);
+  window._pendingWave=null;
+};
+
+window.startBattle=function(forced, prebuiltWave){
+  _battle.defenders=buildDefenders();
+  _battle.monsters=prebuiltWave||buildWave(forced===true);
+  _battle.round=1;
+  _battle.monstersAdvanced=0;
+  _battle.log=[];
+  _battle.active=true;
+  _battle.creditsEarned=0;
+
+  document.getElementById('battleOverlay').style.display='flex';
+  battleLog('⚔️ Dark forces approach your castle!');
+  if(_battle.defenders.length===0){
+    battleLog('😱 You have no defenders! Every attack damages your base!');
+    document.getElementById('battleRollBtn').textContent='😰 SURVIVE!';
+  } else {
+    battleLog('🛡️ Your '+_battle.defenders.length+' defender'+(  _battle.defenders.length>1?'s':'')+' stand ready!');
+    document.getElementById('battleRollBtn').textContent='⚔️ ATTACK!';
+  }
+  renderBattle();
+};
+
+function battleLog(msg){
+  _battle.log.unshift(msg);
+  if(_battle.log.length>30) _battle.log.pop();
+  var el=document.getElementById('battleLog');
+  if(el) el.innerHTML=_battle.log.map(function(m){ return '<div>'+m+'</div>'; }).join('');
+}
+
+function hpBar(hp, maxHp, color){
+  var pct=Math.max(0,Math.round(hp/maxHp*100));
+  var col=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
+  return '<div style="width:100%;height:6px;background:#1e3a5f;border-radius:3px;margin-top:2px;">'
+    +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px;transition:width 0.3s;"></div></div>';
+}
+
+function renderBattle(){
+  var dl=document.getElementById('defendersList');
+  var ml=document.getElementById('monstersList');
+  var ph=document.getElementById('battlePhaseLabel');
+  var ft=document.getElementById('battleFooter');
+  if(!dl||!ml) return;
+
+  ph.textContent='Round '+_battle.round+' — Enemies at distance '+(4-Math.min(3,_battle.monstersAdvanced));
+
+  // Defenders
+  dl.innerHTML=_battle.defenders.map(function(def,i){
+    if(def.dead) return '<div style="opacity:0.3;font-size:0.7rem;text-align:center;padding:4px;">'+def.emoji+' '+def.name+'<br><span style="color:#ef476f;font-size:0.6rem;">💀 Fallen</span></div>';
+    return '<div style="background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.2);border-radius:8px;padding:6px 8px;">'
+      +'<div style="display:flex;align-items:center;gap:4px;">'
+      +'<span style="font-size:1.3rem;">'+def.emoji+'</span>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:0.65rem;font-weight:800;color:#e8f0fe;">'+def.name+'</div>'
+      +'<div style="font-size:0.55rem;color:#7a8fb5;">❤️ '+def.hp+'/'+def.maxHp+' ⚔️ '+def.atk+(def.range>1?' 🏹':'')+(def.healer?' ✨':'')+'</div>'
+      +hpBar(def.hp,def.maxHp)
+      +'</div></div></div>';
+  }).join('');
+
+  // Monsters
+  ml.innerHTML=_battle.monsters.map(function(mon){
+    if(mon.hp<=0) return '<div style="opacity:0.3;font-size:0.7rem;text-align:center;padding:4px;">'+mon.emoji+' '+mon.name+'<br><span style="color:#06d6a0;font-size:0.6rem;">💀 Defeated!</span></div>';
+    return '<div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.2);border-radius:8px;padding:6px 8px;">'
+      +'<div style="display:flex;align-items:center;gap:4px;">'
+      +'<span style="font-size:1.3rem;">'+mon.emoji+'</span>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:0.65rem;font-weight:800;color:#ffb3b3;">'+mon.name+(mon.stunned?' 😵':'')+'</div>'
+      +'<div style="font-size:0.55rem;color:#7a8fb5;">❤️ '+mon.hp+'/'+mon.maxHp+' ⚔️ '+mon.atk+'</div>'
+      +hpBar(mon.hp,mon.maxHp,'#ef476f')
+      +'</div></div></div>';
+  }).join('');
+
+  ft.textContent='Tap ATTACK to roll your defenders\' attacks this round.';
+}
+
+window.battleRoll=function(){
+  if(!_battle.active) return;
+  var defs=_battle.defenders.filter(function(d){return !d.dead;});
+  var mons=_battle.monsters.filter(function(m){return m.hp>0;});
+  if(!mons.length){ checkBattleEnd(); return; }
+
+  _battle.monstersAdvanced++;
+  battleLog('— Round '+_battle.round+' —');
+
+  // DEFENDERS ATTACK
+  if(defs.length===0){
+    battleLog('😱 No defenders! Monsters rampage!');
+  } else {
+    defs.forEach(function(def){
+      var targets=_battle.monsters.filter(function(m){return m.hp>0;});
+      if(!targets.length) return;
+      // Melee can only attack when close (advanced >= 2)
+      if(def.range===1 && _battle.monstersAdvanced<2){ battleLog(def.emoji+' '+def.name+' waits for enemy to close in...'); return; }
+      var dmg=Math.max(1, def.atk + Math.floor(Math.random()*def.atk*0.5) - Math.floor(Math.random()*3));
+      if(def.healer){
+        // Heal lowest-HP ally instead
+        var wounded=_battle.defenders.filter(function(d){return !d.dead&&d.hp<d.maxHp;});
+        if(wounded.length){
+          wounded.sort(function(a,b){return a.hp-b.hp;});
+          var heal=Math.floor(def.atk*2+Math.random()*8);
+          wounded[0].hp=Math.min(wounded[0].maxHp, wounded[0].hp+heal);
+          battleLog('✨ '+def.name+' heals '+wounded[0].name+' for '+heal+'hp!');
+        } else { battleLog('✨ '+def.name+' stands by (all healthy).'); }
+        return;
+      }
+      if(def.aoe){
+        // Hit all monsters
+        var aoeMsg=def.emoji+' '+def.name+' BLASTS all enemies for '+Math.round(dmg*0.6)+'!';
+        targets.forEach(function(m){ m.hp=Math.max(0,m.hp-Math.round(dmg*0.6)); });
+        battleLog(aoeMsg);
+      } else {
+        var target=targets[Math.floor(Math.random()*targets.length)];
+        if(def.stun&&Math.random()<0.3){ target.stunned=true; battleLog('⚡ '+def.name+' STUNS '+target.name+'!'); }
+        target.hp=Math.max(0, target.hp-dmg);
+        battleLog(def.emoji+' '+def.name+' hits '+target.emoji+' '+target.name+' for '+dmg+'!'+(target.hp<=0?' 💀':''));
+        if(target.hp<=0) _battle.creditsEarned+=target.reward;
+      }
+    });
+  }
+
+  // MONSTERS ATTACK
+  var stillAlive=_battle.monsters.filter(function(m){return m.hp>0;});
+  stillAlive.forEach(function(mon){
+    if(mon.stunned){ battleLog(mon.emoji+' '+mon.name+' is stunned — skips!'); mon.stunned=false; return; }
+    var defTargets=_battle.defenders.filter(function(d){return !d.dead;});
+    if(!defTargets.length){
+      battleLog(mon.emoji+' '+mon.name+' smashes your base! 💥');
+      return;
+    }
+    // Ranged can always attack, melee only when close
+    if(mon.range===1 && _battle.monstersAdvanced<2){ battleLog(mon.emoji+' '+mon.name+' advances...'); return; }
+    var defTarget=defTargets[Math.floor(Math.random()*defTargets.length)];
+    var dodged=defTarget.dodge&&Math.random()<0.35;
+    if(dodged){ battleLog('🥷 '+defTarget.name+' DODGES '+mon.name+'\'s attack!'); return; }
+    var mDmg=Math.max(1, mon.atk+Math.floor(Math.random()*4)-1);
+    defTarget.hp=Math.max(0, defTarget.hp-mDmg);
+    battleLog(mon.emoji+' '+mon.name+' attacks '+defTarget.emoji+' '+defTarget.name+' for '+mDmg+'!'+(defTarget.hp<=0?' 💀':''));
+    if(defTarget.hp<=0) defTarget.dead=true;
+  });
+
+  _battle.round++;
+  renderBattle();
+  checkBattleEnd();
+};
+
+function checkBattleEnd(){
+  var monstersLeft=_battle.monsters.filter(function(m){return m.hp>0;});
+  var defendersLeft=_battle.defenders.filter(function(d){return !d.dead;});
+
+  if(monstersLeft.length===0){
+    // Victory!
+    _battle.active=false;
+    var totalReward=_battle.creditsEarned;
+    // Award credits
+    if(totalReward>0){
+      var d=getData(), ud=d[userKey];
+      if(ud&&ud.mp){ ud.mp.credits=(ud.mp.credits||0)+totalReward; saveData(d); }
+    }
+    setTimeout(function(){
+      document.getElementById('battleOverlay').style.display='none';
+      showBattleResult(true, '🏆 Your defenders crushed the attackers!\n\nYou earned 🪙'+totalReward+' credits!', totalReward);
+    }, 600);
+    return;
+  }
+
+  if(_battle.defenders.length>0 && defendersLeft.length===0){
+    // All defenders dead — monsters win
+    _battle.active=false;
+    // Damage some base items
+    var d=getData(), ud=d[userKey];
+    if(ud&&ud.mp){
+      var keys=Object.keys(ud.mp.baseGrid||{});
+      var dmgCount=Math.min(3, Math.floor(keys.length*0.4));
+      for(var i=0;i<dmgCount&&keys.length;i++){
+        var k=keys.splice(Math.floor(Math.random()*keys.length),1)[0];
+        if(ud.mp.baseGrid[k]&&!ud.mp.baseGrid[k].damaged){
+          ud.mp.baseGrid[k].damaged=true;
+          ud.mp.baseGrid[k].repairCost=10;
+        }
+      }
+      saveData(d);
+    }
+    setTimeout(function(){
+      document.getElementById('battleOverlay').style.display='none';
+      showBattleResult(false, '💀 Your defenders were overwhelmed!\n\nSome buildings were damaged. Buy more defenders!', 0);
+    }, 600);
+    return;
+  }
+
+  if(_battle.defenders.length===0 && _battle.round>3){
+    // No defenders, monsters trash the base
+    _battle.active=false;
+    var d2=getData(), ud2=d2[userKey];
+    if(ud2&&ud2.mp){
+      var keys2=Object.keys(ud2.mp.baseGrid||{});
+      keys2.forEach(function(k){
+        if(ud2.mp.baseGrid[k]) ud2.mp.baseGrid[k].damaged=true, ud2.mp.baseGrid[k].repairCost=15;
+      });
+      saveData(d2);
+    }
+    setTimeout(function(){
+      document.getElementById('battleOverlay').style.display='none';
+      showBattleResult(false, '💥 The monsters destroyed your base!\n\nYou had no defenders. Everything needs repair!', 0);
+    }, 600);
+  }
+}
+
+function showBattleResult(victory, msg, credits){
+  var overlay=document.getElementById('battleResultOverlay');
+  document.getElementById('battleResultEmoji').textContent=victory?'🏆':'💀';
+  document.getElementById('battleResultTitle').textContent=victory?'VICTORY!':'DEFEAT...';
+  document.getElementById('battleResultTitle').style.color=victory?'#06d6a0':'#ef476f';
+  document.getElementById('battleResultMsg').textContent=msg;
+  document.getElementById('battleResultBtn').textContent=victory?'Collect Rewards! 🪙':'Fix My Base 🔨';
+  overlay.style.display='flex';
+  if(victory) doConfetti&&doConfetti();
+}
+
+window.closeBattleResult=function(){
+  document.getElementById('battleResultOverlay').style.display='none';
+  // Refresh castle UI
+  var d=getData(), ud=d[userKey];
+  if(ud&&ud.mp) document.getElementById('mpCredits').textContent=ud.mp.credits||0;
+  renderBaseGrid();
+  renderInventory();
+};
+
 // ── SHOP ──
 function renderShop(){
   var d=getData(), ud=d[userKey]; if(!ud) return;
@@ -1981,7 +2345,8 @@ function renderShop(){
   });
   var html='';
   Object.keys(sections).forEach(function(sec){
-    html+='<div class="shop-section-title">'+sec+'</div><div class="shop-grid">';
+    var isDef=sec==='Defenders';
+    html+='<div class="shop-section-title" style="'+(isDef?'color:#06d6a0;':'')+'">'+( isDef?'🛡️ ':'')+''+sec+(isDef?' — Place on grid to defend your castle!':'')+'</div><div class="shop-grid">';
     sections[sec].forEach(function(item){
       var inStock=(mp.inventory[item.id]||0);
       var canAfford=mp.credits>=item.cost;
@@ -1994,11 +2359,14 @@ function renderShop(){
       else if(!canAfford) lockMsg='Need 🪙'+item.cost;
       var w=item.w||1, h=item.h||1;
       var sizeStr=(w>1||h>1)?'<div style="font-size:0.5rem;color:#3a4f6b;margin-bottom:1px;">'+w+'×'+h+'</div>':'';
-      html+='<div class="shop-item'+(locked?' locked':'')+'" onclick="buyItem(\''+item.id+'\')">'
+      var defStats=item.defender?'<div class="shop-def-stats">⚔️'+item.atk+' ❤️'+item.hp+(item.range>1?' 🏹':'⚔️')+(item.healer?' ✨heal':'')+(item.aoe?' 💥aoe':'')+(item.dodge?' 🥷dodge':'')+(item.stun?' ⚡stun':'')+'</div>':'';
+      var secColor=item.section==='Defenders'?'border-color:rgba(6,214,160,0.4);background:rgba(6,214,160,0.05);':'';
+      html+='<div class="shop-item'+(locked?' locked':'')+'" style="'+secColor+'" onclick="buyItem(\''+item.id+'\')">'
         +(inStock>0?'<div class="si-owned-tag">×'+inStock+'</div>':'')
         +'<div class="si-emoji">'+item.emoji+'</div>'
         +sizeStr
         +'<div class="si-name">'+item.name+'</div>'
+        +defStats
         +'<div class="si-cost">🪙'+item.cost+(item.leg?' +'+item.leg+'⚔️':'')+'</div>'
         +(locked&&lockMsg?'<div class="si-lock">'+lockMsg+'</div>':'')
         +'</div>';
@@ -2016,11 +2384,13 @@ window.buyItem=function(itemId){
   var legDefeats=ud.legendaryDefeats||0;
   if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! Need 🪙'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
-  ud.mp.credits-=item.cost;
-  ud.mp.inventory[item.id]=(ud.mp.inventory[item.id]||0)+(item.qty||1);
+  ud.mp.credits=Math.max(0, ud.mp.credits-item.cost);
+  var newQty=((ud.mp.inventory[item.id]||0)+(item.qty||1));
+  // Hard cap at 99 per item — no infinite stacks
+  ud.mp.inventory[item.id]=Math.min(99, Math.max(0, isFinite(newQty)?newQty:1));
   saveData(d);
   document.getElementById('mpCredits').textContent=ud.mp.credits;
-  showMPToast(item.emoji+' +'+item.qty+' '+item.name+'! ('+ud.mp.inventory[item.id]+' total)');
+  showMPToast(item.emoji+' +'+( item.qty||1)+' '+item.name+'! ('+ud.mp.inventory[item.id]+' total)');
   renderShop();
   renderInventory();
 };
@@ -2375,11 +2745,27 @@ window.switchMPTab=switchMPTab;
 
 function showMyPlace(){
   _selectedItemId=null;
+  // Sanitize any corrupted inventory values (Infinity, NaN, negatives, >99)
+  var d=getData(), ud=d[userKey];
+  if(ud&&ud.mp&&ud.mp.inventory){
+    var dirty=false;
+    Object.keys(ud.mp.inventory).forEach(function(k){
+      var v=ud.mp.inventory[k];
+      if(!isFinite(v)||isNaN(v)||v<0||v>99){
+        ud.mp.inventory[k]=Math.min(99,Math.max(0,isFinite(v)&&!isNaN(v)?Math.floor(v):1));
+        dirty=true;
+      }
+    });
+    if(dirty) saveData(d);
+  }
   checkDailyLoginBonus();
   checkGoblinAttack();
   var d=getData(), ud=d[userKey];
   var credits=(ud&&ud.mp&&ud.mp.credits)||0;
   document.getElementById('mpCredits').textContent=credits;
+  // Show god test button for god account
+  var godBtn=document.getElementById('godBattleTestBtn');
+  if(godBtn) godBtn.style.display=(userKey==='god')?'block':'none';
   switchMPTab('base');
   show('myPlaceScreen');
 }
