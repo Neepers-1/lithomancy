@@ -689,6 +689,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <input type="text" id="nameInput" placeholder="Enter your name to battle..." maxlength="30" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="background:rgba(255,255,255,0.05);border-color:rgba(255,215,0,0.2);font-size:1.1rem;">
       <div id="nameKeyPreview" style="font-size:0.62rem;color:#3a4f6b;margin-top:3px;text-align:center;font-family:monospace;min-height:14px;"></div>
       <button class="btn" id="loginBtn" style="background:linear-gradient(135deg,#ffd700,#ff9500);color:#1a1a2e;font-size:1.05rem;font-weight:900;letter-spacing:1px;margin-top:14px;box-shadow:0 0 24px rgba(255,215,0,0.35);">⚔️ ENTER BATTLE ⚔️</button>
+      <div id="loginErrorMsg" style="display:none;color:#ef476f;font-size:0.72rem;margin-top:8px;text-align:center;font-weight:700;"></div>
     </div>
   </div>
 </div>
@@ -1074,7 +1075,28 @@ function getZone(ms){
 // DATA
 // ══════════════════════════════════════════
 function getData(){ try{ return JSON.parse(localStorage.getItem('tt_v4')||'{}'); }catch(e){ return {}; } }
-function saveData(d){ localStorage.setItem('tt_v4',JSON.stringify(d)); }
+function saveData(d){ 
+  try{ 
+    localStorage.setItem('tt_v4',JSON.stringify(d)); 
+  } catch(e){ 
+    // QuotaExceededError — storage full. Trim oldest session history and retry once.
+    try {
+      var keys=Object.keys(d);
+      keys.forEach(function(k){
+        if(d[k]&&d[k].sessions&&d[k].sessions.length>20) d[k].sessions=d[k].sessions.slice(-20);
+        if(d[k]&&d[k].facts){
+          Object.keys(d[k].facts).forEach(function(fk){
+            var f=d[k].facts[fk];
+            if(f&&f.history&&f.history.length>50) f.history=f.history.slice(-50);
+          });
+        }
+      });
+      localStorage.setItem('tt_v4',JSON.stringify(d));
+    } catch(e2){
+      console.error('localStorage full, could not save:', e2);
+    }
+  }
+}
 function getUser(name){ return getData()[name.trim().toLowerCase()]||null; }
 
 function initUser(name){
@@ -1204,16 +1226,24 @@ document.getElementById('loginBtn').addEventListener('click',handleLogin);
 function handleLogin(){
   var name=nameInput.value.trim();
   if(!name){ nameInput.focus(); nameInput.style.borderColor='#ef476f'; setTimeout(function(){nameInput.style.borderColor='';},1000); return; }
-  userKey=name.toLowerCase();
-  var ud=initUser(name);
-  // God account — seed with test data on first login
-  if(userKey==='god') seedGodAccount();
-  document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
-  selMode=null; activeAttackZone=null;
-  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
-  document.getElementById('startBtn').disabled=true;
-  renderModeScreen();
-  show('modeScreen');
+  try {
+    userKey=name.toLowerCase();
+    var ud=initUser(name);
+    // God account — seed with test data on first login
+    if(userKey==='god') seedGodAccount();
+    document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
+    selMode=null; activeAttackZone=null;
+    document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
+    document.getElementById('startBtn').disabled=true;
+    renderModeScreen();
+    show('modeScreen');
+  } catch(err) {
+    console.error('Login error:', err);
+    nameInput.style.borderColor='#ef476f';
+    var errMsg=document.getElementById('loginErrorMsg');
+    if(errMsg){ errMsg.textContent='Login error: '+err.message+' — try refreshing the page.'; errMsg.style.display='block'; }
+    setTimeout(function(){ nameInput.style.borderColor=''; },2000);
+  }
 }
 
 function seedGodAccount(){
