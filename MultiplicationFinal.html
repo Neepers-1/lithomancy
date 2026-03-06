@@ -686,7 +686,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <div class="welcome-stats" id="wbStats"></div>
       </div>
       <label for="nameInput" style="color:#b89fd4;font-size:0.72rem;letter-spacing:2px;">WARRIOR NAME</label>
-      <input type="text" id="nameInput" placeholder="Enter your name to battle..." maxlength="30" autocomplete="off" style="background:rgba(255,255,255,0.05);border-color:rgba(255,215,0,0.2);font-size:1.1rem;">
+      <input type="text" id="nameInput" placeholder="Enter your name to battle..." maxlength="30" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="background:rgba(255,255,255,0.05);border-color:rgba(255,215,0,0.2);font-size:1.1rem;">
+      <div id="nameKeyPreview" style="font-size:0.62rem;color:#3a4f6b;margin-top:3px;text-align:center;font-family:monospace;min-height:14px;"></div>
       <button class="btn" id="loginBtn" style="background:linear-gradient(135deg,#ffd700,#ff9500);color:#1a1a2e;font-size:1.05rem;font-weight:900;letter-spacing:1px;margin-top:14px;box-shadow:0 0 24px rgba(255,215,0,0.35);">⚔️ ENTER BATTLE ⚔️</button>
     </div>
   </div>
@@ -976,7 +977,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <!-- Build view: grid + inventory together, scrollable -->
     <div id="mp-base-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;">
       <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
-      <div class="base-canvas" id="baseCanvas" style="margin:0 auto;"></div>
+      <div class="base-canvas" id="baseCanvas" style="margin:0 auto;" oncontextmenu="return false;"></div>
       <div style="font-size:0.62rem;color:#3a4f6b;margin:4px 0 10px;text-align:center;" id="mpLastSeen"></div>
       <!-- Inventory inline -->
       <div style="font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin-bottom:5px;">🎒 Tap an item to select it, then tap a grid cell</div>
@@ -1183,6 +1184,9 @@ function show(id){
 var nameInput=document.getElementById('nameInput');
 nameInput.addEventListener('input',function(){
   var n=this.value.trim(), wb=document.getElementById('welcomeBox');
+  // Show the actual login key so students can debug name issues
+  var keyPreview=document.getElementById('nameKeyPreview');
+  if(keyPreview) keyPreview.textContent=n.length>0?'Login key: "'+n.toLowerCase()+'"':'';
   if(n.length>1){
     var ud=getUser(n);
     if(ud&&ud.sessions&&ud.sessions.length){
@@ -1729,6 +1733,11 @@ var MP_GRID_COLS=10, MP_GRID_ROWS=8;
 
 // All shop items — w/h = grid cells they occupy (default 1x1)
 var SHOP_ITEMS=[
+  // Roads & Walls (rotatable: tap to rotate, 1x1 each)
+  { id:'dirt_road',    emoji:'🟫', name:'Dirt Road',     cost:4,   qty:1, leg:0, w:1,h:1, section:'Roads & Walls', rotatable:true,  desc:'Dusty path', rotemoji:['━','┃'] },
+  { id:'brick_road',   emoji:'🧱', name:'Brick Road',    cost:10,  qty:1, leg:0, w:1,h:1, section:'Roads & Walls', rotatable:true,  desc:'Cobblestone road', rotemoji:['━','┃'] },
+  { id:'wood_fence',   emoji:'🟤', name:'Wood Wall',     cost:6,   qty:1, leg:0, w:1,h:1, section:'Roads & Walls', rotatable:true,  desc:'Wooden fence', rotemoji:['━','┃'] },
+  { id:'stone_fence',  emoji:'⬜', name:'Stone Wall',    cost:14,  qty:1, leg:0, w:1,h:1, section:'Roads & Walls', rotatable:true,  desc:'Stone wall segment', rotemoji:['━','┃'] },
   // Structures
   { id:'wood_wall',   emoji:'🪵', name:'Wood Plank',    cost:5,   qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Basic wall piece' },
   { id:'stone_wall',  emoji:'🧱', name:'Stone Block',   cost:12,  qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Sturdy stone' },
@@ -2028,11 +2037,61 @@ function renderInventory(){
 }
 
 // ── BASE GRID ──
+// SVG visual for rotatable items (roads/walls)
+function makeRotatableSVG(itemId, rot){
+  // rot=0 → horizontal, rot=1 → vertical
+  var configs={
+    'dirt_road':   { h:'#8B6914', s:'#6B4F0F', type:'road' },
+    'brick_road':  { h:'#9B4A2A', s:'#7A3520', type:'road' },
+    'wood_fence':  { h:'#8B5E3C', s:'#5C3D1E', type:'fence' },
+    'stone_fence': { h:'#8A9BAE', s:'#5C6B7A', type:'fence' },
+  };
+  var cfg=configs[itemId]||{ h:'#888', s:'#555', type:'road' };
+  var horiz=rot===0;
+  var svg='<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">';
+  if(cfg.type==='road'){
+    if(horiz){
+      svg+='<rect x="0" y="14" width="44" height="16" rx="2" fill="'+cfg.h+'"/>';
+      svg+='<rect x="0" y="20" width="44" height="4" rx="1" fill="'+cfg.s+'" opacity="0.5"/>';
+      // Road dashes
+      svg+='<rect x="4" y="21" width="8" height="2" rx="1" fill="#fff" opacity="0.3"/>';
+      svg+='<rect x="18" y="21" width="8" height="2" rx="1" fill="#fff" opacity="0.3"/>';
+      svg+='<rect x="32" y="21" width="8" height="2" rx="1" fill="#fff" opacity="0.3"/>';
+    } else {
+      svg+='<rect x="14" y="0" width="16" height="44" rx="2" fill="'+cfg.h+'"/>';
+      svg+='<rect x="20" y="0" width="4" height="44" rx="1" fill="'+cfg.s+'" opacity="0.5"/>';
+      svg+='<rect x="21" y="4" width="2" height="8" rx="1" fill="#fff" opacity="0.3"/>';
+      svg+='<rect x="21" y="18" width="2" height="8" rx="1" fill="#fff" opacity="0.3"/>';
+      svg+='<rect x="21" y="32" width="2" height="8" rx="1" fill="#fff" opacity="0.3"/>';
+    }
+  } else {
+    // fence/wall
+    if(horiz){
+      svg+='<rect x="0" y="16" width="44" height="12" rx="2" fill="'+cfg.h+'"/>';
+      svg+='<rect x="0" y="16" width="44" height="3" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="0" y="25" width="44" height="3" rx="1" fill="'+cfg.s+'"/>';
+      // Posts
+      svg+='<rect x="1" y="14" width="5" height="16" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="19" y="14" width="5" height="16" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="38" y="14" width="5" height="16" rx="1" fill="'+cfg.s+'"/>';
+    } else {
+      svg+='<rect x="16" y="0" width="12" height="44" rx="2" fill="'+cfg.h+'"/>';
+      svg+='<rect x="16" y="0" width="3" height="44" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="25" y="0" width="3" height="44" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="14" y="1" width="16" height="5" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="14" y="19" width="16" height="5" rx="1" fill="'+cfg.s+'"/>';
+      svg+='<rect x="14" y="38" width="16" height="5" rx="1" fill="'+cfg.s+'"/>';
+    }
+  }
+  svg+='</svg>';
+  return svg;
+}
+
 function renderBaseGrid(){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   var baseGrid=(ud.mp&&ud.mp.baseGrid)||{};
   var canvas=document.getElementById('baseCanvas'); if(!canvas) return;
-  var CELL=46; // px per cell including gap
+  var CELL=46;
 
   // Render empty grid cells
   var html='';
@@ -2040,13 +2099,13 @@ function renderBaseGrid(){
     for(var c=0;c<MP_GRID_COLS;c++){
       var key=r+'_'+c;
       html+='<div class="base-cell" data-key="'+key+'" '
-        +'ondragover="cellDragOver(event)" ondragleave="cellDragLeave(event)" ondrop="cellDrop(event,\''+key+'\')" '
-        +'onclick="cellClick(\''+key+'\')"></div>';
+        +'onclick="cellClick(\''+key+'\')" '
+        +'oncontextmenu="cellRightClick(event,\''+key+'\')"></div>';
     }
   }
   canvas.innerHTML=html;
 
-  // Overlay multi-cell item blocks — only render the "origin" cell of each item
+  // Overlay item blocks
   var rendered={};
   Object.keys(baseGrid).forEach(function(key){
     var cell=baseGrid[key];
@@ -2056,23 +2115,36 @@ function renderBaseGrid(){
     var parts=key.split('_');
     var row=parseInt(parts[0]), col=parseInt(parts[1]);
     var w=item.w||1, h=item.h||1;
-    // Mark all cells as occupied
-    for(var dr=0;dr<h;dr++) for(var dc=0;dc<w;dc++) rendered[(row+dr)+'_'+(col+dc)]=true;
-    // Position: offset from canvas padding (6px) + cell size
+    // For rotatable items, swap w/h if rot=1
+    var rot=cell.rot||0;
+    var rw=w, rh=h;
+    if(item.rotatable&&rot===1){ rw=h; rh=w; }
+    for(var dr=0;dr<rh;dr++) for(var dc=0;dc<rw;dc++) rendered[(row+dr)+'_'+(col+dc)]=true;
     var top=6+row*CELL, left=6+col*CELL;
-    var width=w*CELL-2, height=h*CELL-2;
-    var fontSize=Math.min(width,height)*0.45;
-    fontSize=Math.max(14,Math.min(40,fontSize));
-    var isSelected=(_selectedItemId===null && cell._moving);
+    var width=rw*CELL-2, height=rh*CELL-2;
     var damaged=cell.damaged;
     var block=document.createElement('div');
     block.className='base-item-block'+(damaged?' damaged':'');
-    block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;';
+    block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;padding:0;overflow:hidden;';
     block.dataset.key=key;
-    block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
-      +'<span class="bi-name">'+item.name+'</span>'
-      +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+
+    if(item.rotatable){
+      // Draw as SVG, scale to fill cell
+      block.style.cssText+='background:transparent;border:1.5px solid rgba(255,255,255,0.1);';
+      block.innerHTML='<div title="Tap to rotate" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">'
+        +makeRotatableSVG(item.id, rot)
+        +'</div>'
+        +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+    } else {
+      var fontSize=Math.min(width,height)*0.45;
+      fontSize=Math.max(14,Math.min(40,fontSize));
+      block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
+        +'<span class="bi-name">'+item.name+'</span>'
+        +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+    }
+
     block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
+    block.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); cellRightClick(e, this.dataset.key); });
     canvas.appendChild(block);
   });
 
@@ -2114,45 +2186,42 @@ window.cellClick=function(key){
   if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
   var grid=ud.mp.baseGrid;
 
-  // Find if this key is part of a multi-cell item (check key and surrounding origins)
+  // Find origin key (handles multi-cell items where a covered cell is clicked)
   var originKey=key;
   var cellItem=grid[key];
   if(!cellItem){
-    // Maybe it's a covered cell of a multi-cell item — scan grid for items that cover this cell
     var kp=key.split('_'), kr=parseInt(kp[0]), kc=parseInt(kp[1]);
     Object.keys(grid).forEach(function(gk){
       var gc=grid[gk]; if(!gc) return;
       var item=SHOP_ITEMS.find(function(x){return x.id===gc.id;});
       if(!item) return;
       var gp=gk.split('_'), gr=parseInt(gp[0]), gcol=parseInt(gp[1]);
+      var rot=gc.rot||0;
       var w=item.w||1, h=item.h||1;
+      if(item.rotatable&&rot===1){ var tmp=w; w=h; h=tmp; }
       if(kr>=gr&&kr<gr+h&&kc>=gcol&&kc<gcol+w) originKey=gk;
     });
     cellItem=grid[originKey];
   }
 
   if(_selectedItemId){
-    // PLACING — check multi-cell fit
+    // PLACING
     var selItem=SHOP_ITEMS.find(function(x){return x.id===_selectedItemId;});
     var sw=selItem?selItem.w||1:1, sh=selItem?selItem.h||1:1;
     var kp2=key.split('_'), kr2=parseInt(kp2[0]), kc2=parseInt(kp2[1]);
-    // Check bounds
     if(kr2+sh>MP_GRID_ROWS||kc2+sw>MP_GRID_COLS){
       showMPToast("Doesn't fit — try another spot."); return;
     }
-
-    // Build set of cells occupied by the item being moved (to ignore them)
     var movingCells={};
     var moving=_movingFromKey;
     if(moving){
-      var mItem=grid[moving]; 
+      var mItem=grid[moving];
       var mSelItem=mItem?SHOP_ITEMS.find(function(x){return x.id===mItem.id;}):null;
       var mw=mSelItem?mSelItem.w||1:1, mh=mSelItem?mSelItem.h||1:1;
+      if(mSelItem&&mSelItem.rotatable&&(mItem.rot||0)===1){ var tmp2=mw; mw=mh; mh=tmp2; }
       var mp2=moving.split('_'), mr=parseInt(mp2[0]), mc=parseInt(mp2[1]);
       for(var mdr=0;mdr<mh;mdr++) for(var mdc=0;mdc<mw;mdc++) movingCells[(mr+mdr)+'_'+(mc+mdc)]=true;
     }
-
-    // Check all target cells are free
     var occupied=false;
     for(var dr=0;dr<sh&&!occupied;dr++){
       for(var dc=0;dc<sw&&!occupied;dc++){
@@ -2161,20 +2230,15 @@ window.cellClick=function(key){
       }
     }
     if(occupied){ showMPToast('Something is already there!'); return; }
-
-    // Clear old position if moving
     if(moving){
       Object.keys(movingCells).forEach(function(ck){ delete grid[ck]; });
       _movingFromKey=null;
     } else {
-      // Consuming from inventory
       var stock=(ud.mp.inventory[_selectedItemId]||0);
       if(stock<=0){ showMPToast('No more of that item! Buy more in Shop.'); setSelectedItem(null); return; }
       ud.mp.inventory[_selectedItemId]=stock-1;
     }
-
-    // Place at new location
-    grid[key]={ id:_selectedItemId };
+    grid[key]={ id:_selectedItemId, rot:0 };
     saveData(d);
     setSelectedItem(null);
     renderBaseGrid();
@@ -2182,8 +2246,18 @@ window.cellClick=function(key){
     return;
   }
 
-  // NOT placing — tap on item to PICK IT UP (move mode)
+  // NOT placing
   if(!cellItem) return;
+
+  var item=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
+
+  // Rotatable item → rotate on tap
+  if(item&&item.rotatable&&!cellItem.damaged){
+    cellItem.rot=((cellItem.rot||0)+1)%2;
+    saveData(d);
+    renderBaseGrid();
+    return;
+  }
 
   if(cellItem.damaged){
     var cost=cellItem.repairCost||10;
@@ -2198,15 +2272,63 @@ window.cellClick=function(key){
       showMPToast('Need 🪙'+cost+' to repair!');
     }
   } else {
-    // Pick up to move — set as selected without consuming inventory
+    // Pick up to move
     var pickItem=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
     _movingFromKey=originKey;
     setSelectedItem(cellItem.id);
     var lbl=document.getElementById('mpSelectedItem');
-    if(lbl) lbl.textContent=(pickItem?pickItem.emoji+' '+pickItem.name:'Item')+' picked up — tap new location to move, or tap inventory to return';
+    if(lbl) lbl.textContent=(pickItem?pickItem.emoji+' '+pickItem.name:'Item')+' picked up — tap to place, right-click to delete';
     saveData(d);
     renderBaseGrid();
   }
+};
+
+// Right-click: remove item and return to inventory
+window.cellRightClick=function(e, key){
+  e.preventDefault();
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  if(!ud.mp) return;
+  var grid=ud.mp.baseGrid;
+
+  // If we're in move mode, cancel it
+  if(_selectedItemId&&_movingFromKey){
+    // return the item to grid (undo the pickup)
+    setSelectedItem(null);
+    renderBaseGrid();
+    renderInventory();
+    return;
+  }
+
+  // Find origin key
+  var originKey=key;
+  var cellItem=grid[key];
+  if(!cellItem){
+    var kp=key.split('_'), kr=parseInt(kp[0]), kc=parseInt(kp[1]);
+    Object.keys(grid).forEach(function(gk){
+      var gc=grid[gk]; if(!gc) return;
+      var item=SHOP_ITEMS.find(function(x){return x.id===gc.id;});
+      if(!item) return;
+      var gp=gk.split('_'), gr=parseInt(gp[0]), gcol=parseInt(gp[1]);
+      var rot=gc.rot||0, w=item.w||1, h=item.h||1;
+      if(item.rotatable&&rot===1){ var tmp=w; w=h; h=tmp; }
+      if(kr>=gr&&kr<gr+h&&kc>=gcol&&kc<gcol+w) originKey=gk;
+    });
+    cellItem=grid[originKey];
+  }
+  if(!cellItem) return;
+
+  // Remove all cells this item covers and return to inventory
+  var item=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
+  var w=item?item.w||1:1, h=item?item.h||1:1;
+  var rot=cellItem.rot||0;
+  if(item&&item.rotatable&&rot===1){ var tmp=w; w=h; h=tmp; }
+  var op=originKey.split('_'), or2=parseInt(op[0]), oc=parseInt(op[1]);
+  for(var dr=0;dr<h;dr++) for(var dc=0;dc<w;dc++) delete grid[(or2+dr)+'_'+(oc+dc)];
+  ud.mp.inventory[cellItem.id]=(ud.mp.inventory[cellItem.id]||0)+1;
+  saveData(d);
+  showMPToast('Returned to inventory 📦');
+  renderBaseGrid();
+  renderInventory();
 };
 
 function switchMPTab(tab){
