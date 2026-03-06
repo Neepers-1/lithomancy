@@ -401,14 +401,21 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .base-cell { width:44px;height:44px;border-radius:5px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:background 0.15s;position:relative;user-select:none; }
 .base-cell:hover { background:rgba(255,255,255,0.08); }
 .base-cell.drag-over { background:rgba(17,138,178,0.3);border-color:#118ab2; }
-.base-cell.has-item { cursor:grab; }
+.base-cell.has-item { cursor:pointer; }
 .base-cell .item-emoji { font-size:1.5rem;line-height:1;pointer-events:none; }
 .base-cell .item-dmg { position:absolute;top:1px;right:2px;font-size:0.55rem;color:#ef476f;font-weight:900; }
-/* Shop */
-.shop-wrap { flex:1;overflow-y:auto;padding:0 14px 80px; }
+/* Multi-cell items — placed as a single merged visual over grid cells */
+.base-item-block { position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);box-sizing:border-box;transition:filter 0.15s;z-index:2;user-select:none; }
+.base-item-block:hover { filter:brightness(1.3); }
+.base-item-block .bi-emoji { line-height:1;pointer-events:none; }
+.base-item-block .bi-name { font-size:0.45rem;font-weight:800;color:rgba(255,255,255,0.5);letter-spacing:0.3px;pointer-events:none;margin-top:1px; }
+.base-item-block .bi-dmg { position:absolute;top:2px;right:3px;font-size:0.52rem;color:#ef476f;font-weight:900;pointer-events:none; }
+.base-item-block.selected-placed { border-color:#ffd700;box-shadow:0 0 12px rgba(255,209,102,0.6); }
+/* Shop — full width */
+.shop-wrap { flex:1;overflow-y:auto;padding:0 4px 80px; }
 .shop-section-title { font-size:0.6rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin:12px 0 6px; }
-.shop-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px; }
-.shop-item { background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 6px 8px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative; }
+.shop-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px; }
+.shop-item { background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 4px 6px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative; }
 .shop-item:hover:not(.locked) { border-color:#ffd700;background:rgba(255,209,102,0.08); }
 .shop-item.locked { opacity:0.45;cursor:not-allowed; }
 .shop-item.owned { border-color:#06d6a0;background:rgba(6,214,160,0.06); }
@@ -688,40 +695,43 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 <!-- ══ MODE SELECT ══ -->
 <div id="modeScreen" class="screen">
   <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;">
-      <div>
-        <h1 style="font-size:1.4rem;text-align:left;margin-bottom:2px;" id="modeGreeting">Hi!</h1>
-        <p class="subtitle" style="text-align:left;margin-bottom:0;">Choose how long to practice:</p>
+    <div style="text-align:center;margin-bottom:10px;">
+      <h1 style="font-size:1.4rem;margin-bottom:2px;" id="modeGreeting">Hi!</h1>
+      <p class="subtitle" style="margin-bottom:8px;">Choose how long to practice:</p>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:10px 16px;font-size:0.9rem;white-space:nowrap;flex:1;max-width:160px;">&#x1F4CA; My Info</button>
+        <button class="btn" id="myPlaceBtnMode" style="width:auto;margin-top:0;padding:10px 16px;font-size:0.9rem;white-space:nowrap;flex:1;max-width:160px;background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
       </div>
-      <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;">&#x1F4CA; My Info</button>
-      <button class="btn" id="myPlaceBtnMode" style="width:auto;margin-top:0;padding:12px 18px;font-size:1rem;white-space:nowrap;flex-shrink:0;background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
     </div>
-    <!-- Badge + Fire layout: badges on sides, big fire in center -->
-    <div id="badgeFireRow" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0 10px;">
-      <div id="badgeAreaLeft" style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:4px;"></div>
-      <div id="fireBadgeArea" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;"></div>
-      <div id="badgeAreaRight" style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:4px;"></div>
+    <!-- Badge rows left + right, with fire sitting above the level bar below -->
+    <div style="display:flex;align-items:flex-start;justify-content:center;gap:6px;margin:4px 0 0;">
+      <div id="badgeAreaLeft" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:1;"></div>
+      <div style="flex-shrink:0;width:80px;"></div><!-- spacer matching fire/level column width -->
+      <div id="badgeAreaRight" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;flex:1;"></div>
     </div>
-    <div class="mode-level-layout">
+    <div class="mode-level-layout" style="margin-top:4px;">
       <!-- Left timers -->
       <div class="mode-left">
         <button class="mode-btn" id="mode-30"><div class="mode-time">0:30</div><div class="mode-label">Quick Burst</div><div class="mode-count">~10 problems</div></button>
         <button class="mode-btn" id="mode-60" style="margin-top:10px;"><div class="mode-time">1:00</div><div class="mode-label">Speed Round</div><div class="mode-count">~20 problems</div></button>
       </div>
-      <!-- Center: Level Bar (big & wide) -->
-      <div class="level-bar-wrap" id="levelBarWrap" onclick="toggleLevelTooltip()">
-        <div class="level-label-top">LEVEL</div>
-        <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-          <div class="level-bar-track" id="levelBarTrack" style="height:200px;width:34px;">
-            <div class="level-bar-fill" id="levelBarFill" style="height:0%;"></div>
+      <!-- Center: Fire + Level Bar stacked -->
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div id="fireBadgeArea" style="display:flex;flex-direction:column;align-items:center;margin-bottom:4px;"></div>
+        <div class="level-bar-wrap" id="levelBarWrap" onclick="toggleLevelTooltip()">
+          <div class="level-label-top">LEVEL</div>
+          <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+            <div class="level-bar-track" id="levelBarTrack" style="height:200px;width:34px;">
+              <div class="level-bar-fill" id="levelBarFill" style="height:0%;"></div>
+            </div>
+            <div class="level-tooltip" id="levelTooltip" style="right:auto;left:calc(100% + 10px);top:0;width:230px;">
+              <div class="level-tooltip-title" id="levelTooltipTitle">Level 1</div>
+              <div id="levelTooltipBody"></div>
+            </div>
           </div>
-          <div class="level-tooltip" id="levelTooltip" style="right:auto;left:calc(100% + 10px);top:0;width:230px;">
-            <div class="level-tooltip-title" id="levelTooltipTitle">Level 1</div>
-            <div id="levelTooltipBody"></div>
-          </div>
+          <div class="level-badge" id="levelBadge" style="background:#0f3460;color:#7a8fb5;width:48px;height:48px;font-size:1.1rem;">0</div>
+          <div style="font-size:0.6rem;color:#7a8fb5;font-weight:700;margin-top:3px;text-align:center;letter-spacing:0.5px;" id="levelNameLabel"></div>
         </div>
-        <div class="level-badge" id="levelBadge" style="background:#0f3460;color:#7a8fb5;width:48px;height:48px;font-size:1.1rem;">0</div>
-        <div style="font-size:0.6rem;color:#7a8fb5;font-weight:700;margin-top:3px;text-align:center;letter-spacing:0.5px;" id="levelNameLabel"></div>
       </div>
       <!-- Right timers -->
       <div class="mode-right">
@@ -1192,12 +1202,61 @@ function handleLogin(){
   if(!name){ nameInput.focus(); nameInput.style.borderColor='#ef476f'; setTimeout(function(){nameInput.style.borderColor='';},1000); return; }
   userKey=name.toLowerCase();
   var ud=initUser(name);
+  // God account — seed with test data on first login
+  if(userKey==='god') seedGodAccount();
   document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
   selMode=null; activeAttackZone=null;
   document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
   document.getElementById('startBtn').disabled=true;
   renderModeScreen();
   show('modeScreen');
+}
+
+function seedGodAccount(){
+  var d=getData(), ud=d['god']; if(!ud) return;
+  // Only seed once
+  if(ud._godSeeded) return;
+  ud._godSeeded=true;
+  // Give 1000 credits
+  if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
+  ud.mp.credits=1000;
+  // Seed facts with a normal distribution of speeds
+  // Some gold (<1s), some green (1-2s), some blue (2-3s), some orange (3-5s), some red (5s+)
+  if(!ud.facts) ud.facts={};
+  var speedDist=[
+    700,750,800,850,900,         // gold zone facts (2×2 to 3×3 range)
+    1100,1200,1300,1400,1500,    // green zone
+    2100,2200,2300,2400,2500,    // blue zone
+    3500,3800,4000,4200,4500,    // orange zone
+    6000,7000,8000,9000,10000    // red zone
+  ];
+  var allFacts=[];
+  for(var a=2;a<=9;a++) for(var b=2;b<=9;b++) allFacts.push([a,b]);
+  // Shuffle
+  for(var i=allFacts.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=allFacts[i]; allFacts[i]=allFacts[j]; allFacts[j]=tmp;
+  }
+  allFacts.forEach(function(ab,idx){
+    var k=ab[0]+'x'+ab[1];
+    var speedMs=speedDist[idx%speedDist.length];
+    // Add slight randomness
+    speedMs=Math.round(speedMs*(0.85+Math.random()*0.3));
+    // Store as recent10 array (factAvg reads this)
+    ud.facts[k]={ recent10:[] };
+    for(var r=0;r<10;r++){
+      ud.facts[k].recent10.push(Math.round(speedMs*(0.9+Math.random()*0.2)));
+    }
+  });
+  // Add some legendary defeats for testing
+  ud.legendaryDefeats=12;
+  // Add some sessions for veteran/consistent
+  var now=new Date();
+  for(var s=0;s<5;s++){
+    var dStr=new Date(now.getTime()-s*86400000).toISOString();
+    ud.sessions.push({ date:dStr, dur:60, correct:15, total:16, avgMs:2000 });
+  }
+  saveData(d);
 }
 
 // ══════════════════════════════════════════
@@ -1668,33 +1727,53 @@ window.closeBadgeTip=function(){
 
 var MP_GRID_COLS=10, MP_GRID_ROWS=8;
 
-// All shop items
+// All shop items — w/h = grid cells they occupy (default 1x1)
 var SHOP_ITEMS=[
   // Structures
-  { id:'wood_wall',   emoji:'🪵', name:'Wood Plank',    cost:10,  leg:0, section:'Structures',    desc:'Basic wall material' },
-  { id:'stone_wall',  emoji:'🧱', name:'Stone Block',   cost:35,  leg:0, section:'Structures',    desc:'Sturdy stone' },
-  { id:'crystal',     emoji:'💎', name:'Crystal Brick', cost:90,  leg:0, section:'Structures',    desc:'Shimmering crystal' },
-  { id:'gold_wall',   emoji:'🏅', name:'Gold Wall',     cost:250, leg:0, section:'Structures',    desc:'Gleaming gold' },
-  { id:'door',        emoji:'🚪', name:'Castle Door',   cost:40,  leg:0, section:'Structures',    desc:'Grand entrance' },
-  { id:'window',      emoji:'🪟', name:'Window',        cost:20,  leg:0, section:'Structures',    desc:'Let in the light' },
-  { id:'tower',       emoji:'🗼', name:'Tower',         cost:80,  leg:0, section:'Structures',    desc:'Round turret' },
-  { id:'battlement',  emoji:'🏯', name:'Battlement',    cost:60,  leg:0, section:'Structures',    desc:'Castle top' },
+  { id:'wood_wall',   emoji:'🪵', name:'Wood Plank',    cost:5,   qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Basic wall piece' },
+  { id:'stone_wall',  emoji:'🧱', name:'Stone Block',   cost:12,  qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Sturdy stone' },
+  { id:'crystal',     emoji:'💎', name:'Crystal Brick', cost:30,  qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Shimmering crystal' },
+  { id:'gold_wall',   emoji:'🏅', name:'Gold Wall',     cost:80,  qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Gleaming gold' },
+  { id:'door',        emoji:'🚪', name:'Castle Door',   cost:20,  qty:1, leg:0, w:1,h:2, section:'Structures',   desc:'Tall grand entrance' },
+  { id:'window',      emoji:'🪟', name:'Window',        cost:10,  qty:1, leg:0, w:1,h:1, section:'Structures',   desc:'Let in the light' },
+  { id:'tower',       emoji:'🗼', name:'Tower',         cost:40,  qty:1, leg:0, w:1,h:3, section:'Structures',   desc:'Tall round turret' },
+  { id:'battlement',  emoji:'🏯', name:'Battlement',    cost:25,  qty:1, leg:0, w:2,h:1, section:'Structures',   desc:'Castle top crenels' },
+  { id:'wall_section',emoji:'🔲', name:'Wall Section',  cost:15,  qty:1, leg:0, w:3,h:1, section:'Structures',   desc:'Long wall piece' },
+  { id:'arch',        emoji:'⛩️', name:'Stone Arch',    cost:35,  qty:1, leg:0, w:2,h:2, section:'Structures',   desc:'Decorative arch' },
   // Decorations
-  { id:'torch',       emoji:'🔦', name:'Torch',         cost:10,  leg:0, section:'Decorations',   desc:'Flickering light' },
-  { id:'tree',        emoji:'🌲', name:'Tree',          cost:15,  leg:0, section:'Decorations',   desc:'Pine tree' },
-  { id:'banner',      emoji:'🚩', name:'Banner',        cost:20,  leg:0, section:'Decorations',   desc:'Your flag' },
-  { id:'chest',       emoji:'📦', name:'Treasure Chest',cost:50,  leg:0, section:'Decorations',   desc:'Full of loot' },
-  { id:'catapult',    emoji:'⚙️', name:'Catapult',      cost:75,  leg:0, section:'Decorations',   desc:'Launch stuff' },
-  { id:'moat',        emoji:'🌊', name:'Moat',          cost:25,  leg:0, section:'Decorations',   desc:'Water barrier' },
-  { id:'shield_dec',  emoji:'🛡️', name:'Shield',        cost:30,  leg:0, section:'Decorations',   desc:'Hang it proud' },
-  { id:'flower',      emoji:'🌸', name:'Garden',        cost:12,  leg:0, section:'Decorations',   desc:'Pretty flowers' },
+  { id:'torch',       emoji:'🔦', name:'Torch',         cost:5,   qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Flickering light' },
+  { id:'tree',        emoji:'🌲', name:'Tree',          cost:8,   qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Pine tree' },
+  { id:'banner',      emoji:'🚩', name:'Banner',        cost:10,  qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Your flag' },
+  { id:'chest',       emoji:'📦', name:'Treasure Chest',cost:25,  qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Full of loot' },
+  { id:'catapult',    emoji:'⚙️', name:'Catapult',      cost:40,  qty:1, leg:0, w:2,h:1, section:'Decorations',  desc:'Launch stuff' },
+  { id:'moat',        emoji:'🌊', name:'Moat',          cost:12,  qty:1, leg:0, w:3,h:1, section:'Decorations',  desc:'Water barrier' },
+  { id:'shield_dec',  emoji:'🛡️', name:'Shield',        cost:15,  qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Hang it proud' },
+  { id:'flower',      emoji:'🌸', name:'Garden',        cost:6,   qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Pretty flowers' },
+  { id:'fountain',    emoji:'⛲', name:'Fountain',      cost:30,  qty:1, leg:0, w:2,h:2, section:'Decorations',  desc:'Fancy fountain' },
+  { id:'flag_pole',   emoji:'🎌', name:'Flag Pole',     cost:18,  qty:1, leg:0, w:1,h:2, section:'Decorations',  desc:'Tall flag' },
+  { id:'campfire',    emoji:'🔥', name:'Campfire',      cost:12,  qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Cozy fire' },
+  { id:'well',        emoji:'🪣', name:'Wishing Well',  cost:22,  qty:1, leg:0, w:1,h:1, section:'Decorations',  desc:'Toss a coin' },
+  // Shops & Buildings
+  { id:'tavern',      emoji:'🍺', name:'Tavern',        cost:60,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Where warriors gather' },
+  { id:'weapon_shop', emoji:'⚔️', name:'Weapon Store',  cost:75,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Swords, axes & more' },
+  { id:'hair_salon',  emoji:'💇', name:'Hair Stylist',  cost:45,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Looking fresh' },
+  { id:'dress_shop',  emoji:'👗', name:'Dress Shop',    cost:45,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Fancy fits' },
+  { id:'magic_shop',  emoji:'🔮', name:'Magic Shop',    cost:80,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Potions & spells' },
+  { id:'bakery',      emoji:'🥐', name:'Bakery',        cost:35,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Fresh bread daily' },
+  { id:'library',     emoji:'📚', name:'Library',       cost:50,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Knowledge is power' },
+  { id:'smithy',      emoji:'🔨', name:'Blacksmith',    cost:65,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Craft your gear' },
+  { id:'stable',      emoji:'🐴', name:'Stables',       cost:55,  qty:1, leg:0, w:3,h:2, section:'Buildings',    desc:'Your horses live here' },
+  { id:'market',      emoji:'🏪', name:'Market Square', cost:70,  qty:1, leg:0, w:3,h:2, section:'Buildings',    desc:'Trade & bustle' },
+  // Special unlock
+  { id:'six_seven',   emoji:'😏', name:'6×7=42 Club',   cost:42,  qty:1, leg:0, w:2,h:2, section:'Special',      desc:'For those who know', unlock:'6x7' },
   // Legendary items
-  { id:'dragon',      emoji:'🐉', name:'Dragon Perch',  cost:500, leg:10, section:'Legendary',    desc:'A dragon on your roof' },
-  { id:'portal',      emoji:'🌀', name:'Magic Portal',  cost:800, leg:20, section:'Legendary',    desc:'Glowing magic vortex' },
-  { id:'throne',      emoji:'👑', name:'Gold Throne',   cost:600, leg:15, section:'Legendary',    desc:'Rule from here' },
-  { id:'big_sword',   emoji:'⚔️', name:'The Sword',     cost:200, leg:5,  section:'Legendary',    desc:'Stuck in the ground' },
-  { id:'wizard',      emoji:'🧙', name:'Wizard Tower',  cost:400, leg:8,  section:'Legendary',    desc:'Magic crackles here' },
-  { id:'unicorn',     emoji:'🦄', name:'Unicorn Stable',cost:350, leg:6,  section:'Legendary',    desc:'Magical beast' },
+  { id:'dragon',      emoji:'🐉', name:'Dragon Perch',  cost:500, qty:1, leg:10, w:3,h:2, section:'Legendary',   desc:'A dragon on your roof' },
+  { id:'portal',      emoji:'🌀', name:'Magic Portal',  cost:800, qty:1, leg:20, w:2,h:3, section:'Legendary',   desc:'Glowing magic vortex' },
+  { id:'throne',      emoji:'👑', name:'Gold Throne',   cost:600, qty:1, leg:15, w:2,h:2, section:'Legendary',   desc:'Rule from here' },
+  { id:'big_sword',   emoji:'⚔️', name:'The Sword',     cost:200, qty:1, leg:5,  w:1,h:3, section:'Legendary',   desc:'Stuck in the ground' },
+  { id:'wizard',      emoji:'🧙', name:'Wizard Tower',  cost:400, qty:1, leg:8,  w:2,h:3, section:'Legendary',   desc:'Magic crackles here' },
+  { id:'unicorn',     emoji:'🦄', name:'Unicorn Stable',cost:350, qty:1, leg:6,  w:3,h:2, section:'Legendary',   desc:'Magical beast' },
+  { id:'colosseum',   emoji:'🏟️', name:'Colosseum',     cost:999, qty:1, leg:25, w:4,h:3, section:'Legendary',   desc:'Ultimate arena' },
 ];
 
 // Items that goblins can steal (lower tier, decorations)
@@ -1843,6 +1922,19 @@ function renderShop(){
   if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
   var mp=ud.mp;
   var legDefeats=ud.legendaryDefeats||0;
+  var facts=ud.facts||{};
+
+  // Check 6×7 green unlock: both ×6 and ×7 tables need green (avg < 2000ms) across all facts
+  function has6x7Unlock(){
+    for(var n=2;n<=9;n++){
+      var a6=factAvg(facts['6x'+n]||facts[n+'x6']);
+      var a7=factAvg(facts['7x'+n]||facts[n+'x7']);
+      if(!a6||a6>=2000||!a7||a7>=2000) return false;
+    }
+    return true;
+  }
+  var unlocked6x7=has6x7Unlock();
+
   var sections={};
   SHOP_ITEMS.forEach(function(item){
     if(!sections[item.section]) sections[item.section]=[];
@@ -1852,18 +1944,23 @@ function renderShop(){
   Object.keys(sections).forEach(function(sec){
     html+='<div class="shop-section-title">'+sec+'</div><div class="shop-grid">';
     sections[sec].forEach(function(item){
-      var owned=!!(mp.inventory[item.id]&&mp.inventory[item.id]>0);
+      var inStock=(mp.inventory[item.id]||0);
       var canAfford=mp.credits>=item.cost;
       var hasLeg=legDefeats>=item.leg;
-      var locked=!canAfford||!hasLeg;
+      var specialLocked=item.unlock==='6x7'&&!unlocked6x7;
+      var locked=!canAfford||!hasLeg||specialLocked;
       var lockMsg='';
-      if(!hasLeg) lockMsg='Need '+item.leg+' legendary defeats (you have '+legDefeats+')';
-      else if(!canAfford) lockMsg='Need 🪙'+item.cost+' (you have '+mp.credits+')';
-      html+='<div class="shop-item'+(locked?' locked':'')+(owned?' owned':'')+'" onclick="buyItem(\''+item.id+'\')">'
-        +(owned?'<div class="si-owned-tag">OWNED</div>':'')
+      if(specialLocked) lockMsg='Unlock: get ×6 & ×7 to 🟢 green!';
+      else if(!hasLeg) lockMsg='Need '+item.leg+'⚔️ (have '+legDefeats+')';
+      else if(!canAfford) lockMsg='Need 🪙'+item.cost;
+      var w=item.w||1, h=item.h||1;
+      var sizeStr=(w>1||h>1)?'<div style="font-size:0.5rem;color:#3a4f6b;margin-bottom:1px;">'+w+'×'+h+'</div>':'';
+      html+='<div class="shop-item'+(locked?' locked':'')+'" onclick="buyItem(\''+item.id+'\')">'
+        +(inStock>0?'<div class="si-owned-tag">×'+inStock+'</div>':'')
         +'<div class="si-emoji">'+item.emoji+'</div>'
+        +sizeStr
         +'<div class="si-name">'+item.name+'</div>'
-        +'<div class="si-cost">🪙 '+item.cost+(item.leg?' + '+item.leg+'⚔️':' credits')+'</div>'
+        +'<div class="si-cost">🪙'+item.cost+(item.leg?' +'+item.leg+'⚔️':'')+'</div>'
         +(locked&&lockMsg?'<div class="si-lock">'+lockMsg+'</div>':'')
         +'</div>';
     });
@@ -1878,15 +1975,15 @@ window.buyItem=function(itemId){
   var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
   if(!item) return;
   var legDefeats=ud.legendaryDefeats||0;
-  if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! 🪙'); return; }
+  if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! Need 🪙'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
-  if(ud.mp.inventory[item.id]&&ud.mp.inventory[item.id]>0){ showMPToast('Already owned!'); return; }
   ud.mp.credits-=item.cost;
-  ud.mp.inventory[item.id]=1;
+  ud.mp.inventory[item.id]=(ud.mp.inventory[item.id]||0)+(item.qty||1);
   saveData(d);
   document.getElementById('mpCredits').textContent=ud.mp.credits;
-  showMPToast(item.emoji+' '+item.name+' added to inventory!');
+  showMPToast(item.emoji+' +'+item.qty+' '+item.name+'! ('+ud.mp.inventory[item.id]+' total)');
   renderShop();
+  renderInventory();
 };
 
 function showMPToast(msg){
@@ -1935,25 +2032,50 @@ function renderBaseGrid(){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   var baseGrid=(ud.mp&&ud.mp.baseGrid)||{};
   var canvas=document.getElementById('baseCanvas'); if(!canvas) return;
+  var CELL=46; // px per cell including gap
+
+  // Render empty grid cells
   var html='';
   for(var r=0;r<MP_GRID_ROWS;r++){
     for(var c=0;c<MP_GRID_COLS;c++){
       var key=r+'_'+c;
-      var cell=baseGrid[key];
-      var inner='';
-      if(cell){
-        var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
-        var emoji=item?item.emoji:'?';
-        inner='<span class="item-emoji">'+emoji+'</span>';
-        if(cell.damaged) inner+='<span class="item-dmg">🔨'+cell.repairCost+'</span>';
-      }
-      html+='<div class="base-cell'+(cell?' has-item':'')+'" data-key="'+key+'" '
+      html+='<div class="base-cell" data-key="'+key+'" '
         +'ondragover="cellDragOver(event)" ondragleave="cellDragLeave(event)" ondrop="cellDrop(event,\''+key+'\')" '
-        +'onclick="cellClick(\''+key+'\')">'
-        +inner+'</div>';
+        +'onclick="cellClick(\''+key+'\')"></div>';
     }
   }
   canvas.innerHTML=html;
+
+  // Overlay multi-cell item blocks — only render the "origin" cell of each item
+  var rendered={};
+  Object.keys(baseGrid).forEach(function(key){
+    var cell=baseGrid[key];
+    if(!cell||rendered[key]) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(!item) return;
+    var parts=key.split('_');
+    var row=parseInt(parts[0]), col=parseInt(parts[1]);
+    var w=item.w||1, h=item.h||1;
+    // Mark all cells as occupied
+    for(var dr=0;dr<h;dr++) for(var dc=0;dc<w;dc++) rendered[(row+dr)+'_'+(col+dc)]=true;
+    // Position: offset from canvas padding (6px) + cell size
+    var top=6+row*CELL, left=6+col*CELL;
+    var width=w*CELL-2, height=h*CELL-2;
+    var fontSize=Math.min(width,height)*0.45;
+    fontSize=Math.max(14,Math.min(40,fontSize));
+    var isSelected=(_selectedItemId===null && cell._moving);
+    var damaged=cell.damaged;
+    var block=document.createElement('div');
+    block.className='base-item-block'+(damaged?' damaged':'');
+    block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;';
+    block.dataset.key=key;
+    block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
+      +'<span class="bi-name">'+item.name+'</span>'
+      +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+    block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
+    canvas.appendChild(block);
+  });
+
   var lastLogin=(ud.mp&&ud.mp.lastLogin)||Date.now();
   var hrs=Math.floor((Date.now()-lastLogin)/3600000);
   var lsEl=document.getElementById('mpLastSeen');
@@ -1962,9 +2084,11 @@ function renderBaseGrid(){
 
 // ── TAP TO PLACE (replaces drag-and-drop) ──
 var _selectedItemId=null;
+var _movingFromKey=null;
 
 function setSelectedItem(id){
   _selectedItemId=id;
+  if(!id) _movingFromKey=null;
   var label=document.getElementById('mpSelectedItem');
   if(label){
     if(id){
@@ -1988,24 +2112,84 @@ window.cellDrop=function(e,key){ e.preventDefault(); }; // no-op, using tap
 window.cellClick=function(key){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
-  var cell=ud.mp.baseGrid[key];
+  var grid=ud.mp.baseGrid;
+
+  // Find if this key is part of a multi-cell item (check key and surrounding origins)
+  var originKey=key;
+  var cellItem=grid[key];
+  if(!cellItem){
+    // Maybe it's a covered cell of a multi-cell item — scan grid for items that cover this cell
+    var kp=key.split('_'), kr=parseInt(kp[0]), kc=parseInt(kp[1]);
+    Object.keys(grid).forEach(function(gk){
+      var gc=grid[gk]; if(!gc) return;
+      var item=SHOP_ITEMS.find(function(x){return x.id===gc.id;});
+      if(!item) return;
+      var gp=gk.split('_'), gr=parseInt(gp[0]), gcol=parseInt(gp[1]);
+      var w=item.w||1, h=item.h||1;
+      if(kr>=gr&&kr<gr+h&&kc>=gcol&&kc<gcol+w) originKey=gk;
+    });
+    cellItem=grid[originKey];
+  }
 
   if(_selectedItemId){
-    // Place selected item
-    ud.mp.baseGrid[key]={ id:_selectedItemId };
+    // PLACING — check multi-cell fit
+    var selItem=SHOP_ITEMS.find(function(x){return x.id===_selectedItemId;});
+    var sw=selItem?selItem.w||1:1, sh=selItem?selItem.h||1:1;
+    var kp2=key.split('_'), kr2=parseInt(kp2[0]), kc2=parseInt(kp2[1]);
+    // Check bounds
+    if(kr2+sh>MP_GRID_ROWS||kc2+sw>MP_GRID_COLS){
+      showMPToast("Doesn't fit — try another spot."); return;
+    }
+
+    // Build set of cells occupied by the item being moved (to ignore them)
+    var movingCells={};
+    var moving=_movingFromKey;
+    if(moving){
+      var mItem=grid[moving]; 
+      var mSelItem=mItem?SHOP_ITEMS.find(function(x){return x.id===mItem.id;}):null;
+      var mw=mSelItem?mSelItem.w||1:1, mh=mSelItem?mSelItem.h||1:1;
+      var mp2=moving.split('_'), mr=parseInt(mp2[0]), mc=parseInt(mp2[1]);
+      for(var mdr=0;mdr<mh;mdr++) for(var mdc=0;mdc<mw;mdc++) movingCells[(mr+mdr)+'_'+(mc+mdc)]=true;
+    }
+
+    // Check all target cells are free
+    var occupied=false;
+    for(var dr=0;dr<sh&&!occupied;dr++){
+      for(var dc=0;dc<sw&&!occupied;dc++){
+        var ck=(kr2+dr)+'_'+(kc2+dc);
+        if(grid[ck]&&!movingCells[ck]) occupied=true;
+      }
+    }
+    if(occupied){ showMPToast('Something is already there!'); return; }
+
+    // Clear old position if moving
+    if(moving){
+      Object.keys(movingCells).forEach(function(ck){ delete grid[ck]; });
+      _movingFromKey=null;
+    } else {
+      // Consuming from inventory
+      var stock=(ud.mp.inventory[_selectedItemId]||0);
+      if(stock<=0){ showMPToast('No more of that item! Buy more in Shop.'); setSelectedItem(null); return; }
+      ud.mp.inventory[_selectedItemId]=stock-1;
+    }
+
+    // Place at new location
+    grid[key]={ id:_selectedItemId };
     saveData(d);
+    setSelectedItem(null);
     renderBaseGrid();
-    // Keep item selected for rapid placement
+    renderInventory();
     return;
   }
 
-  if(!cell) return;
+  // NOT placing — tap on item to PICK IT UP (move mode)
+  if(!cellItem) return;
 
-  if(cell.damaged){
-    var cost=cell.repairCost||10;
+  if(cellItem.damaged){
+    var cost=cellItem.repairCost||10;
     if((ud.mp.credits||0)>=cost){
       ud.mp.credits-=cost;
-      delete cell.damaged; delete cell.repairCost;
+      delete cellItem.damaged; delete cellItem.repairCost;
       saveData(d);
       document.getElementById('mpCredits').textContent=ud.mp.credits;
       showMPToast('Repaired! 🔨');
@@ -2014,10 +2198,14 @@ window.cellClick=function(key){
       showMPToast('Need 🪙'+cost+' to repair!');
     }
   } else {
-    delete ud.mp.baseGrid[key];
+    // Pick up to move — set as selected without consuming inventory
+    var pickItem=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
+    _movingFromKey=originKey;
+    setSelectedItem(cellItem.id);
+    var lbl=document.getElementById('mpSelectedItem');
+    if(lbl) lbl.textContent=(pickItem?pickItem.emoji+' '+pickItem.name:'Item')+' picked up — tap new location to move, or tap inventory to return';
     saveData(d);
     renderBaseGrid();
-    showMPToast('Removed');
   }
 };
 
@@ -2080,24 +2268,23 @@ function renderFireBadge(){
   var avgLabel=avg?'Avg: '+(avg/1000).toFixed(1)+'s':'Keep practicing!';
 
   var colors=[
-    ['#556','#667','#445'],
-    ['#ff6600','#cc3300','#ff9900'],
-    ['#ff6600','#ff3300','#ffaa00'],
-    ['#ff4400','#ff0000','#ffcc00'],
-    ['#ff2200','#ff6600','#ffff00']
+    ['#ff6600','#cc3300','#ff9900'],  // level 0: smoldering ember (faint orange, not grey)
+    ['#ff6600','#cc3300','#ff9900'],  // level 1: small flame
+    ['#ff6600','#ff3300','#ffaa00'],  // level 2: medium
+    ['#ff4400','#ff0000','#ffcc00'],  // level 3: big
+    ['#ff2200','#ff6600','#ffff00']   // level 4: blazing
   ];
   var c=colors[level];
 
-  // 3x bigger than before
-  var flameH=[90,132,168,204,240][level];
-  var flameW=[72,96,120,156,192][level];
+  // 3x bigger than before — LARGER at higher levels (faster speed)
+  var flameH=[60,96,144,192,240][level];
+  var flameW=[48,72,108,156,192][level];
 
-  // Glow layers — stronger at higher levels
-  var glowColor=c[0];
-  var glowSize=[0,8,16,28,42][level];
-  var glowStyle=level>=1
-    ?'filter:drop-shadow(0 0 '+glowSize+'px '+glowColor+') drop-shadow(0 0 '+(glowSize*0.5)+'px '+c[2]+');'
-    :'filter:opacity(0.4);';
+  // Level 0 smolders very faintly, higher levels glow bright
+  var glowOpacity=[0.12,0.4,0.65,0.85,1.0][level];
+  var glowSize=[4,8,16,28,42][level];
+  var glowStyle='filter:drop-shadow(0 0 '+glowSize+'px rgba(255,102,0,'+glowOpacity+')) drop-shadow(0 0 '+(glowSize*0.4)+'px rgba(255,153,0,'+(glowOpacity*0.6)+'));'
+    +(level===0?'opacity:0.35;':'');
 
   // Ambient glow behind flame for higher levels
   var ambientGlow=level>=3
@@ -2208,15 +2395,7 @@ function renderBadges(){
 
   // ── Build all badge rows ──
   // Row 1: Number badges 2-9
-  var row1='<div class="badge-row" style="gap:3px;">';
-  for(var n=2;n<=9;n++){
-    var tier=badges['num'+n]||null;
-    var col=tier?ZONE_COLORS[tier]:'rgba(255,255,255,0.08)';
-    row1+=makeShieldBadge('nb'+n, !tier, col, tier?String(n):'?', tier?'×all':'', tier);
-  }
-  row1+='</div>';
-
-  // Row 2: Squares + special perf badges
+  // LEFT: shield badges only (×2–×9 number row + x² squares)
   var squaresUnified=null;
   var tiersHF=['gold','green','blue'];
   for(var ti=0;ti<tiersHF.length;ti++){
@@ -2243,36 +2422,41 @@ function renderBadges(){
   var quits=ud.earlyQuits||0, grank=getGiverUpRank(quits), giverEarned=grank!==null;
   var giverEmojis=['🏃','🚪','💨','🌪️','👑'];
 
-  var row2='<div class="badge-row" style="gap:3px;">'
-    +makeShieldBadge('sq-all', sqLocked, sqColor, sqLocked?(sqDone>0?sqDone+'/8':'?'):'x²', sqLocked?(sqDone>0?'sq':''):'all', squaresUnified)
-    +makeRoundBadge('leg', legEarned, '#9b59b6', '👑', legEarned?String(legCount):'?', legEarned?'LEGEND':'???')
-    +makeInfernoBadge(infernoEarned, bestStr, getCurrentStreak())
-    +makeRoundBadge('perfectionist', perfEarned, '#06d6a0', '🎯', perfEarned?'100%':'?', perfEarned?'PERFECT':'???')
-    +'</div>';
+  // LEFT: shields in rows of 4-5, right-aligned toward fire
+  var shields=[];
+  for(var n=2;n<=9;n++){
+    var tier=badges['num'+n]||null;
+    var col=tier?ZONE_COLORS[tier]:'rgba(255,255,255,0.08)';
+    shields.push(makeShieldBadge('nb'+n,!tier,col,tier?String(n):'?',tier?'×all':'',tier));
+  }
+  shields.push(makeShieldBadge('sq-all',sqLocked,sqColor,sqLocked?(sqDone>0?sqDone+'/8':'?'):'x²',sqLocked?(sqDone>0?'sq':''):'all',squaresUnified));
+  // 9 shields → 2 rows: 5 top, 4 bottom
+  leftEl.innerHTML=
+    '<div style="display:flex;gap:2px;justify-content:flex-end;">'+shields.slice(0,5).join('')+'</div>'+
+    '<div style="display:flex;gap:2px;justify-content:flex-end;">'+shields.slice(5,9).join('')+'</div>';
 
-  var row3='<div class="badge-row" style="gap:3px;">'
-    +makeRoundBadge('speedBlitz', blitzEarned, '#118ab2', '⚡', blitzEarned?'x10':'?', blitzEarned?'BLITZ':'???')
-    +makeRoundBadge('clutch', clutchEarned, '#9b59b6', '🧊', clutchEarned?'ICE':'?', clutchEarned?'CLUTCH':'???')
-    +makeRoundBadge('untouchable', untouchEarned, '#06d6a0', '🛡️', untouchEarned?'CLEAN':'?', untouchEarned?'UNTOUCHABLE':'???')
-    +makeRoundBadge('ghost', ghostEarned, '#b89fd4', '👻', ghostEarned?'BOO':'?', ghostEarned?'GHOST':'???')
-    +'</div>';
-
-  var row4='<div class="badge-row" style="gap:3px;">'
-    +makeRoundBadge('redline', redlineEarned, '#ef476f', '🏎️', redlineEarned?'FAST':'?', redlineEarned?'REDLINE':'???')
-    +makeRoundBadge('veteran', vetEarned, '#7a8fb5', '💀', vetEarned?String(sessions.length):'?', vetEarned?'VETERAN':'???')
-    +makeRoundBadge('ironWill', ironEarned, '#aaaaaa', '🔩', ironEarned?totalMins+'m':'?', ironEarned?'IRON WILL':'???')
-    +makeRoundBadge('consistent', consEarned, '#118ab2', '📅', consEarned?Object.keys(consDays).length+'d':'?', consEarned?'CONSISTENT':'???')
-    +'</div>';
-
-  var row5='<div class="badge-row" style="gap:3px;">'
-    +makeRoundBadge('turtle', turtleEarned, '#06d6a0', '🐢', turtleEarned?'SLOW':'?', turtleEarned?'TURTLE':'???')
-    +makeRoundBadge('stubborn', stubbornEarned, '#ffd700', '🔄', stubbornEarned?'SMH':'?', stubbornEarned?'STUBBORN':'???')
-    +makeRoundBadge('giverUp', giverEarned, '#ff8c00', giverEarned?giverEmojis[grank]:'🏃', giverEarned?String(quits):'?', giverEarned?'QUITTER':'???')
-    +'</div>';
-
-  // Left column: rows 1, 2, 3  |  Right column: rows 4, 5 + row1 overflow
-  leftEl.innerHTML=row1+row2+row3;
-  rightEl.innerHTML=row4+row5;
+  // RIGHT: rounds in rows of 5, right-aligned away from fire
+  var rounds=[
+    makeRoundBadge('leg',legEarned,'#9b59b6','👑',legEarned?String(legCount):'?',legEarned?'LEGEND':'???'),
+    makeInfernoBadge(infernoEarned,bestStr,getCurrentStreak()),
+    makeRoundBadge('perfectionist',perfEarned,'#06d6a0','🎯',perfEarned?'100%':'?',perfEarned?'PERFECT':'???'),
+    makeRoundBadge('speedBlitz',blitzEarned,'#118ab2','⚡',blitzEarned?'x10':'?',blitzEarned?'BLITZ':'???'),
+    makeRoundBadge('clutch',clutchEarned,'#9b59b6','🧊',clutchEarned?'ICE':'?',clutchEarned?'CLUTCH':'???'),
+    makeRoundBadge('untouchable',untouchEarned,'#06d6a0','🛡️',untouchEarned?'CLEAN':'?',untouchEarned?'UNTOUCHABLE':'???'),
+    makeRoundBadge('ghost',ghostEarned,'#b89fd4','👻',ghostEarned?'BOO':'?',ghostEarned?'GHOST':'???'),
+    makeRoundBadge('redline',redlineEarned,'#ef476f','🏎️',redlineEarned?'FAST':'?',redlineEarned?'REDLINE':'???'),
+    makeRoundBadge('veteran',vetEarned,'#7a8fb5','💀',vetEarned?String(sessions.length):'?',vetEarned?'VETERAN':'???'),
+    makeRoundBadge('ironWill',ironEarned,'#aaaaaa','🔩',ironEarned?totalMins+'m':'?',ironEarned?'IRON WILL':'???'),
+    makeRoundBadge('consistent',consEarned,'#118ab2','📅',consEarned?Object.keys(consDays).length+'d':'?',consEarned?'CONSISTENT':'???'),
+    makeRoundBadge('turtle',turtleEarned,'#06d6a0','🐢',turtleEarned?'SLOW':'?',turtleEarned?'TURTLE':'???'),
+    makeRoundBadge('stubborn',stubbornEarned,'#ffd700','🔄',stubbornEarned?'SMH':'?',stubbornEarned?'STUBBORN':'???'),
+    makeRoundBadge('giverUp',giverEarned,'#ff8c00',giverEarned?giverEmojis[grank]:'🏃',giverEarned?String(quits):'?',giverEarned?'QUITTER':'???')
+  ];
+  // 14 rounds → 3 rows: 5, 5, 4
+  rightEl.innerHTML=
+    '<div style="display:flex;gap:2px;">'+rounds.slice(0,5).join('')+'</div>'+
+    '<div style="display:flex;gap:2px;">'+rounds.slice(5,10).join('')+'</div>'+
+    '<div style="display:flex;gap:2px;">'+rounds.slice(10,14).join('')+'</div>';
 
   renderFireBadge();
 }
