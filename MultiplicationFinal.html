@@ -1063,10 +1063,13 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   <div style="font-size:1.8rem;font-weight:900;color:#ef476f;letter-spacing:3px;text-align:center;animation:battleShake 0.4s ease-in-out infinite;">DARK FORCES</div>
   <div style="font-size:1.8rem;font-weight:900;color:#ff8c00;letter-spacing:3px;text-align:center;">ARE ATTACKING!</div>
   <div style="font-size:0.85rem;color:#ffb3b3;font-weight:600;text-align:center;margin-top:4px;" id="attackWarningMsg">Prepare your defenders!</div>
-  <div style="margin-top:16px;display:flex;gap:12px;">
+  <div id="attackMonsterPreview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;justify-content:center;max-width:320px;"></div>
+  <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
     <button onclick="dismissAttackWarning()" style="padding:12px 28px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;letter-spacing:1px;">⚔️ DEFEND!</button>
+    <button id="scareAwayBtn" onclick="tryScare()" style="padding:12px 20px;background:linear-gradient(135deg,#ff8c00,#e07000);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:900;font-size:0.85rem;cursor:pointer;">
+      <span id="scareBtnLabel">😤 Scare Away!</span>
+    </button>
   </div>
-  <div id="attackMonsterPreview" style="display:flex;gap:8px;margin-top:12px;font-size:1.8rem;"></div>
 </div>
 
 <!-- ══ BATTLE OVERLAY ══ -->
@@ -2006,7 +2009,7 @@ function checkGoblinAttack(){
 
   // Trigger a battle!
   setTimeout(function(){
-    showAttackWarning();
+    showAttackWarning(hoursAway);
   }, 800);
 }
 
@@ -2041,18 +2044,63 @@ window.closeGoblinPopup=function(){
 // BATTLE SYSTEM
 // ══════════════════════════════════════════════════════════
 
+// rarity: 'common'|'uncommon'|'rare'|'epic'|'legendary'
+// giant: true = oversized emoji display
 var MONSTER_TYPES=[
-  { id:'goblin',    emoji:'👺', name:'Goblin',       hp:20,  atk:5,  range:1, speed:'melee',  reward:8  },
-  { id:'orc',       emoji:'👹', name:'Orc Warrior',  hp:40,  atk:10, range:1, speed:'melee',  reward:15 },
-  { id:'skeleton',  emoji:'💀', name:'Skeleton',     hp:15,  atk:4,  range:1, speed:'melee',  reward:6  },
-  { id:'troll',     emoji:'🧌', name:'Troll',        hp:70,  atk:14, range:1, speed:'melee',  reward:25 },
-  { id:'dark_archer',emoji:'🏴',name:'Dark Archer',  hp:18,  atk:8,  range:3, speed:'ranged', reward:12 },
-  { id:'witch',     emoji:'🧟', name:'Dark Witch',   hp:25,  atk:12, range:2, speed:'ranged', reward:18, aoe:true },
-  { id:'dragon_e',  emoji:'🐲', name:'Baby Dragon',  hp:60,  atk:18, range:2, speed:'ranged', reward:35 },
-  { id:'giant',     emoji:'🦣', name:'Giant',        hp:120, atk:20, range:1, speed:'melee',  reward:50 },
+  // ── COMMON ─────────────────────────────────────────────
+  { id:'goblin',       emoji:'👺', name:'Goblin',            hp:20,  atk:5,  range:1, speed:'melee',  reward:8,  rarity:'common'   },
+  { id:'skeleton',     emoji:'💀', name:'Skeleton',          hp:15,  atk:4,  range:1, speed:'melee',  reward:6,  rarity:'common'   },
+  { id:'zombie',       emoji:'🧟', name:'Zombie',            hp:25,  atk:3,  range:1, speed:'melee',  reward:7,  rarity:'common'   },
+  { id:'rat_swarm',    emoji:'🐀', name:'Rat Swarm',         hp:12,  atk:6,  range:1, speed:'melee',  reward:5,  rarity:'common',  aoe:true },
+  { id:'imp',          emoji:'😈', name:'Imp',               hp:10,  atk:7,  range:2, speed:'ranged', reward:9,  rarity:'common'   },
+  { id:'kobold',       emoji:'🦎', name:'Kobold',            hp:14,  atk:5,  range:1, speed:'melee',  reward:6,  rarity:'common'   },
+  { id:'mud_golem',    emoji:'🟫', name:'Mud Golem',         hp:35,  atk:4,  range:1, speed:'melee',  reward:10, rarity:'common'   },
+  { id:'bat_horde',    emoji:'🦇', name:'Bat Horde',         hp:16,  atk:5,  range:2, speed:'ranged', reward:8,  rarity:'common',  aoe:true },
+  { id:'slime',        emoji:'🫧', name:'Slime',             hp:30,  atk:3,  range:1, speed:'melee',  reward:7,  rarity:'common'   },
+  { id:'scarecrow',    emoji:'🎃', name:'Cursed Scarecrow',  hp:22,  atk:6,  range:1, speed:'melee',  reward:9,  rarity:'common'   },
+  // ── UNCOMMON ───────────────────────────────────────────
+  { id:'orc',          emoji:'👹', name:'Orc Warrior',       hp:45,  atk:12, range:1, speed:'melee',  reward:15, rarity:'uncommon' },
+  { id:'dark_archer',  emoji:'🏴', name:'Dark Archer',       hp:22,  atk:9,  range:3, speed:'ranged', reward:14, rarity:'uncommon' },
+  { id:'troll',        emoji:'🧌', name:'Troll',             hp:75,  atk:15, range:1, speed:'melee',  reward:22, rarity:'uncommon' },
+  { id:'werewolf',     emoji:'🐺', name:'Werewolf',          hp:50,  atk:16, range:1, speed:'melee',  reward:20, rarity:'uncommon' },
+  { id:'harpy',        emoji:'🦅', name:'Harpy',             hp:28,  atk:11, range:2, speed:'ranged', reward:16, rarity:'uncommon' },
+  { id:'minotaur',     emoji:'🐂', name:'Minotaur',          hp:65,  atk:18, range:1, speed:'melee',  reward:24, rarity:'uncommon' },
+  { id:'ghost',        emoji:'👻', name:'Ghost',             hp:20,  atk:13, range:2, speed:'ranged', reward:18, rarity:'uncommon', dodge:true },
+  { id:'ogre',         emoji:'🫨', name:'Ogre',              hp:80,  atk:14, range:1, speed:'melee',  reward:20, rarity:'uncommon' },
+  { id:'dark_shaman',  emoji:'🪄', name:'Dark Shaman',       hp:30,  atk:14, range:3, speed:'ranged', reward:22, rarity:'uncommon', aoe:true },
+  { id:'banshee',      emoji:'😱', name:'Banshee',           hp:25,  atk:15, range:3, speed:'ranged', reward:20, rarity:'uncommon', aoe:true },
+  // ── RARE ───────────────────────────────────────────────
+  { id:'giant',        emoji:'🦣', name:'Giant',             hp:120, atk:22, range:1, speed:'melee',  reward:45, rarity:'rare',    giant:true },
+  { id:'dragon_e',     emoji:'🐲', name:'Young Dragon',      hp:80,  atk:22, range:2, speed:'ranged', reward:40, rarity:'rare'     },
+  { id:'lich',         emoji:'🦴', name:'Lich',              hp:55,  atk:20, range:3, speed:'ranged', reward:45, rarity:'rare',    aoe:true },
+  { id:'stone_giant',  emoji:'🗿', name:'Stone Giant',       hp:150, atk:18, range:1, speed:'melee',  reward:50, rarity:'rare',    giant:true },
+  { id:'cyclops',      emoji:'🫣', name:'Cyclops',           hp:110, atk:25, range:1, speed:'melee',  reward:48, rarity:'rare',    giant:true },
+  { id:'hydra',        emoji:'🐍', name:'Hydra',             hp:90,  atk:20, range:2, speed:'ranged', reward:50, rarity:'rare',    aoe:true },
+  { id:'medusa',       emoji:'🐛', name:'Medusa',            hp:45,  atk:22, range:2, speed:'ranged', reward:45, rarity:'rare',    stun:true },
+  { id:'golem',        emoji:'🤖', name:'Iron Golem',        hp:160, atk:16, range:1, speed:'melee',  reward:55, rarity:'rare',    giant:true },
+  { id:'wyvern',       emoji:'🦕', name:'Wyvern',            hp:70,  atk:24, range:2, speed:'ranged', reward:52, rarity:'rare'     },
+  { id:'vampire_lord', emoji:'🧛', name:'Vampire Lord',      hp:65,  atk:20, range:2, speed:'ranged', reward:50, rarity:'rare',    dodge:true },
+  // ── EPIC ───────────────────────────────────────────────
+  { id:'dragon',       emoji:'🐉', name:'Elder Dragon',      hp:200, atk:35, range:3, speed:'ranged', reward:100, rarity:'epic',   giant:true, aoe:true },
+  { id:'demon_lord',   emoji:'👿', name:'Demon Lord',        hp:150, atk:40, range:2, speed:'ranged', reward:90,  rarity:'epic',   giant:true, aoe:true },
+  { id:'titan',        emoji:'🦾', name:'Titan',             hp:300, atk:30, range:1, speed:'melee',  reward:120, rarity:'epic',   giant:true },
+  { id:'dark_phoenix', emoji:'🔥', name:'Dark Phoenix',      hp:100, atk:38, range:3, speed:'ranged', reward:110, rarity:'epic',   aoe:true },
+  { id:'kraken',       emoji:'🦑', name:'Kraken',            hp:180, atk:32, range:2, speed:'ranged', reward:105, rarity:'epic',   giant:true, aoe:true },
+  { id:'necromancer',  emoji:'🧙', name:'Necromancer',       hp:70,  atk:42, range:3, speed:'ranged', reward:95,  rarity:'epic',   aoe:true },
+  { id:'shadow_beast', emoji:'🌑', name:'Shadow Beast',      hp:120, atk:36, range:2, speed:'ranged', reward:100, rarity:'epic',   dodge:true },
+  { id:'colossus',     emoji:'🏛️', name:'Ancient Colossus',  hp:350, atk:28, range:1, speed:'melee',  reward:130, rarity:'epic',   giant:true },
+  // ── LEGENDARY ──────────────────────────────────────────
+  { id:'world_serpent',emoji:'🐲', name:'World Serpent',     hp:500, atk:50, range:2, speed:'ranged', reward:250, rarity:'legendary', giant:true, aoe:true },
+  { id:'void_god',     emoji:'🌌', name:'Void God',          hp:400, atk:60, range:3, speed:'ranged', reward:300, rarity:'legendary', giant:true, aoe:true },
+  { id:'death',        emoji:'☠️',  name:'Death Itself',      hp:300, atk:55, range:2, speed:'ranged', reward:280, rarity:'legendary', giant:true, stun:true },
+  { id:'chaos_titan',  emoji:'💀', name:'Chaos Titan',       hp:600, atk:45, range:1, speed:'melee',  reward:350, rarity:'legendary', giant:true },
+  { id:'storm_king',   emoji:'⛈️', name:'Storm King',        hp:350, atk:52, range:3, speed:'ranged', reward:280, rarity:'legendary', giant:true, aoe:true },
+  { id:'abomination',  emoji:'👾', name:'The Abomination',   hp:450, atk:48, range:2, speed:'ranged', reward:320, rarity:'legendary', giant:true, aoe:true },
+  { id:'lich_king',    emoji:'💎', name:'Lich King',         hp:280, atk:58, range:3, speed:'ranged', reward:290, rarity:'legendary', aoe:true, stun:true },
+  { id:'ancient_evil', emoji:'🌀', name:'Ancient Evil',      hp:999, atk:40, range:1, speed:'melee',  reward:500, rarity:'legendary', giant:true },
 ];
 
-// Build a wave of monsters scaled to how many defenders the player has
+// Build a wave of monsters scaled to defenders, weighted by rarity
 function buildWave(isTough){
   var d=getData(), ud=d[userKey];
   var mp=ud&&ud.mp?ud.mp:{};
@@ -2061,26 +2109,50 @@ function buildWave(isTough){
     var cell=mp.baseGrid[k];
     if(cell){ var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;}); if(item&&item.defender) defCount++; }
   });
-  // Scale wave size and difficulty
-  var waveSize= isTough ? 5 : Math.max(2, Math.min(5, Math.ceil(defCount*0.8)+1));
-  var pool= defCount===0 ? [MONSTER_TYPES[0],MONSTER_TYPES[2],MONSTER_TYPES[2]] // easy if no defenders
-           : isTough     ? MONSTER_TYPES
-           : MONSTER_TYPES.slice(0,5);
+  var waveSize=isTough?6:Math.max(2,Math.min(6,Math.ceil(defCount*0.9)+1));
+  // Rarity weights — higher weight = more common
+  // Scale rarity access with defender count
+  var rarityWeights;
+  if(defCount===0){
+    rarityWeights={common:80,uncommon:18,rare:2,epic:0,legendary:0};
+  } else if(defCount<=2){
+    rarityWeights={common:60,uncommon:30,rare:8,epic:2,legendary:0};
+  } else if(defCount<=5){
+    rarityWeights={common:40,uncommon:35,rare:18,epic:6,legendary:1};
+  } else if(defCount<=8){
+    rarityWeights={common:25,uncommon:30,rare:28,epic:14,legendary:3};
+  } else {
+    rarityWeights={common:15,uncommon:25,rare:30,epic:22,legendary:8};
+  }
+  if(isTough){ rarityWeights={common:10,uncommon:20,rare:30,epic:28,legendary:12}; }
+
+  function pickMonster(){
+    // Build weighted pool
+    var pool=[];
+    MONSTER_TYPES.forEach(function(mt){
+      var w=rarityWeights[mt.rarity]||0;
+      for(var i=0;i<w;i++) pool.push(mt);
+    });
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
   var wave=[];
   for(var i=0;i<waveSize;i++){
-    var mt=pool[Math.floor(Math.random()*pool.length)];
+    var mt=pickMonster();
     wave.push({ id:mt.id, emoji:mt.emoji, name:mt.name,
       hp:mt.hp, maxHp:mt.hp, atk:mt.atk, range:mt.range,
-      speed:mt.speed, reward:mt.reward, aoe:mt.aoe||false,
+      speed:mt.speed, reward:mt.reward,
+      aoe:mt.aoe||false, stun:mt.stun||false, dodge:mt.dodge||false,
+      giant:mt.giant||false, rarity:mt.rarity,
       stunned:false });
   }
   return wave;
 }
 
-// Build defenders list from placed items on grid
+// Build defenders list from placed items on grid (skipping permanently dead ones)
 function buildDefenders(){
   var d=getData(), ud=d[userKey];
   var mp=ud&&ud.mp?ud.mp:{};
+  var permaDead=mp.permaDead||{};
   var defs=[];
   var seen={};
   Object.keys(mp.baseGrid||{}).forEach(function(k){
@@ -2088,11 +2160,12 @@ function buildDefenders(){
     var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
     if(!item||!item.defender) return;
     if(seen[k]) return; seen[k]=true;
+    if(permaDead[k]) return; // skip permanently killed defenders
     defs.push({ id:item.id, emoji:item.emoji, name:item.name,
       hp:item.hp, maxHp:item.hp, atk:item.atk, range:item.range,
       aoe:item.aoe||false, healer:item.healer||false,
       dodge:item.dodge||false, stun:item.stun||false,
-      dead:false });
+      dead:false, gridKey:k }); // store gridKey for perma-death lookup
   });
   return defs;
 }
@@ -2104,21 +2177,81 @@ var _battle={
   log:[], active:false, creditsEarned:0
 };
 
-function showAttackWarning(){
+// Scare-away chances by attempt index: 50%, 40%, 30%, 20%, 10%, 0%
+var SCARE_CHANCES=[0.50,0.40,0.30,0.20,0.10,0.00];
+
+function showAttackWarning(hoursAway){
   var wave=buildWave(false);
-  // Store pending wave on window so battle can use it
   window._pendingWave=wave;
   // Show monster preview
   var prev=document.getElementById('attackMonsterPreview');
-  if(prev) prev.innerHTML=wave.map(function(m){return '<span title="'+m.name+'">'+m.emoji+'</span>';}).join('');
+  if(prev) prev.innerHTML=wave.map(function(m){
+    var rarityColor={common:'#aaa',uncommon:'#06d6a0',rare:'#118ab2',epic:'#9b59b6',legendary:'#ffd700'};
+    return '<span title="'+m.name+' ('+m.rarity+')" style="font-size:'+(m.giant?'2.6rem':'1.8rem')+';filter:drop-shadow(0 0 6px '+(rarityColor[m.rarity]||'#fff')+');">'+m.emoji+'</span>';
+  }).join('');
+  var hasDefenders=buildDefenders().length>0;
   var msg=document.getElementById('attackWarningMsg');
   if(msg){
-    var hasDefenders=buildDefenders().length>0;
-    msg.textContent=hasDefenders?'Your defenders stand ready! Roll to fight back!':'⚠️ You have no defenders! Visit the Shop to buy some!';
+    msg.textContent=hasDefenders?'Your defenders stand ready! Will you fight or scare them off?':'⚠️ You have no defenders! Buy some from the Shop!';
     msg.style.color=hasDefenders?'#06d6a0':'#ef476f';
+  }
+  // Scare button — show current chance
+  var d=getData(), ud=d[userKey];
+  var scareIdx=(ud&&ud.mp&&ud.mp.scareIdx!==undefined)?ud.mp.scareIdx:0;
+  scareIdx=Math.min(scareIdx,SCARE_CHANCES.length-1);
+  var scareChance=SCARE_CHANCES[scareIdx];
+  var scareBtn=document.getElementById('scareAwayBtn');
+  var scareLabel=document.getElementById('scareBtnLabel');
+  if(scareBtn){
+    if(scareChance>0){
+      scareBtn.style.display='inline-block';
+      if(scareLabel) scareLabel.textContent='😤 Scare Away! ('+Math.round(scareChance*100)+'% chance)';
+    } else {
+      scareBtn.style.display='inline-block';
+      if(scareLabel) scareLabel.textContent='😤 Scare Away (0% — they\'ve had enough!)';
+      scareBtn.style.opacity='0.4';
+      scareBtn.style.pointerEvents='none';
+    }
   }
   document.getElementById('attackWarningOverlay').style.display='flex';
 }
+
+window.tryScare=function(){
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.mp) return;
+  var scareIdx=(ud.mp.scareIdx!==undefined)?ud.mp.scareIdx:0;
+  scareIdx=Math.min(scareIdx,SCARE_CHANCES.length-1);
+  var chance=SCARE_CHANCES[scareIdx];
+  ud.mp.scareIdx=scareIdx+1; // increment for next time regardless
+  saveData(d);
+  document.getElementById('attackWarningOverlay').style.display='none';
+  if(Math.random()<chance){
+    showMPToast('😤 You scared them off! For now...');
+    // Small confetti puff
+    setTimeout(function(){
+      var div=document.createElement('div');
+      div.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.7);';
+      div.innerHTML='<div style="font-size:5rem;animation:attackPulse 0.4s infinite">😤</div>'
+        +'<div style="font-size:1.5rem;font-weight:900;color:#06d6a0;margin-top:12px;">SCARED AWAY!</div>'
+        +'<div style="font-size:0.85rem;color:#7a8fb5;margin-top:8px;">Next scare: '+(SCARE_CHANCES[Math.min(scareIdx+1,SCARE_CHANCES.length-1)]*100)+'% chance</div>';
+      document.body.appendChild(div);
+      setTimeout(function(){ document.body.removeChild(div); },1800);
+    },100);
+  } else {
+    setTimeout(function(){
+      var div=document.createElement('div');
+      div.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.85);';
+      div.innerHTML='<div style="font-size:5rem;animation:battleShake 0.3s infinite">👹</div>'
+        +'<div style="font-size:1.5rem;font-weight:900;color:#ef476f;margin-top:12px;animation:battleShake 0.3s infinite">THEY LAUGHED AT YOU!</div>'
+        +'<div style="font-size:0.85rem;color:#ffb3b3;margin-top:8px;">They\'re still attacking!</div>';
+      document.body.appendChild(div);
+      setTimeout(function(){
+        document.body.removeChild(div);
+        window.dismissAttackWarning();
+      },1800);
+    },100);
+  }
+};
 
 window.dismissAttackWarning=function(){
   document.getElementById('attackWarningOverlay').style.display='none';
@@ -2183,11 +2316,18 @@ function renderBattle(){
   }).join('');
 
   // Monsters
+  var rarityColor={common:'rgba(239,71,111,0.08)',uncommon:'rgba(239,71,111,0.14)',rare:'rgba(17,138,178,0.15)',epic:'rgba(155,89,182,0.2)',legendary:'rgba(255,215,0,0.15)'};
+  var rarityBorder={common:'rgba(239,71,111,0.2)',uncommon:'rgba(239,71,111,0.35)',rare:'rgba(17,138,178,0.5)',epic:'rgba(155,89,182,0.6)',legendary:'rgba(255,215,0,0.7)'};
+  var rarityLabel={common:'',uncommon:'🟢',rare:'🔵',epic:'🟣',legendary:'⭐'};
   ml.innerHTML=_battle.monsters.map(function(mon){
-    if(mon.hp<=0) return '<div style="opacity:0.25;text-align:center;padding:6px;"><div style="font-size:3.5rem;filter:grayscale(1);">'+mon.emoji+'</div><div style="font-size:0.65rem;color:#06d6a0;font-weight:800;">💀 Defeated</div></div>';
-    return '<div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.2);border-radius:10px;padding:8px;text-align:center;">'
-      +'<div style="font-size:3.5rem;line-height:1;">'+mon.emoji+(mon.stunned?'<span style="font-size:1.2rem;">😵</span>':'')+'</div>'
-      +'<div style="font-size:0.7rem;font-weight:900;color:#ffb3b3;margin-top:4px;">'+mon.name+'</div>'
+    var iconSize=mon.giant?'5.5rem':'3.5rem';
+    var rc=rarityColor[mon.rarity]||rarityColor.common;
+    var rb=rarityBorder[mon.rarity]||rarityBorder.common;
+    var rl=rarityLabel[mon.rarity]||'';
+    if(mon.hp<=0) return '<div style="opacity:0.25;text-align:center;padding:6px;"><div style="font-size:'+iconSize+';filter:grayscale(1);">'+mon.emoji+'</div><div style="font-size:0.65rem;color:#06d6a0;font-weight:800;">💀 Defeated</div></div>';
+    return '<div style="background:'+rc+';border:1.5px solid '+rb+';border-radius:10px;padding:8px;text-align:center;">'
+      +'<div style="font-size:'+iconSize+';line-height:1;">'+mon.emoji+(mon.stunned?'<span style="font-size:1.2rem;">😵</span>':'')+'</div>'
+      +'<div style="font-size:0.7rem;font-weight:900;color:#ffb3b3;margin-top:4px;">'+rl+' '+mon.name+'</div>'
       +'<div style="font-size:0.58rem;color:#7a8fb5;margin-top:1px;">❤️ '+mon.hp+'/'+mon.maxHp+' ⚔️ '+mon.atk+'</div>'
       +hpBar(mon.hp,mon.maxHp,'#ef476f')
       +'</div>';
@@ -2258,7 +2398,22 @@ window.battleRoll=function(){
     var mDmg=Math.max(1, mon.atk+Math.floor(Math.random()*4)-1);
     defTarget.hp=Math.max(0, defTarget.hp-mDmg);
     battleLog(mon.emoji+' '+mon.name+' attacks '+defTarget.emoji+' '+defTarget.name+' for '+mDmg+'!'+(defTarget.hp<=0?' 💀':''));
-    if(defTarget.hp<=0) defTarget.dead=true;
+    if(defTarget.hp<=0){
+      defTarget.dead=true;
+      // 30% chance of permanent death
+      if(Math.random()<0.30 && defTarget.gridKey){
+        defTarget.permaDied=true;
+        var pd=getData(), pud=pd[userKey];
+        if(pud&&pud.mp){
+          if(!pud.mp.permaDead) pud.mp.permaDead={};
+          pud.mp.permaDead[defTarget.gridKey]=true;
+          saveData(pd);
+          battleLog('💔 '+defTarget.name+' has been PERMANENTLY slain! 30% chance of death struck!');
+        }
+      } else {
+        battleLog('🩹 '+defTarget.name+' fell — but will recover after battle (70% survival).');
+      }
+    }
   });
 
   _battle.round++;
@@ -2274,10 +2429,11 @@ function checkBattleEnd(){
     // Victory!
     _battle.active=false;
     var totalReward=_battle.creditsEarned;
-    // Award credits
-    if(totalReward>0){
-      var d=getData(), ud=d[userKey];
-      if(ud&&ud.mp){ ud.mp.credits=(ud.mp.credits||0)+totalReward; saveData(d); }
+    var d=getData(), ud=d[userKey];
+    if(ud&&ud.mp){
+      ud.mp.credits=(ud.mp.credits||0)+totalReward;
+      ud.mp.scareIdx=0; // reset scare counter after real battle
+      saveData(d);
     }
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
@@ -2289,9 +2445,9 @@ function checkBattleEnd(){
   if(_battle.defenders.length>0 && defendersLeft.length===0){
     // All defenders dead — monsters win
     _battle.active=false;
-    // Damage some base items
     var d=getData(), ud=d[userKey];
     if(ud&&ud.mp){
+      ud.mp.scareIdx=0; // reset scare counter
       var keys=Object.keys(ud.mp.baseGrid||{});
       var dmgCount=Math.min(3, Math.floor(keys.length*0.4));
       for(var i=0;i<dmgCount&&keys.length;i++){
@@ -2590,13 +2746,13 @@ function renderBaseGrid(){
     var top=6+row*CELL, left=6+col*CELL;
     var width=rw*CELL-2, height=rh*CELL-2;
     var damaged=cell.damaged;
+    var permaDead=(ud.mp&&ud.mp.permaDead&&ud.mp.permaDead[key])||false;
     var block=document.createElement('div');
-    block.className='base-item-block'+(damaged?' damaged':'');
-    block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;padding:0;overflow:hidden;';
+    block.className='base-item-block'+(damaged?' damaged':'')+(permaDead?' perma-dead':'');
+    block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;padding:0;overflow:hidden;'+(permaDead?'filter:grayscale(1);opacity:0.4;':'');
     block.dataset.key=key;
 
     if(item.rotatable){
-      // Draw as SVG, scale to fill cell
       block.style.cssText+='background:transparent;border:1.5px solid rgba(255,255,255,0.1);';
       block.innerHTML='<div title="Tap to rotate" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">'
         +makeRotatableSVG(item.id, rot)
@@ -2607,7 +2763,8 @@ function renderBaseGrid(){
       fontSize=Math.max(14,Math.min(40,fontSize));
       block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
         +'<span class="bi-name">'+item.name+'</span>'
-        +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+        +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'')
+        +(permaDead?'<span class="bi-dmg" style="color:#9b59b6;">💀RIP</span>':'');
     }
 
     block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
