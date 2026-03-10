@@ -983,7 +983,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div class="myplace-topbar">
       <button class="back-link" id="myPlaceBackBtn" style="margin:0;">&larr; Back</button>
       <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Castle</div>
-      <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="destroyBaseStep(1)" style="background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:#ef476f;border-radius:6px;padding:4px 8px;font-size:0.6rem;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">💥 Destroy</button>
+        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
+      </div>
     </div>
     <div class="myplace-tabs">
       <button class="myplace-tab active" id="mptab-base" onclick="switchMPTab('base')">🏰 Build</button>
@@ -1024,6 +1027,36 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 <!-- Drag ghost -->
 <div id="dragGhost"></div>
 
+<!-- ══ DESTROY BASE CONFIRMATION ══ -->
+<div id="destroyConfirmOverlay" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;">
+  <div id="destroyConfirmCard" style="background:linear-gradient(160deg,#1a0505,#0d0800);border:2px solid #ef476f;border-radius:20px;padding:28px 24px;text-align:center;max-width:300px;width:88%;box-shadow:0 0 60px rgba(239,71,111,0.5);animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+    <div id="destroyStep1" style="">
+      <div style="font-size:3rem;margin-bottom:8px;">💥</div>
+      <div style="font-size:1.1rem;font-weight:900;color:#ef476f;margin-bottom:10px;">Destroy Your Base?</div>
+      <div style="font-size:0.82rem;color:#ffb3b3;margin-bottom:20px;line-height:1.5;">This will wipe your entire grid and return everything to your inventory.</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="destroyBaseStep(0)" style="padding:10px 20px;background:rgba(255,255,255,0.08);color:#aaa;border:1px solid #333;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;">Cancel</button>
+        <button onclick="destroyBaseStep(2)" style="padding:10px 20px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;">Yeah destroy it</button>
+      </div>
+    </div>
+    <div id="destroyStep2" style="display:none;">
+      <div style="font-size:3rem;margin-bottom:8px;animation:attackPulse 0.4s ease-in-out infinite;">🚨</div>
+      <div style="font-size:1.1rem;font-weight:900;color:#ef476f;margin-bottom:10px;">Super Duper Sure?</div>
+      <div style="font-size:0.82rem;color:#ffb3b3;margin-bottom:20px;line-height:1.5;">Like... REALLY sure? Your entire castle layout will be gone forever.</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button onclick="destroyBaseStep(0)" style="padding:10px 20px;background:rgba(255,255,255,0.08);color:#aaa;border:1px solid #333;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;">Nope, keep it</button>
+        <button onclick="destroyBaseStep(3)" style="padding:10px 22px;background:linear-gradient(135deg,#ff0000,#8b0000);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;animation:battleShake 0.3s infinite;">💥 DESTROY IT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPLOSION OVERLAY ══ -->
+<div id="destroyExplosionOverlay" style="display:none;position:fixed;inset:0;z-index:9000;background:#000;align-items:center;justify-content:center;flex-direction:column;">
+  <div id="explosionEmojis" style="font-size:5rem;text-align:center;animation:attackPulse 0.15s ease-in-out infinite;"></div>
+  <div style="font-size:1.8rem;font-weight:900;color:#ef476f;letter-spacing:3px;margin-top:16px;animation:battleShake 0.2s infinite;">💥 BASE DESTROYED 💥</div>
+</div>
+
 <!-- ══ ATTACK WARNING SPLASH ══ -->
 <div id="attackWarningOverlay" class="attack-warning-overlay" style="display:none;">
   <div style="font-size:5rem;animation:attackPulse 0.6s ease-in-out infinite;" id="attackWarningEmoji">👹</div>
@@ -1051,10 +1084,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div id="defendersList" style="display:flex;flex-direction:column;gap:5px;flex:1;"></div>
     </div>
     <!-- Center: battle log + action -->
-    <div style="width:130px;flex-shrink:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;padding:6px;gap:4px;overflow:hidden;">
+    <div style="width:260px;flex-shrink:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;padding:8px 10px;gap:6px;overflow:hidden;border-left:1px solid #1e2a3a;border-right:1px solid #1e2a3a;">
       <div style="font-size:1.6rem;" id="battleVsEmoji">⚔️</div>
-      <div id="battleLog" style="flex:1;width:100%;overflow-y:auto;font-size:0.58rem;color:#7a8fb5;line-height:1.6;text-align:center;"></div>
-      <button id="battleRollBtn" onclick="battleRoll()" style="width:100%;padding:10px 4px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;font-size:0.8rem;cursor:pointer;letter-spacing:1px;">⚔️ ATTACK!</button>
+      <div id="battleLog" style="flex:1;width:100%;overflow-y:auto;font-size:0.78rem;color:#c8d8f0;line-height:1.9;text-align:left;padding:0 4px;"></div>
+      <button id="battleRollBtn" onclick="battleRoll()" style="width:100%;padding:12px 4px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 15px rgba(239,71,111,0.4);">⚔️ ATTACK!</button>
     </div>
     <!-- Right: Monsters -->
     <div style="flex:1;background:linear-gradient(180deg,#1a0a0a,#0d1520);border-left:1px solid #3a1a1a;display:flex;flex-direction:column;padding:8px;gap:6px;overflow-y:auto;">
@@ -2140,28 +2173,24 @@ function renderBattle(){
 
   // Defenders
   dl.innerHTML=_battle.defenders.map(function(def,i){
-    if(def.dead) return '<div style="opacity:0.3;font-size:0.7rem;text-align:center;padding:4px;">'+def.emoji+' '+def.name+'<br><span style="color:#ef476f;font-size:0.6rem;">💀 Fallen</span></div>';
-    return '<div style="background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.2);border-radius:8px;padding:6px 8px;">'
-      +'<div style="display:flex;align-items:center;gap:4px;">'
-      +'<span style="font-size:1.3rem;">'+def.emoji+'</span>'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:0.65rem;font-weight:800;color:#e8f0fe;">'+def.name+'</div>'
-      +'<div style="font-size:0.55rem;color:#7a8fb5;">❤️ '+def.hp+'/'+def.maxHp+' ⚔️ '+def.atk+(def.range>1?' 🏹':'')+(def.healer?' ✨':'')+'</div>'
+    if(def.dead) return '<div style="opacity:0.25;text-align:center;padding:6px;"><div style="font-size:3.5rem;filter:grayscale(1);">'+def.emoji+'</div><div style="font-size:0.65rem;color:#ef476f;font-weight:800;">💀 '+def.name+'</div></div>';
+    return '<div style="background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.2);border-radius:10px;padding:8px;text-align:center;">'
+      +'<div style="font-size:3.5rem;line-height:1;">'+def.emoji+'</div>'
+      +'<div style="font-size:0.7rem;font-weight:900;color:#e8f0fe;margin-top:4px;">'+def.name+'</div>'
+      +'<div style="font-size:0.58rem;color:#7a8fb5;margin-top:1px;">❤️ '+def.hp+'/'+def.maxHp+(def.range>1?' 🏹':'⚔️')+(def.healer?' ✨':'')+'</div>'
       +hpBar(def.hp,def.maxHp)
-      +'</div></div></div>';
+      +'</div>';
   }).join('');
 
   // Monsters
   ml.innerHTML=_battle.monsters.map(function(mon){
-    if(mon.hp<=0) return '<div style="opacity:0.3;font-size:0.7rem;text-align:center;padding:4px;">'+mon.emoji+' '+mon.name+'<br><span style="color:#06d6a0;font-size:0.6rem;">💀 Defeated!</span></div>';
-    return '<div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.2);border-radius:8px;padding:6px 8px;">'
-      +'<div style="display:flex;align-items:center;gap:4px;">'
-      +'<span style="font-size:1.3rem;">'+mon.emoji+'</span>'
-      +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:0.65rem;font-weight:800;color:#ffb3b3;">'+mon.name+(mon.stunned?' 😵':'')+'</div>'
-      +'<div style="font-size:0.55rem;color:#7a8fb5;">❤️ '+mon.hp+'/'+mon.maxHp+' ⚔️ '+mon.atk+'</div>'
+    if(mon.hp<=0) return '<div style="opacity:0.25;text-align:center;padding:6px;"><div style="font-size:3.5rem;filter:grayscale(1);">'+mon.emoji+'</div><div style="font-size:0.65rem;color:#06d6a0;font-weight:800;">💀 Defeated</div></div>';
+    return '<div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.2);border-radius:10px;padding:8px;text-align:center;">'
+      +'<div style="font-size:3.5rem;line-height:1;">'+mon.emoji+(mon.stunned?'<span style="font-size:1.2rem;">😵</span>':'')+'</div>'
+      +'<div style="font-size:0.7rem;font-weight:900;color:#ffb3b3;margin-top:4px;">'+mon.name+'</div>'
+      +'<div style="font-size:0.58rem;color:#7a8fb5;margin-top:1px;">❤️ '+mon.hp+'/'+mon.maxHp+' ⚔️ '+mon.atk+'</div>'
       +hpBar(mon.hp,mon.maxHp,'#ef476f')
-      +'</div></div></div>';
+      +'</div>';
   }).join('');
 
   ft.textContent='Tap ATTACK to roll your defenders\' attacks this round.';
@@ -2317,6 +2346,44 @@ window.closeBattleResult=function(){
   if(ud&&ud.mp) document.getElementById('mpCredits').textContent=ud.mp.credits||0;
   renderBaseGrid();
   renderInventory();
+};
+
+// ── DESTROY BASE ──
+window.destroyBaseStep=function(step){
+  var overlay=document.getElementById('destroyConfirmOverlay');
+  var s1=document.getElementById('destroyStep1');
+  var s2=document.getElementById('destroyStep2');
+  var explosion=document.getElementById('destroyExplosionOverlay');
+  if(step===0){
+    overlay.style.display='none';
+    s1.style.display=''; s2.style.display='none';
+  } else if(step===1){
+    s1.style.display=''; s2.style.display='none';
+    overlay.style.display='flex';
+  } else if(step===2){
+    s1.style.display='none'; s2.style.display='';
+  } else if(step===3){
+    overlay.style.display='none';
+    // Show explosion
+    document.getElementById('explosionEmojis').textContent='💥 🔥 💣 ☠️ 🌋 ⚡ 💥 🔥 💥';
+    explosion.style.display='flex';
+    // Return all placed items to inventory
+    var d=getData(), ud=d[userKey];
+    if(ud&&ud.mp&&ud.mp.baseGrid){
+      Object.keys(ud.mp.baseGrid).forEach(function(k){
+        var cell=ud.mp.baseGrid[k]; if(!cell||!cell.id) return;
+        ud.mp.inventory[cell.id]=Math.min(99,(ud.mp.inventory[cell.id]||0)+1);
+      });
+      ud.mp.baseGrid={};
+      saveData(d);
+    }
+    setTimeout(function(){
+      explosion.style.display='none';
+      renderBaseGrid();
+      renderInventory();
+      showMPToast('💥 Base cleared! Items returned to inventory.');
+    }, 1800);
+  }
 };
 
 // ── SHOP ──
