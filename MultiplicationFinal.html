@@ -10,12 +10,12 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: #1a1a2e; color: #e8f0fe;
   min-height: 100vh; display: flex; align-items: flex-start;
-  justify-content: center; padding: 20px 16px 60px;
+  justify-content: center; padding: 20px 12px 60px;
 }
-#app { width: 100%; max-width: 600px; margin-top: 24px; }
+#app { width: 100%; max-width: min(100%, 860px); margin: 24px auto 0; }
 .screen { display: none; }
-.screen.active { display: block; }
-.card { background: #16213e; border-radius: 18px; padding: 30px 26px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.screen.active { display: block; width: 100%; }
+.card { background: #16213e; border-radius: 18px; padding: 30px 26px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); width: 100%; box-sizing: border-box; }
 h1 { font-size: 2rem; font-weight: 900; text-align: center; color: #ffd166; margin-bottom: 4px; }
 .subtitle { text-align: center; color: #7a8fb5; font-size: 0.9rem; font-weight: 600; margin-bottom: 24px; }
 label { display: block; font-weight: 700; color: #7a8fb5; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
@@ -392,7 +392,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .myplace-screen { display:flex;flex-direction:column;height:100%;overflow:hidden; }
 .myplace-topbar { display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;flex-shrink:0; }
 .myplace-credits { display:flex;align-items:center;gap:6px;background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.35);border-radius:20px;padding:5px 12px;font-size:0.85rem;font-weight:900;color:#ffd700; }
-.myplace-tabs { display:flex;gap:6px;padding:0 14px 8px;flex-shrink:0; }
+.myplace-tabs { display:flex;gap:6px;padding:0 14px 8px;flex-shrink:0;justify-content:center; }
 .myplace-tab { flex:1;padding:7px 4px;border:none;border-radius:8px;font-family:inherit;font-weight:800;font-size:0.78rem;cursor:pointer;background:rgba(255,255,255,0.06);color:#7a8fb5;transition:all 0.2s; }
 .myplace-tab.active { background:rgba(17,138,178,0.25);color:#118ab2;border:1.5px solid #118ab2; }
 /* Base grid */
@@ -450,6 +450,16 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .attack-warning-overlay { position:fixed;inset:0;z-index:5500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.95);flex-direction:column;gap:16px; }
 @keyframes attackPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
 @keyframes battleShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);} }
+@keyframes dmgFloat { 0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.2);} 100%{opacity:0;transform:translateX(-50%) translateY(-60px) scale(0.8);} }
+@keyframes lungeRight { 0%{transform:translateX(0);} 40%{transform:translateX(28px);} 100%{transform:translateX(0);} }
+@keyframes lungeLeft  { 0%{transform:translateX(0);} 40%{transform:translateX(-28px);} 100%{transform:translateX(0);} }
+@keyframes hitFlash   { 0%,100%{filter:brightness(1);} 30%{filter:brightness(3) saturate(0);} 60%{filter:brightness(1) sepia(1) hue-rotate(-20deg);} }
+@keyframes slashIn    { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-40deg) scale(0.2);} 50%{opacity:1;transform:translate(-50%,-50%) rotate(-40deg) scale(1.4);} 100%{opacity:0.7;transform:translate(-50%,-50%) rotate(-40deg) scale(1);} }
+@keyframes deadFade   { 0%{opacity:0;transform:translateY(8px);} 30%{opacity:1;transform:translateY(0);} 100%{opacity:1;transform:translateY(0);} }
+@keyframes flyRight   { 0%{opacity:1;transform:translateX(0) scale(1.4);} 100%{opacity:0.2;transform:translateX(var(--fly-dist)) scale(0.8);} }
+@keyframes flyLeft    { 0%{opacity:1;transform:translateX(0) scale(1.4);} 100%{opacity:0.2;transform:translateX(calc(var(--fly-dist) * -1)) scale(0.8);} }
+@keyframes tokenBob   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
+@keyframes floatUp    { 0%{opacity:1;transform:translateY(0);} 100%{opacity:0;transform:translateY(-50px);} }
 .shop-def-stats { font-size:0.5rem;color:#06d6a0;margin-top:2px;font-weight:700; }
 /* Dragging ghost */
 #dragGhost { position:fixed;pointer-events:none;z-index:9999;font-size:2rem;transform:translate(-50%,-50%);opacity:0.8;display:none; }
@@ -893,6 +903,54 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   </div>
 </div>
 
+
+<!-- ══ MY CASTLE ══ -->
+<div id="myPlaceScreen" class="screen" style="padding:0;">
+  <div class="card myplace-screen" style="padding:0;overflow:hidden;">
+    <div class="myplace-topbar">
+      <button class="back-link" id="myPlaceBackBtn" style="margin:0;">&larr; Back</button>
+      <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Castle</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="destroyBaseStep(1)" style="background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:#ef476f;border-radius:6px;padding:4px 8px;font-size:0.6rem;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">💥 Destroy</button>
+        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
+      </div>
+    </div>
+    <div class="myplace-tabs">
+      <button class="myplace-tab active" id="mptab-base" onclick="switchMPTab('base')">🏰 Build</button>
+      <button class="myplace-tab" id="mptab-shop" onclick="switchMPTab('shop')">🛒 Shop</button>
+      <button class="myplace-tab" id="mptab-funeral" onclick="openFuneral()" style="display:none;background:rgba(155,89,182,0.2);color:#9b59b6;border:1px solid rgba(155,89,182,0.4);">⚰️ Funeral</button>
+      <button class="myplace-tab" id="mptab-trophy" onclick="switchMPTab('trophy')">🏆 Trophies</button>
+    </div>
+    <!-- Build view: grid + inventory together, scrollable -->
+    <div id="mp-base-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;">
+      <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
+      <div id="godBattleTestBtn" style="display:none;text-align:center;margin-bottom:6px;">
+        <button onclick="startBattle(false)" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:8px;padding:6px 16px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">🧪 TEST BATTLE (GOD)</button>
+      </div>
+      <div class="base-canvas" id="baseCanvas" style="margin:0 auto;" oncontextmenu="return false;"></div>
+      <div style="font-size:0.62rem;color:#3a4f6b;margin:4px 0 10px;text-align:center;" id="mpLastSeen"></div>
+      <!-- Inventory inline -->
+      <div style="font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin-bottom:5px;">🎒 Tap an item to select it, then tap a grid cell</div>
+      <div id="invGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;"></div>
+      <div style="font-size:0.6rem;color:#3a4f6b;text-align:center;">Tap a placed item on the grid to remove it.</div>
+    </div>
+    <!-- Shop view -->
+    <div id="mp-shop-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;display:none;">
+      <div id="shopContent"></div>
+    </div>
+    <!-- Trophy Room view -->
+    <div id="mp-trophy-view" style="flex:1;overflow-y:auto;padding:10px 12px 80px;display:none;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:1.6rem;">🏆</div>
+        <div style="font-size:0.75rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;">Trophy Room</div>
+        <div style="font-size:0.58rem;color:#4a5f80;margin-top:3px;">Monsters your defenders have slain</div>
+      </div>
+      <div id="trophyGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+      <div id="trophyEmpty" style="text-align:center;padding:40px;color:#3a4f6b;font-size:0.75rem;display:none;">No trophies yet!<br>Win some battles to fill this room.</div>
+    </div>
+  </div>
+</div>
+
 </div><!-- #app -->
 
 <!-- Gold confirm popup -->
@@ -977,40 +1035,6 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <button onclick="document.getElementById('giverUpOverlay').style.display='none'" style="background:linear-gradient(135deg,#ff8c00,#ff4500);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;">I Deserve This 🏃</button>
   </div>
 </div>
-<!-- ══ MY CASTLE ══ -->
-<div id="myPlaceScreen" class="screen" style="padding:0;">
-  <div class="card myplace-screen" style="padding:0;overflow:hidden;">
-    <div class="myplace-topbar">
-      <button class="back-link" id="myPlaceBackBtn" style="margin:0;">&larr; Back</button>
-      <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Castle</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button onclick="destroyBaseStep(1)" style="background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:#ef476f;border-radius:6px;padding:4px 8px;font-size:0.6rem;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">💥 Destroy</button>
-        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
-      </div>
-    </div>
-    <div class="myplace-tabs">
-      <button class="myplace-tab active" id="mptab-base" onclick="switchMPTab('base')">🏰 Build</button>
-      <button class="myplace-tab" id="mptab-shop" onclick="switchMPTab('shop')">🛒 Shop</button>
-    </div>
-    <!-- Build view: grid + inventory together, scrollable -->
-    <div id="mp-base-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;">
-      <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
-      <div id="godBattleTestBtn" style="display:none;text-align:center;margin-bottom:6px;">
-        <button onclick="startBattle(true)" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:8px;padding:6px 16px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">🧪 TEST BATTLE (GOD)</button>
-      </div>
-      <div class="base-canvas" id="baseCanvas" style="margin:0 auto;" oncontextmenu="return false;"></div>
-      <div style="font-size:0.62rem;color:#3a4f6b;margin:4px 0 10px;text-align:center;" id="mpLastSeen"></div>
-      <!-- Inventory inline -->
-      <div style="font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin-bottom:5px;">🎒 Tap an item to select it, then tap a grid cell</div>
-      <div id="invGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;"></div>
-      <div style="font-size:0.6rem;color:#3a4f6b;text-align:center;">Tap a placed item on the grid to remove it.</div>
-    </div>
-    <!-- Shop view -->
-    <div id="mp-shop-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;display:none;">
-      <div id="shopContent"></div>
-    </div>
-  </div>
-</div>
 
 <!-- Goblin attack popup -->
 <div id="goblinOverlay" class="goblin-overlay" style="display:none;">
@@ -1026,6 +1050,31 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 <!-- Drag ghost -->
 <div id="dragGhost"></div>
+
+<!-- ══ FUNERAL OVERLAY ══ -->
+<div id="funeralOverlay" style="display:none;position:fixed;inset:0;z-index:8200;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;flex-direction:column;">
+
+  <!-- Step screens (choice phases) -->
+  <div id="funeralStepScreen" style="width:90%;max-width:360px;">
+    <div style="font-size:0.55rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-align:center;text-transform:uppercase;margin-bottom:10px;" id="funeralStepLabel">In memory of our fallen</div>
+    <!-- Fallen heroes icons -->
+    <div id="funeralHeroIcons" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;font-size:2.6rem;"></div>
+    <div style="font-size:0.8rem;color:#9b59b6;font-weight:700;text-align:center;margin-bottom:14px;" id="funeralStepPrompt">Choose your words…</div>
+    <!-- Choice buttons -->
+    <div id="funeralChoices" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- Eulogy screen (fades in/out) -->
+  <div id="funeralEulogyScreen" style="display:none;width:90%;max-width:400px;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:16px;">⚰️</div>
+    <div style="font-size:0.5rem;font-weight:900;letter-spacing:4px;color:#9b59b6;margin-bottom:20px;text-transform:uppercase;">In Memoriam</div>
+    <div id="funeralHeroIconsEulogy" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:22px;font-size:3rem;"></div>
+    <div id="funeralEulogyText" style="font-size:1rem;color:#d4a0ff;font-weight:700;line-height:1.9;font-style:italic;"></div>
+    <div style="margin-top:24px;">
+      <button onclick="closeFuneral()" style="padding:10px 28px;background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:900;cursor:pointer;font-size:0.9rem;">🕊️ Rest in Peace</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ DESTROY BASE CONFIRMATION ══ -->
 <div id="destroyConfirmOverlay" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;">
@@ -1073,33 +1122,54 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 </div>
 
 <!-- ══ BATTLE OVERLAY ══ -->
-<div id="battleOverlay" style="display:none;position:fixed;inset:0;z-index:6000;background:#000;flex-direction:column;align-items:stretch;font-family:inherit;">
+<div id="battleOverlay" style="display:none;position:fixed;inset:0;z-index:6000;background:#0a0510;flex-direction:column;font-family:inherit;overflow:hidden;">
   <!-- Header -->
-  <div id="battleHeader" style="background:linear-gradient(135deg,#1a0505,#2d0a0a);border-bottom:2px solid #ef476f;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-    <div style="font-size:1.1rem;font-weight:900;color:#ef476f;letter-spacing:2px;" id="battleTitle">⚔️ DARK FORCES ATTACK!</div>
-    <div style="font-size:0.72rem;color:#ffb3b3;font-weight:700;" id="battlePhaseLabel">Round 1</div>
-  </div>
-  <!-- Battlefield -->
-  <div style="flex:1;display:flex;gap:0;overflow:hidden;min-height:0;">
-    <!-- Left: Your Defenders -->
-    <div style="flex:1;background:linear-gradient(180deg,#0a1a0a,#0d1520);border-right:1px solid #1e3a2a;display:flex;flex-direction:column;padding:8px;gap:6px;overflow-y:auto;">
-      <div style="font-size:0.6rem;font-weight:900;letter-spacing:2px;color:#06d6a0;text-align:center;margin-bottom:2px;">YOUR DEFENDERS</div>
-      <div id="defendersList" style="display:flex;flex-direction:column;gap:5px;flex:1;"></div>
-    </div>
-    <!-- Center: battle log + action -->
-    <div style="width:260px;flex-shrink:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;padding:8px 10px;gap:6px;overflow:hidden;border-left:1px solid #1e2a3a;border-right:1px solid #1e2a3a;">
-      <div style="font-size:1.6rem;" id="battleVsEmoji">⚔️</div>
-      <div id="battleLog" style="flex:1;width:100%;overflow-y:auto;font-size:0.78rem;color:#c8d8f0;line-height:1.9;text-align:left;padding:0 4px;"></div>
-      <button id="battleRollBtn" onclick="battleRoll()" style="width:100%;padding:12px 4px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 15px rgba(239,71,111,0.4);">⚔️ ATTACK!</button>
-    </div>
-    <!-- Right: Monsters -->
-    <div style="flex:1;background:linear-gradient(180deg,#1a0a0a,#0d1520);border-left:1px solid #3a1a1a;display:flex;flex-direction:column;padding:8px;gap:6px;overflow-y:auto;">
-      <div style="font-size:0.6rem;font-weight:900;letter-spacing:2px;color:#ef476f;text-align:center;margin-bottom:2px;">ENEMIES</div>
-      <div id="monstersList" style="display:flex;flex-direction:column;gap:5px;flex:1;"></div>
+  <div style="background:linear-gradient(135deg,#1a0505,#2d0a0a);border-bottom:2px solid #ef476f;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="font-size:0.95rem;font-weight:900;color:#ef476f;letter-spacing:2px;" id="battleTitle">⚔️ DARK FORCES ATTACK!</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="autoFightBtn" onclick="toggleAutoFight()" style="background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.3);color:#ffd700;border-radius:8px;padding:4px 10px;font-size:0.62rem;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:all 0.2s;">⚡ AUTO</button>
+      <div style="font-size:0.65rem;color:#ffb3b3;font-weight:700;" id="battlePhaseLabel">Turn 1</div>
     </div>
   </div>
-  <!-- Footer status -->
-  <div id="battleFooter" style="background:#0a0e1a;border-top:1px solid #1e3a5f;padding:8px 16px;text-align:center;font-size:0.72rem;color:#7a8fb5;flex-shrink:0;" ></div>
+
+  <!-- Battlefield — left/right split -->
+  <div style="flex:1;display:flex;flex-direction:row;position:relative;overflow:hidden;">
+
+    <!-- Left panel: YOUR FORCES -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;gap:8px;background:linear-gradient(135deg,#071a07,#0a1520);border-right:2px solid #1e3a2a;position:relative;overflow-y:auto;">
+      <div style="position:absolute;top:6px;left:8px;font-size:0.42rem;font-weight:900;letter-spacing:2px;color:#06d6a0;opacity:0.7;">🛡️ YOUR FORCES</div>
+      <div id="defenderRow" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;padding-top:14px;"></div>
+    </div>
+
+    <!-- Right panel: ENEMY FORCES -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;gap:8px;background:linear-gradient(135deg,#1a0707,#0a0515);position:relative;overflow-y:auto;">
+      <div style="position:absolute;top:6px;right:8px;font-size:0.42rem;font-weight:900;letter-spacing:2px;color:#ef476f;opacity:0.7;">ENEMY FORCES 💀</div>
+      <div id="monsterRow" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;padding-top:14px;"></div>
+    </div>
+
+    <!-- Projectile layer (emoji flies across here) -->
+    <div id="projectileLayer" style="position:absolute;inset:0;pointer-events:none;z-index:100;overflow:hidden;"></div>
+
+    <!-- Floating text layer -->
+    <div id="floatLayer" style="position:absolute;inset:0;pointer-events:none;z-index:101;overflow:hidden;"></div>
+
+  </div>
+
+  <!-- Bottom bar: hint -->
+  <div style="flex-shrink:0;background:#0a0e1a;border-top:1px solid #1e2a3a;padding:5px 14px;display:flex;align-items:center;gap:8px;">
+    <div style="flex:1;font-size:0.68rem;color:#7a8fb5;text-align:center;" id="battleTurnHint">Tap a fighter to attack!</div>
+  </div>
+  <div id="battleLog" style="display:none;"></div>
+</div>
+
+<!-- Destruction notification popup -->
+<div id="destroyNotifOverlay" style="display:none;position:fixed;inset:0;z-index:8500;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#1a0505,#0d0800);border:2px solid #ef476f;border-radius:18px;padding:24px;text-align:center;max-width:300px;width:90%;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:3.5rem;margin-bottom:8px;" id="destroyNotifEmoji">💥</div>
+    <div style="font-size:1rem;font-weight:900;color:#ef476f;margin-bottom:8px;" id="destroyNotifTitle">DESTROYED!</div>
+    <div style="font-size:0.85rem;color:#ffb3b3;line-height:1.5;" id="destroyNotifMsg"></div>
+    <button onclick="closeDestroyNotif()" style="margin-top:16px;padding:10px 28px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;">OK...</button>
+  </div>
 </div>
 
 <!-- Battle Result Overlay -->
@@ -1107,7 +1177,11 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   <div style="background:linear-gradient(160deg,#0d1520,#1e3a5f);border:2px solid #118ab2;border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%;">
     <div style="font-size:4rem;margin-bottom:8px;" id="battleResultEmoji">🏆</div>
     <div style="font-size:1.5rem;font-weight:900;margin-bottom:8px;" id="battleResultTitle">VICTORY!</div>
-    <div style="font-size:0.85rem;color:#b89fd4;margin-bottom:16px;line-height:1.5;" id="battleResultMsg"></div>
+    <div style="font-size:0.85rem;color:#b89fd4;margin-bottom:12px;line-height:1.5;" id="battleResultMsg"></div>
+    <div id="battleResultReward" style="display:none;background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.35);border-radius:12px;padding:10px 18px;margin-bottom:16px;">
+      <div style="font-size:0.6rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Reward Earned</div>
+      <div style="font-size:1.8rem;font-weight:900;color:#ffd700;" id="battleResultRewardAmt">🪙 0</div>
+    </div>
     <button onclick="closeBattleResult()" style="background:linear-gradient(135deg,#06d6a0,#0a9a74);color:#0a1520;border:none;border-radius:12px;padding:12px 32px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;" id="battleResultBtn">Continue</button>
   </div>
 </div>
@@ -1353,12 +1427,9 @@ function handleLogin(){
 
 function seedGodAccount(){
   var d=getData(), ud=d['god']; if(!ud) return;
-  // Only seed once
-  if(ud._godSeeded) return;
-  ud._godSeeded=true;
-  // Give 1000 credits
   if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
-  ud.mp.credits=1000;
+  ud.mp.credits=1000; // always reset to 1000 for testing
+  ud.mp.battleWins=8; // enough wins to see mid-tier, but still mostly easy
   // Seed facts with a normal distribution of speeds
   // Some gold (<1s), some green (1-2s), some blue (2-3s), some orange (3-5s), some red (5s+)
   if(!ud.facts) ud.facts={};
@@ -1919,6 +1990,18 @@ var SHOP_ITEMS=[
   { id:'eng_cat',     emoji:'🔩',  name:'Siege Engineer',cost:60,  qty:1, leg:0, w:2,h:1, section:'Defenders',    desc:'Launches boulders at enemies.', defender:true, atk:18, hp:10, range:4, speed:'ranged' },
   { id:'ninja',       emoji:'🥷',  name:'Ninja',         cost:45,  qty:1, leg:0, w:1,h:1, section:'Defenders',    desc:'Fast strikes. Dodges often.', defender:true, atk:9,  hp:18, range:1, speed:'melee', dodge:true },
   { id:'paladin',     emoji:'🛡️',  name:'Paladin',       cost:80,  qty:1, leg:2, w:1,h:1, section:'Defenders',    desc:'Holy warrior. Stuns enemies.', defender:true, atk:14, hp:45, range:1, speed:'melee', stun:true },
+  // ── NEW DEFENDERS ──────────────────────────────────────────
+  { id:'dwarf_cannon',emoji:'💣',  name:'Dwarf Cannon',  cost:90,  qty:1, leg:0, w:2,h:1, section:'Defenders', desc:'Massive area blast. Slow but devastating.', defender:true, atk:25, hp:20, range:5, speed:'ranged', aoe:true },
+  { id:'ice_witch',   emoji:'🧊',  name:'Ice Witch',     cost:70,  qty:1, leg:1, w:1,h:1, section:'Defenders', desc:'Freezes enemies solid. High stun chance.', defender:true, atk:8,  hp:22, range:3, speed:'ranged', stun:true, aoe:true },
+  { id:'berserker',   emoji:'🪓',  name:'Berserker',     cost:65,  qty:1, leg:0, w:1,h:1, section:'Defenders', desc:'Wild fighter. High attack, reckless.', defender:true, atk:20, hp:35, range:1, speed:'melee' },
+  { id:'dragon_rider',emoji:'🐲',  name:'Dragon Rider',  cost:200, qty:1, leg:3, w:2,h:2, section:'Defenders', desc:'Legendary dragon mount. Burns all foes.', defender:true, atk:30, hp:80, range:4, speed:'ranged', aoe:true, giant:true },
+  { id:'golem_def',   emoji:'🗿',  name:'Stone Guardian',cost:150, qty:1, leg:2, w:2,h:2, section:'Defenders', desc:'Enormous stone guardian. Nearly unbreakable.', defender:true, atk:15, hp:200, range:1, speed:'melee', giant:true },
+  { id:'catapult',    emoji:'⚙️',  name:'Catapult',      cost:110, qty:1, leg:0, w:3,h:1, section:'Defenders', desc:'Rains boulders on all enemies.', defender:true, atk:22, hp:15, range:6, speed:'ranged', aoe:true },
+  { id:'vampire_def', emoji:'🧛',  name:'Vampire Knight',cost:120, qty:1, leg:2, w:1,h:2, section:'Defenders', desc:'Drains life from enemies to heal itself.', defender:true, atk:18, hp:55, range:2, speed:'ranged', dodge:true, healer:true },
+  { id:'archmage',    emoji:'🔮',  name:'Archmage',      cost:180, qty:1, leg:3, w:2,h:3, section:'Defenders', desc:'Supreme spellcaster. Massive AOE damage.', defender:true, atk:35, hp:40, range:5, speed:'ranged', aoe:true },
+  { id:'titan_def',   emoji:'🦾',  name:'Iron Titan',    cost:300, qty:1, leg:5, w:2,h:3, section:'Defenders', desc:'Nigh unstoppable. Crushes entire armies.', defender:true, atk:40, hp:300, range:1, speed:'melee', giant:true, stun:true },
+  { id:'phoenix_def', emoji:'🔥',  name:'Phoenix',       cost:250, qty:1, leg:4, w:3,h:2, section:'Defenders', desc:'Reborn from ashes. Heals all allies.', defender:true, atk:28, hp:70, range:3, speed:'ranged', aoe:true, healer:true },
+  { id:'sea_serpent', emoji:'🐍',  name:'Sea Serpent',   cost:160, qty:1, leg:2, w:3,h:1, section:'Defenders', desc:'Coiling beast. Poisons all foes.', defender:true, atk:20, hp:90, range:3, speed:'melee', stun:true },
   // Legendary items
   { id:'dragon',      emoji:'🐉', name:'Dragon Perch',  cost:500, qty:1, leg:10, w:3,h:2, section:'Legendary',   desc:'A dragon on your roof' },
   { id:'portal',      emoji:'🌀', name:'Magic Portal',  cost:800, qty:1, leg:20, w:2,h:3, section:'Legendary',   desc:'Glowing magic vortex' },
@@ -2044,108 +2127,230 @@ window.closeGoblinPopup=function(){
 // BATTLE SYSTEM
 // ══════════════════════════════════════════════════════════
 
-// rarity: 'common'|'uncommon'|'rare'|'epic'|'legendary'
+// rarity: 'common'|'uncommon'|'rare'|'epic'|'legendary'|'secret'
 // giant: true = oversized emoji display
+// dropChance: for secret monsters — 1-in-N chance per battle
 var MONSTER_TYPES=[
-  // ── COMMON ─────────────────────────────────────────────
-  { id:'goblin',       emoji:'👺', name:'Goblin',            hp:20,  atk:5,  range:1, speed:'melee',  reward:8,  rarity:'common'   },
-  { id:'skeleton',     emoji:'💀', name:'Skeleton',          hp:15,  atk:4,  range:1, speed:'melee',  reward:6,  rarity:'common'   },
-  { id:'zombie',       emoji:'🧟', name:'Zombie',            hp:25,  atk:3,  range:1, speed:'melee',  reward:7,  rarity:'common'   },
-  { id:'rat_swarm',    emoji:'🐀', name:'Rat Swarm',         hp:12,  atk:6,  range:1, speed:'melee',  reward:5,  rarity:'common',  aoe:true },
-  { id:'imp',          emoji:'😈', name:'Imp',               hp:10,  atk:7,  range:2, speed:'ranged', reward:9,  rarity:'common'   },
-  { id:'kobold',       emoji:'🦎', name:'Kobold',            hp:14,  atk:5,  range:1, speed:'melee',  reward:6,  rarity:'common'   },
-  { id:'mud_golem',    emoji:'🟫', name:'Mud Golem',         hp:35,  atk:4,  range:1, speed:'melee',  reward:10, rarity:'common'   },
-  { id:'bat_horde',    emoji:'🦇', name:'Bat Horde',         hp:16,  atk:5,  range:2, speed:'ranged', reward:8,  rarity:'common',  aoe:true },
-  { id:'slime',        emoji:'🫧', name:'Slime',             hp:30,  atk:3,  range:1, speed:'melee',  reward:7,  rarity:'common'   },
-  { id:'scarecrow',    emoji:'🎃', name:'Cursed Scarecrow',  hp:22,  atk:6,  range:1, speed:'melee',  reward:9,  rarity:'common'   },
+  // ── TINY CRITTERS (very common, barely a threat) ───────
+  { id:'chicken',      emoji:'🐔', name:'Chicken',           hp:4,   atk:1,  range:1, speed:'melee',  reward:2,  rarity:'common'   },
+  { id:'rabbit',       emoji:'🐰', name:'Fluffy Rabbit',     hp:5,   atk:1,  range:1, speed:'melee',  reward:2,  rarity:'common'   },
+  { id:'rat',          emoji:'🐭', name:'Rat',               hp:6,   atk:2,  range:1, speed:'melee',  reward:3,  rarity:'common'   },
+  { id:'bunny',        emoji:'🐇', name:'Angry Bunny',       hp:7,   atk:2,  range:1, speed:'melee',  reward:3,  rarity:'common'   },
+  { id:'butterfly',    emoji:'🦋', name:'Butterfly',         hp:3,   atk:1,  range:2, speed:'ranged', reward:2,  rarity:'common'   },
+  { id:'caterpillar',  emoji:'🐛', name:'Caterpillar',       hp:5,   atk:1,  range:1, speed:'melee',  reward:2,  rarity:'common'   },
+  { id:'snail',        emoji:'🐌', name:'Attack Snail',      hp:8,   atk:1,  range:1, speed:'melee',  reward:3,  rarity:'common'   },
+  { id:'hamster',      emoji:'🐹', name:'Hamster of Doom',   hp:6,   atk:2,  range:1, speed:'melee',  reward:3,  rarity:'common'   },
+  { id:'duck',         emoji:'🦆', name:'Angry Duck',        hp:8,   atk:3,  range:1, speed:'melee',  reward:4,  rarity:'common'   },
+  { id:'frog',         emoji:'🐸', name:'Screaming Frog',    hp:7,   atk:2,  range:2, speed:'ranged', reward:3,  rarity:'common'   },
+  { id:'worm',         emoji:'🪱', name:'Wiggly Worm',       hp:4,   atk:1,  range:1, speed:'melee',  reward:2,  rarity:'common'   },
+  { id:'ladybug',      emoji:'🐞', name:'Ladybug',           hp:5,   atk:2,  range:1, speed:'melee',  reward:3,  rarity:'common'   },
+  // ── COMMON MONSTERS ────────────────────────────────────
+  { id:'goblin',       emoji:'👺', name:'Goblin',            hp:14,  atk:5,  range:1, speed:'melee',  reward:7,  rarity:'common'   },
+  { id:'skeleton',     emoji:'💀', name:'Skeleton',          hp:14,  atk:4,  range:1, speed:'melee',  reward:6,  rarity:'common'   },
+  { id:'zombie',       emoji:'🧟', name:'Zombie',            hp:15,  atk:3,  range:1, speed:'melee',  reward:6,  rarity:'common'   },
+  { id:'rat_swarm',    emoji:'🐀', name:'Rat Swarm',         hp:10,  atk:5,  range:1, speed:'melee',  reward:5,  rarity:'common',  aoe:true },
+  { id:'imp',          emoji:'😈', name:'Imp',               hp:9,   atk:6,  range:2, speed:'ranged', reward:8,  rarity:'common'   },
+  { id:'kobold',       emoji:'🦎', name:'Kobold',            hp:12,  atk:4,  range:1, speed:'melee',  reward:5,  rarity:'common'   },
+  { id:'bat_horde',    emoji:'🦇', name:'Bat Horde',         hp:14,  atk:4,  range:2, speed:'ranged', reward:7,  rarity:'common',  aoe:true },
+  { id:'slime',        emoji:'🫧', name:'Slime',             hp:12,  atk:2,  range:1, speed:'melee',  reward:5,  rarity:'common'   },
+  { id:'scarecrow',    emoji:'🎃', name:'Cursed Scarecrow',  hp:14,  atk:5,  range:1, speed:'melee',  reward:8,  rarity:'common'   },
+  { id:'mud_golem',    emoji:'🟫', name:'Mud Golem',         hp:18,  atk:3,  range:1, speed:'melee',  reward:8,  rarity:'common'   },
+  // ── FUNNY BIZARRE COMMONS ──────────────────────────────
+  { id:'angry_potato', emoji:'🥔', name:'Angry Potato',      hp:12,  atk:3,  range:1, speed:'melee',  reward:5,  rarity:'common'   },
+  { id:'evil_sock',    emoji:'🧦', name:'Evil Sock Monster',  hp:8,   atk:4,  range:1, speed:'melee',  reward:5,  rarity:'common'   },
+  { id:'grumpy_cloud', emoji:'🌧️', name:'Grumpy Rain Cloud',  hp:10,  atk:4,  range:2, speed:'ranged', reward:7,  rarity:'common',  aoe:true },
+  { id:'sentient_spoon',emoji:'🥄',name:'Sentient Spoon',    hp:6,   atk:3,  range:1, speed:'melee',  reward:4,  rarity:'common'   },
+  { id:'wasp',         emoji:'🐝', name:'Very Angry Wasp',   hp:7,   atk:5,  range:2, speed:'ranged', reward:6,  rarity:'common'   },
   // ── UNCOMMON ───────────────────────────────────────────
   { id:'orc',          emoji:'👹', name:'Orc Warrior',       hp:45,  atk:12, range:1, speed:'melee',  reward:15, rarity:'uncommon' },
-  { id:'dark_archer',  emoji:'🏴', name:'Dark Archer',       hp:22,  atk:9,  range:3, speed:'ranged', reward:14, rarity:'uncommon' },
-  { id:'troll',        emoji:'🧌', name:'Troll',             hp:75,  atk:15, range:1, speed:'melee',  reward:22, rarity:'uncommon' },
-  { id:'werewolf',     emoji:'🐺', name:'Werewolf',          hp:50,  atk:16, range:1, speed:'melee',  reward:20, rarity:'uncommon' },
+  { id:'dark_archer',  emoji:'🏹', name:'Dark Archer',       hp:22,  atk:9,  range:3, speed:'ranged', reward:14, rarity:'uncommon' },
+  { id:'troll',        emoji:'🧌', name:'Troll',             hp:55,  atk:14, range:1, speed:'melee',  reward:20, rarity:'uncommon' },
+  { id:'werewolf',     emoji:'🐺', name:'Werewolf',          hp:48,  atk:15, range:1, speed:'melee',  reward:18, rarity:'uncommon' },
   { id:'harpy',        emoji:'🦅', name:'Harpy',             hp:28,  atk:11, range:2, speed:'ranged', reward:16, rarity:'uncommon' },
-  { id:'minotaur',     emoji:'🐂', name:'Minotaur',          hp:65,  atk:18, range:1, speed:'melee',  reward:24, rarity:'uncommon' },
   { id:'ghost',        emoji:'👻', name:'Ghost',             hp:20,  atk:13, range:2, speed:'ranged', reward:18, rarity:'uncommon', dodge:true },
-  { id:'ogre',         emoji:'🫨', name:'Ogre',              hp:80,  atk:14, range:1, speed:'melee',  reward:20, rarity:'uncommon' },
-  { id:'dark_shaman',  emoji:'🪄', name:'Dark Shaman',       hp:30,  atk:14, range:3, speed:'ranged', reward:22, rarity:'uncommon', aoe:true },
-  { id:'banshee',      emoji:'😱', name:'Banshee',           hp:25,  atk:15, range:3, speed:'ranged', reward:20, rarity:'uncommon', aoe:true },
+  { id:'ogre',         emoji:'🧟', name:'Ogre',              hp:60,  atk:13, range:1, speed:'melee',  reward:19, rarity:'uncommon' },
+  { id:'dark_shaman',  emoji:'🪄', name:'Dark Shaman',       hp:28,  atk:13, range:3, speed:'ranged', reward:20, rarity:'uncommon', aoe:true },
+  { id:'banshee',      emoji:'😱', name:'Banshee',           hp:22,  atk:14, range:3, speed:'ranged', reward:18, rarity:'uncommon', aoe:true },
+  { id:'gargoyle',     emoji:'🗿', name:'Gargoyle',          hp:40,  atk:11, range:2, speed:'ranged', reward:16, rarity:'uncommon' },
+  // ── FUNNY UNCOMMONS ────────────────────────────────────
+  { id:'giant_crab',   emoji:'🦀', name:'Giant Angry Crab',  hp:50,  atk:10, range:1, speed:'melee',  reward:16, rarity:'uncommon' },
+  { id:'wizard_hat',   emoji:'🪄', name:'Flying Wizard Hat', hp:25,  atk:12, range:3, speed:'ranged', reward:17, rarity:'uncommon', aoe:true },
+  { id:'possessed_broom',emoji:'🧹',name:'Possessed Broom', hp:30,  atk:10, range:1, speed:'melee',  reward:15, rarity:'uncommon' },
+  // ── UNCOMMON BOSS (appears alone or with weak minions) ─
+  { id:'minotaur',     emoji:'🐂', name:'Minotaur',          hp:60,  atk:17, range:1, speed:'melee',  reward:24, rarity:'uncommon', giant:true },
+  { id:'orc_warchief', emoji:'👹', name:'Orc Warchief',      hp:80,  atk:16, range:1, speed:'melee',  reward:26, rarity:'uncommon', giant:true },
   // ── RARE ───────────────────────────────────────────────
   { id:'giant',        emoji:'🦣', name:'Giant',             hp:120, atk:22, range:1, speed:'melee',  reward:45, rarity:'rare',    giant:true },
   { id:'dragon_e',     emoji:'🐲', name:'Young Dragon',      hp:80,  atk:22, range:2, speed:'ranged', reward:40, rarity:'rare'     },
   { id:'lich',         emoji:'🦴', name:'Lich',              hp:55,  atk:20, range:3, speed:'ranged', reward:45, rarity:'rare',    aoe:true },
-  { id:'stone_giant',  emoji:'🗿', name:'Stone Giant',       hp:150, atk:18, range:1, speed:'melee',  reward:50, rarity:'rare',    giant:true },
   { id:'cyclops',      emoji:'🫣', name:'Cyclops',           hp:110, atk:25, range:1, speed:'melee',  reward:48, rarity:'rare',    giant:true },
   { id:'hydra',        emoji:'🐍', name:'Hydra',             hp:90,  atk:20, range:2, speed:'ranged', reward:50, rarity:'rare',    aoe:true },
-  { id:'medusa',       emoji:'🐛', name:'Medusa',            hp:45,  atk:22, range:2, speed:'ranged', reward:45, rarity:'rare',    stun:true },
+  { id:'medusa',       emoji:'🐍', name:'Medusa',            hp:45,  atk:22, range:2, speed:'ranged', reward:45, rarity:'rare',    stun:true },
   { id:'golem',        emoji:'🤖', name:'Iron Golem',        hp:160, atk:16, range:1, speed:'melee',  reward:55, rarity:'rare',    giant:true },
   { id:'wyvern',       emoji:'🦕', name:'Wyvern',            hp:70,  atk:24, range:2, speed:'ranged', reward:52, rarity:'rare'     },
   { id:'vampire_lord', emoji:'🧛', name:'Vampire Lord',      hp:65,  atk:20, range:2, speed:'ranged', reward:50, rarity:'rare',    dodge:true },
+  { id:'stone_giant',  emoji:'🪨', name:'Stone Giant',       hp:150, atk:18, range:1, speed:'melee',  reward:55, rarity:'rare',    giant:true },
   // ── EPIC ───────────────────────────────────────────────
-  { id:'dragon',       emoji:'🐉', name:'Elder Dragon',      hp:200, atk:35, range:3, speed:'ranged', reward:100, rarity:'epic',   giant:true, aoe:true },
-  { id:'demon_lord',   emoji:'👿', name:'Demon Lord',        hp:150, atk:40, range:2, speed:'ranged', reward:90,  rarity:'epic',   giant:true, aoe:true },
-  { id:'titan',        emoji:'🦾', name:'Titan',             hp:300, atk:30, range:1, speed:'melee',  reward:120, rarity:'epic',   giant:true },
-  { id:'dark_phoenix', emoji:'🔥', name:'Dark Phoenix',      hp:100, atk:38, range:3, speed:'ranged', reward:110, rarity:'epic',   aoe:true },
-  { id:'kraken',       emoji:'🦑', name:'Kraken',            hp:180, atk:32, range:2, speed:'ranged', reward:105, rarity:'epic',   giant:true, aoe:true },
-  { id:'necromancer',  emoji:'🧙', name:'Necromancer',       hp:70,  atk:42, range:3, speed:'ranged', reward:95,  rarity:'epic',   aoe:true },
-  { id:'shadow_beast', emoji:'🌑', name:'Shadow Beast',      hp:120, atk:36, range:2, speed:'ranged', reward:100, rarity:'epic',   dodge:true },
-  { id:'colossus',     emoji:'🏛️', name:'Ancient Colossus',  hp:350, atk:28, range:1, speed:'melee',  reward:130, rarity:'epic',   giant:true },
+  { id:'dragon',       emoji:'🐉', name:'Elder Dragon',      hp:200, atk:35, range:3, speed:'ranged', reward:100, rarity:'epic',  giant:true, aoe:true },
+  { id:'demon_lord',   emoji:'👿', name:'Demon Lord',        hp:150, atk:40, range:2, speed:'ranged', reward:90,  rarity:'epic',  giant:true, aoe:true },
+  { id:'titan',        emoji:'🦾', name:'Titan',             hp:300, atk:30, range:1, speed:'melee',  reward:120, rarity:'epic',  giant:true },
+  { id:'dark_phoenix', emoji:'🔥', name:'Dark Phoenix',      hp:100, atk:38, range:3, speed:'ranged', reward:110, rarity:'epic',  aoe:true },
+  { id:'kraken',       emoji:'🦑', name:'Kraken',            hp:180, atk:32, range:2, speed:'ranged', reward:105, rarity:'epic',  giant:true, aoe:true },
+  { id:'necromancer',  emoji:'🧙', name:'Necromancer',       hp:70,  atk:42, range:3, speed:'ranged', reward:95,  rarity:'epic',  aoe:true },
+  { id:'shadow_beast', emoji:'🌑', name:'Shadow Beast',      hp:120, atk:36, range:2, speed:'ranged', reward:100, rarity:'epic',  dodge:true },
+  { id:'colossus',     emoji:'🏛️', name:'Ancient Colossus',  hp:350, atk:28, range:1, speed:'melee',  reward:130, rarity:'epic',  giant:true },
   // ── LEGENDARY ──────────────────────────────────────────
-  { id:'world_serpent',emoji:'🐲', name:'World Serpent',     hp:500, atk:50, range:2, speed:'ranged', reward:250, rarity:'legendary', giant:true, aoe:true },
   { id:'void_god',     emoji:'🌌', name:'Void God',          hp:400, atk:60, range:3, speed:'ranged', reward:300, rarity:'legendary', giant:true, aoe:true },
   { id:'death',        emoji:'☠️',  name:'Death Itself',      hp:300, atk:55, range:2, speed:'ranged', reward:280, rarity:'legendary', giant:true, stun:true },
-  { id:'chaos_titan',  emoji:'💀', name:'Chaos Titan',       hp:600, atk:45, range:1, speed:'melee',  reward:350, rarity:'legendary', giant:true },
   { id:'storm_king',   emoji:'⛈️', name:'Storm King',        hp:350, atk:52, range:3, speed:'ranged', reward:280, rarity:'legendary', giant:true, aoe:true },
   { id:'abomination',  emoji:'👾', name:'The Abomination',   hp:450, atk:48, range:2, speed:'ranged', reward:320, rarity:'legendary', giant:true, aoe:true },
   { id:'lich_king',    emoji:'💎', name:'Lich King',         hp:280, atk:58, range:3, speed:'ranged', reward:290, rarity:'legendary', aoe:true, stun:true },
   { id:'ancient_evil', emoji:'🌀', name:'Ancient Evil',      hp:999, atk:40, range:1, speed:'melee',  reward:500, rarity:'legendary', giant:true },
+  { id:'chaos_titan',  emoji:'💀', name:'Chaos Titan',       hp:600, atk:45, range:1, speed:'melee',  reward:350, rarity:'legendary', giant:true },
 ];
 
-// Build a wave of monsters scaled to defenders, weighted by rarity
+// ── SECRET RARE CREATURES — appear only by dropChance (1-in-N per battle) ───
+// Not in MONSTER_TYPES so they never appear in normal waves; spawned separately
+var SECRET_MONSTERS=[
+  { id:'golden_chicken',  emoji:'🐓', name:'Golden Chicken',     hp:999, atk:1,  range:1, speed:'melee',  reward:500, rarity:'secret', dropChance:100,  giant:false, desc:'1 in 100 — Its eggs are pure gold. Its attitude is not.' },
+  { id:'bunny_king',      emoji:'🐰', name:'Bunny King',         hp:50,  atk:8,  range:1, speed:'melee',  reward:80,  rarity:'secret', dropChance:150,  giant:false, desc:'1 in 150 — Rules all rabbits with an iron paw.' },
+  { id:'disco_skeleton',  emoji:'🕺', name:'Disco Skeleton',     hp:40,  atk:12, range:1, speed:'melee',  reward:100, rarity:'secret', dropChance:200,  giant:false, desc:'1 in 200 — Has been dead since 1978. Still grooving.' },
+  { id:'mr_muffin',       emoji:'🧁', name:'Mr. Muffin',         hp:25,  atk:20, range:2, speed:'ranged', reward:120, rarity:'secret', dropChance:250,  giant:false, desc:'1 in 250 — Looks delicious. Bites back.' },
+  { id:'galaxy_cow',      emoji:'🐄', name:'Galaxy Cow',         hp:200, atk:25, range:2, speed:'ranged', reward:200, rarity:'secret', dropChance:300,  giant:true,  desc:'1 in 300 — Moos in the language of the cosmos.' },
+  { id:'professor_snail', emoji:'🐌', name:'Professor Snail',    hp:60,  atk:5,  range:3, speed:'ranged', reward:150, rarity:'secret', dropChance:400,  giant:false, desc:'1 in 400 — Has a PhD in slow destruction.' },
+  { id:'laser_penguin',   emoji:'🐧', name:'Laser Penguin',      hp:80,  atk:30, range:3, speed:'ranged', reward:180, rarity:'secret', dropChance:500,  giant:false, desc:'1 in 500 — Eyes shoot actual lasers. Antarctic in origin.' },
+  { id:'time_turtle',     emoji:'🐢', name:'Time Turtle',        hp:999, atk:8,  range:1, speed:'melee',  reward:220, rarity:'secret', dropChance:500,  giant:false, desc:'1 in 500 — Older than the castle. Maybe older than math.' },
+  { id:'ninja_duck',      emoji:'🦆', name:'Ninja Duck',         hp:55,  atk:35, range:2, speed:'ranged', reward:250, rarity:'secret', dropChance:750,  giant:false, desc:'1 in 750 — You never heard it coming. Quack.' },
+  { id:'giant_hamster',   emoji:'🐹', name:'Hamzilla',           hp:500, atk:20, range:1, speed:'melee',  reward:300, rarity:'secret', dropChance:750,  giant:true,  desc:'1 in 750 — The hamster wheel was too small.' },
+  { id:'elder_potato',    emoji:'🥔', name:'Elder Potato God',   hp:300, atk:40, range:2, speed:'ranged', reward:350, rarity:'secret', dropChance:1000, giant:true,  desc:'1 in 1000 — Ancient. Starchy. Unstoppable.' },
+  { id:'moon_crab',       emoji:'🦀', name:'Moon Crab',          hp:400, atk:45, range:2, speed:'ranged', reward:400, rarity:'secret', dropChance:1000, giant:true,  desc:'1 in 1000 — Fell from the moon. Is not happy about it.' },
+  { id:'math_demon',      emoji:'🔢', name:'Math Demon',         hp:150, atk:50, range:3, speed:'ranged', reward:450, rarity:'secret', dropChance:1500, giant:false, desc:'1 in 1500 — Born from every wrong answer ever given.', aoe:true },
+  { id:'rubber_duck_god', emoji:'🦆', name:'Rubber Duck God',    hp:1,   atk:1,  range:1, speed:'melee',  reward:1000,rarity:'secret', dropChance:2000, giant:true,  desc:'1 in 2000 — You stared into the bath toy. It stared back.' },
+  { id:'the_answer',      emoji:'✨', name:'42',                  hp:42,  atk:42, range:4, speed:'ranged', reward:999, rarity:'secret', dropChance:5000, giant:false, desc:'1 in 5000 — The answer to life, the universe, and everything.', aoe:true, stun:true },
+];
+
+
+// Build a wave using heavy power-curve weighting — common monsters dominate
+function makeWaveEntry(mt){
+  return { id:mt.id, emoji:mt.emoji, name:mt.name,
+    hp:mt.hp, maxHp:mt.hp, atk:mt.atk, range:mt.range,
+    speed:mt.speed, reward:mt.reward,
+    aoe:mt.aoe||false, stun:mt.stun||false, dodge:mt.dodge||false,
+    giant:mt.giant||false, rarity:mt.rarity, stunned:false };
+}
+
 function buildWave(isTough){
   var d=getData(), ud=d[userKey];
   var mp=ud&&ud.mp?ud.mp:{};
+  var wins=mp.battleWins||0;
+  var bossCountdown=mp.bossCountdown||0;
   var defCount=0;
   Object.keys(mp.baseGrid||{}).forEach(function(k){
     var cell=mp.baseGrid[k];
     if(cell){ var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;}); if(item&&item.defender) defCount++; }
   });
-  var waveSize=isTough?6:Math.max(2,Math.min(6,Math.ceil(defCount*0.9)+1));
-  // Rarity weights — higher weight = more common
-  // Scale rarity access with defender count
-  var rarityWeights;
-  if(defCount===0){
-    rarityWeights={common:80,uncommon:18,rare:2,epic:0,legendary:0};
-  } else if(defCount<=2){
-    rarityWeights={common:60,uncommon:30,rare:8,epic:2,legendary:0};
-  } else if(defCount<=5){
-    rarityWeights={common:40,uncommon:35,rare:18,epic:6,legendary:1};
-  } else if(defCount<=8){
-    rarityWeights={common:25,uncommon:30,rare:28,epic:14,legendary:3};
-  } else {
-    rarityWeights={common:15,uncommon:25,rare:30,epic:22,legendary:8};
-  }
-  if(isTough){ rarityWeights={common:10,uncommon:20,rare:30,epic:28,legendary:12}; }
 
-  function pickMonster(){
-    // Build weighted pool
-    var pool=[];
-    MONSTER_TYPES.forEach(function(mt){
-      var w=rarityWeights[mt.rarity]||0;
-      for(var i=0;i<w;i++) pool.push(mt);
-    });
-    return pool[Math.floor(Math.random()*pool.length)];
+  // ── Check for secret monster spawn ──
+  for(var si=0;si<SECRET_MONSTERS.length;si++){
+    var sm=SECRET_MONSTERS[si];
+    if(Math.floor(Math.random()*sm.dropChance)===0){
+      // Secret encounter! Boss alone (maybe 1-2 tiny minions)
+      showSecretEncounterBanner(sm);
+      var wave=[makeWaveEntry(sm)];
+      // Maybe add 1-2 tiny critters as flavour
+      if(sm.hp>100){
+        var critters=MONSTER_TYPES.filter(function(m){return m.rarity==='common'&&m.hp<=8;});
+        var n=Math.floor(Math.random()*2)+1;
+        for(var ci=0;ci<n&&ci<critters.length;ci++){
+          wave.push(makeWaveEntry(critters[Math.floor(Math.random()*critters.length)]));
+        }
+      }
+      return wave;
+    }
   }
+
+  // ── Sigmoid weight curve ──
+  function tierWeight(baseW, threshold){
+    var k=0.3;
+    return Math.round(baseW / (1 + Math.exp(-k*(wins-threshold))));
+  }
+
+  var isBoss = isTough || (bossCountdown===1);
+
+  if(isBoss){
+    // Boss wave: pick one tough boss, surround with weak minions
+    var bossPool=MONSTER_TYPES.filter(function(m){ return m.rarity==='rare'||m.rarity==='epic'||m.rarity==='legendary'; });
+    var boss=bossPool[Math.floor(Math.random()*bossPool.length)];
+    var minions=MONSTER_TYPES.filter(function(m){ return m.rarity==='common'&&m.hp<=12; });
+    var wave=[makeWaveEntry(boss)];
+    var numMinions=Math.floor(Math.random()*3)+2;
+    for(var i=0;i<numMinions;i++){
+      wave.push(makeWaveEntry(minions[Math.floor(Math.random()*minions.length)]));
+    }
+    return wave;
+  }
+
+  // ── Normal wave composition ──
+  // Hard-coded distribution: 75% easy, 15% mid, 7% rare, 3% epic
+  // Scale: hard types are locked until enough wins
+  var rand=Math.random()*100;
+  var waveType;
+  var canMid=wins>=3, canRare=wins>=10, canEpic=wins>=25;
+
+  if(canEpic&&rand<3){ waveType='epic'; }
+  else if(canRare&&rand<10){ waveType='rare'; }
+  else if(canMid&&rand<25){ waveType='mid'; }
+  else { waveType='easy'; }
+
   var wave=[];
-  for(var i=0;i<waveSize;i++){
-    var mt=pickMonster();
-    wave.push({ id:mt.id, emoji:mt.emoji, name:mt.name,
-      hp:mt.hp, maxHp:mt.hp, atk:mt.atk, range:mt.range,
-      speed:mt.speed, reward:mt.reward,
-      aoe:mt.aoe||false, stun:mt.stun||false, dodge:mt.dodge||false,
-      giant:mt.giant||false, rarity:mt.rarity,
-      stunned:false });
+
+  if(waveType==='easy'){
+    // Pure critter swarm or goblin mob — 3-6 weak common monsters
+    var commons=MONSTER_TYPES.filter(function(m){return m.rarity==='common';});
+    var n=Math.floor(Math.random()*4)+3;
+    for(var i=0;i<n;i++) wave.push(makeWaveEntry(commons[Math.floor(Math.random()*commons.length)]));
+
+  } else if(waveType==='mid'){
+    // 1 uncommon boss + 2-3 common minions
+    var uncommons=MONSTER_TYPES.filter(function(m){return m.rarity==='uncommon';});
+    var midCommons=MONSTER_TYPES.filter(function(m){return m.rarity==='common'&&m.hp<=20;});
+    var boss=uncommons[Math.floor(Math.random()*uncommons.length)];
+    wave.push(makeWaveEntry(boss));
+    var nm=Math.floor(Math.random()*3)+1;
+    for(var i=0;i<nm;i++) wave.push(makeWaveEntry(midCommons[Math.floor(Math.random()*midCommons.length)]));
+
+  } else if(waveType==='rare'){
+    // 1 rare boss, alone or with 1 weak minion
+    var rares=MONSTER_TYPES.filter(function(m){return m.rarity==='rare';});
+    var rareBoss=rares[Math.floor(Math.random()*rares.length)];
+    wave.push(makeWaveEntry(rareBoss));
+    if(Math.random()<0.4){
+      var tinyCommons=MONSTER_TYPES.filter(function(m){return m.rarity==='common'&&m.hp<=10;});
+      wave.push(makeWaveEntry(tinyCommons[Math.floor(Math.random()*tinyCommons.length)]));
+    }
+
+  } else { // epic
+    // 1 epic/legendary boss, completely alone
+    var hardPool=MONSTER_TYPES.filter(function(m){return m.rarity==='epic'||m.rarity==='legendary';});
+    wave.push(makeWaveEntry(hardPool[Math.floor(Math.random()*hardPool.length)]));
   }
+
   return wave;
+}
+
+function showSecretEncounterBanner(sm){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:9300;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+  el.innerHTML='<div style="background:rgba(0,0,0,0.97);border:2px solid #ffd700;border-radius:18px;'+
+    'padding:28px 36px;max-width:340px;text-align:center;font-family:inherit;animation:popIn 0.4s ease;">'+
+    '<div style="font-size:3rem;margin-bottom:8px;">'+sm.emoji+'</div>'+
+    '<div style="font-size:0.6rem;font-weight:900;color:#ffd700;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">⚠️ SECRET CREATURE ⚠️</div>'+
+    '<div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:8px;">'+sm.name+'</div>'+
+    '<div style="font-size:0.7rem;color:#aaa;line-height:1.5;">'+sm.desc+'</div>'+
+    '</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 1s'; },3000);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },4200);
 }
 
 // Build defenders list from placed items on grid (skipping permanently dead ones)
@@ -2170,11 +2375,15 @@ function buildDefenders(){
   return defs;
 }
 
-// Battle state
+// ── DESTRUCTION CHANCE PER RARITY ──────────────────────────────────────────
+var DESTROY_CHANCE={common:0.10,uncommon:0.20,rare:0.35,epic:0.55,legendary:0.80};
+
+// ── BATTLE STATE ─────────────────────────────────────────────────────────────
+var _autoMode=false; // fast-forward auto battle
 var _battle={
-  defenders:[], monsters:[], round:0,
-  monstersAdvanced:0, // how many turns monsters have moved (melee attack at 2+)
-  log:[], active:false, creditsEarned:0
+  defenders:[], monsters:[], turnQueue:[], qIdx:0,
+  log:[], active:false, creditsEarned:0, round:0,
+  pendingDestroyNotifs:[]
 };
 
 // Scare-away chances by attempt index: 50%, 40%, 30%, 20%, 10%, 0%
@@ -2264,240 +2473,934 @@ window.startBattle=function(forced, prebuiltWave){
   _battle.defenders=buildDefenders();
   _battle.monsters=prebuiltWave||buildWave(forced===true);
   _battle.round=1;
-  _battle.monstersAdvanced=0;
   _battle.log=[];
   _battle.active=true;
   _battle.creditsEarned=0;
+  _battle.pendingDestroyNotifs=[];
+  _battle.turnQueue=buildQueue();
+  _battle.qIdx=0;
 
   document.getElementById('battleOverlay').style.display='flex';
-  battleLog('⚔️ Dark forces approach your castle!');
-  if(_battle.defenders.length===0){
-    battleLog('😱 You have no defenders! Every attack damages your base!');
-    document.getElementById('battleRollBtn').textContent='😰 SURVIVE!';
-  } else {
-    battleLog('🛡️ Your '+_battle.defenders.length+' defender'+(  _battle.defenders.length>1?'s':'')+' stand ready!');
-    document.getElementById('battleRollBtn').textContent='⚔️ ATTACK!';
-  }
-  renderBattle();
+  _deathPopupQueue=[];
+  _deathPopupOpen=false;
+  var hasD=_battle.defenders.length>0;
+  battleLog('⚔️ Dark forces approach!');
+  if(!hasD) battleLog('😱 No defenders — your base is unprotected!');
+  else battleLog('🛡️ '+_battle.defenders.length+' defender'+(_battle.defenders.length>1?'s':'')+' stand ready!');
+  renderDuelArena(hasD?'Tap ⚔️ ATTACK on your fighter!':'Monsters are attacking your base!');
 };
 
+// ── HELPERS ─────────────────────────────────────────────────────────────────
 function battleLog(msg){
   _battle.log.unshift(msg);
-  if(_battle.log.length>30) _battle.log.pop();
+  if(_battle.log.length>40) _battle.log.pop();
   var el=document.getElementById('battleLog');
   if(el) el.innerHTML=_battle.log.map(function(m){ return '<div>'+m+'</div>'; }).join('');
 }
 
 function hpBar(hp, maxHp, color){
   var pct=Math.max(0,Math.round(hp/maxHp*100));
-  var col=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
-  return '<div style="width:100%;height:6px;background:#1e3a5f;border-radius:3px;margin-top:2px;">'
-    +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px;transition:width 0.3s;"></div></div>';
+  var col=color||(pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f');
+  return '<div style="width:100%;height:8px;background:#1e3a5f;border-radius:4px;margin-top:4px;overflow:hidden;">'
+    +'<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:4px;transition:width 0.3s;"></div></div>';
 }
 
-function renderBattle(){
-  var dl=document.getElementById('defendersList');
-  var ml=document.getElementById('monstersList');
-  var ph=document.getElementById('battlePhaseLabel');
-  var ft=document.getElementById('battleFooter');
-  if(!dl||!ml) return;
+// Build the combatant icon card for duel display
+// ── BATTLE RENDERER ─────────────────────────────────────────────────────────
 
-  ph.textContent='Round '+_battle.round+' — Enemies at distance '+(4-Math.min(3,_battle.monstersAdvanced));
+// Map combatant id → DOM token element (built by renderBattlefield)
+var _tokenEls={};
+var _battleLocked=false; // prevents double-tapping ATTACK during animation
+var _autoFight=false;    // fast-forward auto mode
 
-  // Defenders
-  dl.innerHTML=_battle.defenders.map(function(def,i){
-    if(def.dead) return '<div style="opacity:0.25;text-align:center;padding:6px;"><div style="font-size:3.5rem;filter:grayscale(1);">'+def.emoji+'</div><div style="font-size:0.65rem;color:#ef476f;font-weight:800;">💀 '+def.name+'</div></div>';
-    return '<div style="background:rgba(6,214,160,0.08);border:1px solid rgba(6,214,160,0.2);border-radius:10px;padding:8px;text-align:center;">'
-      +'<div style="font-size:3.5rem;line-height:1;">'+def.emoji+'</div>'
-      +'<div style="font-size:0.7rem;font-weight:900;color:#e8f0fe;margin-top:4px;">'+def.name+'</div>'
-      +'<div style="font-size:0.58rem;color:#7a8fb5;margin-top:1px;">❤️ '+def.hp+'/'+def.maxHp+(def.range>1?' 🏹':'⚔️')+(def.healer?' ✨':'')+'</div>'
-      +hpBar(def.hp,def.maxHp)
-      +'</div>';
-  }).join('');
-
-  // Monsters
-  var rarityColor={common:'rgba(239,71,111,0.08)',uncommon:'rgba(239,71,111,0.14)',rare:'rgba(17,138,178,0.15)',epic:'rgba(155,89,182,0.2)',legendary:'rgba(255,215,0,0.15)'};
-  var rarityBorder={common:'rgba(239,71,111,0.2)',uncommon:'rgba(239,71,111,0.35)',rare:'rgba(17,138,178,0.5)',epic:'rgba(155,89,182,0.6)',legendary:'rgba(255,215,0,0.7)'};
-  var rarityLabel={common:'',uncommon:'🟢',rare:'🔵',epic:'🟣',legendary:'⭐'};
-  ml.innerHTML=_battle.monsters.map(function(mon){
-    var iconSize=mon.giant?'5.5rem':'3.5rem';
-    var rc=rarityColor[mon.rarity]||rarityColor.common;
-    var rb=rarityBorder[mon.rarity]||rarityBorder.common;
-    var rl=rarityLabel[mon.rarity]||'';
-    if(mon.hp<=0) return '<div style="opacity:0.25;text-align:center;padding:6px;"><div style="font-size:'+iconSize+';filter:grayscale(1);">'+mon.emoji+'</div><div style="font-size:0.65rem;color:#06d6a0;font-weight:800;">💀 Defeated</div></div>';
-    return '<div style="background:'+rc+';border:1.5px solid '+rb+';border-radius:10px;padding:8px;text-align:center;">'
-      +'<div style="font-size:'+iconSize+';line-height:1;">'+mon.emoji+(mon.stunned?'<span style="font-size:1.2rem;">😵</span>':'')+'</div>'
-      +'<div style="font-size:0.7rem;font-weight:900;color:#ffb3b3;margin-top:4px;">'+rl+' '+mon.name+'</div>'
-      +'<div style="font-size:0.58rem;color:#7a8fb5;margin-top:1px;">❤️ '+mon.hp+'/'+mon.maxHp+' ⚔️ '+mon.atk+'</div>'
-      +hpBar(mon.hp,mon.maxHp,'#ef476f')
-      +'</div>';
-  }).join('');
-
-  ft.textContent='Tap ATTACK to roll your defenders\' attacks this round.';
-}
-
-window.battleRoll=function(){
-  if(!_battle.active) return;
-  var defs=_battle.defenders.filter(function(d){return !d.dead;});
-  var mons=_battle.monsters.filter(function(m){return m.hp>0;});
-  if(!mons.length){ checkBattleEnd(); return; }
-
-  _battle.monstersAdvanced++;
-  battleLog('— Round '+_battle.round+' —');
-
-  // DEFENDERS ATTACK
-  if(defs.length===0){
-    battleLog('😱 No defenders! Monsters rampage!');
-  } else {
-    defs.forEach(function(def){
-      var targets=_battle.monsters.filter(function(m){return m.hp>0;});
-      if(!targets.length) return;
-      // Melee can only attack when close (advanced >= 2)
-      if(def.range===1 && _battle.monstersAdvanced<2){ battleLog(def.emoji+' '+def.name+' waits for enemy to close in...'); return; }
-      var dmg=Math.max(1, def.atk + Math.floor(Math.random()*def.atk*0.5) - Math.floor(Math.random()*3));
-      if(def.healer){
-        // Heal lowest-HP ally instead
-        var wounded=_battle.defenders.filter(function(d){return !d.dead&&d.hp<d.maxHp;});
-        if(wounded.length){
-          wounded.sort(function(a,b){return a.hp-b.hp;});
-          var heal=Math.floor(def.atk*2+Math.random()*8);
-          wounded[0].hp=Math.min(wounded[0].maxHp, wounded[0].hp+heal);
-          battleLog('✨ '+def.name+' heals '+wounded[0].name+' for '+heal+'hp!');
-        } else { battleLog('✨ '+def.name+' stands by (all healthy).'); }
-        return;
-      }
-      if(def.aoe){
-        // Hit all monsters
-        var aoeMsg=def.emoji+' '+def.name+' BLASTS all enemies for '+Math.round(dmg*0.6)+'!';
-        targets.forEach(function(m){ m.hp=Math.max(0,m.hp-Math.round(dmg*0.6)); });
-        battleLog(aoeMsg);
-      } else {
-        var target=targets[Math.floor(Math.random()*targets.length)];
-        if(def.stun&&Math.random()<0.3){ target.stunned=true; battleLog('⚡ '+def.name+' STUNS '+target.name+'!'); }
-        target.hp=Math.max(0, target.hp-dmg);
-        battleLog(def.emoji+' '+def.name+' hits '+target.emoji+' '+target.name+' for '+dmg+'!'+(target.hp<=0?' 💀':''));
-        if(target.hp<=0) _battle.creditsEarned+=target.reward;
-      }
-    });
+window.toggleAutoFight=function(){
+  _autoFight=!_autoFight;
+  var btn=document.getElementById('autoFightBtn');
+  if(btn){
+    if(_autoFight){
+      btn.style.background='rgba(255,209,102,0.3)';
+      btn.style.borderColor='#ffd700';
+      btn.style.color='#ffd700';
+      btn.style.boxShadow='0 0 10px rgba(255,209,102,0.4)';
+      btn.textContent='⚡ AUTO ON';
+    } else {
+      btn.style.background='rgba(255,209,102,0.12)';
+      btn.style.borderColor='rgba(255,209,102,0.3)';
+      btn.style.color='#ffd700';
+      btn.style.boxShadow='none';
+      btn.textContent='⚡ AUTO';
+    }
   }
-
-  // MONSTERS ATTACK
-  var stillAlive=_battle.monsters.filter(function(m){return m.hp>0;});
-  stillAlive.forEach(function(mon){
-    if(mon.stunned){ battleLog(mon.emoji+' '+mon.name+' is stunned — skips!'); mon.stunned=false; return; }
-    var defTargets=_battle.defenders.filter(function(d){return !d.dead;});
-    if(!defTargets.length){
-      battleLog(mon.emoji+' '+mon.name+' smashes your base! 💥');
-      return;
-    }
-    // Ranged can always attack, melee only when close
-    if(mon.range===1 && _battle.monstersAdvanced<2){ battleLog(mon.emoji+' '+mon.name+' advances...'); return; }
-    var defTarget=defTargets[Math.floor(Math.random()*defTargets.length)];
-    var dodged=defTarget.dodge&&Math.random()<0.35;
-    if(dodged){ battleLog('🥷 '+defTarget.name+' DODGES '+mon.name+'\'s attack!'); return; }
-    var mDmg=Math.max(1, mon.atk+Math.floor(Math.random()*4)-1);
-    defTarget.hp=Math.max(0, defTarget.hp-mDmg);
-    battleLog(mon.emoji+' '+mon.name+' attacks '+defTarget.emoji+' '+defTarget.name+' for '+mDmg+'!'+(defTarget.hp<=0?' 💀':''));
-    if(defTarget.hp<=0){
-      defTarget.dead=true;
-      // 30% chance of permanent death
-      if(Math.random()<0.30 && defTarget.gridKey){
-        defTarget.permaDied=true;
-        var pd=getData(), pud=pd[userKey];
-        if(pud&&pud.mp){
-          if(!pud.mp.permaDead) pud.mp.permaDead={};
-          pud.mp.permaDead[defTarget.gridKey]=true;
-          saveData(pd);
-          battleLog('💔 '+defTarget.name+' has been PERMANENTLY slain! 30% chance of death struck!');
-        }
-      } else {
-        battleLog('🩹 '+defTarget.name+' fell — but will recover after battle (70% survival).');
-      }
-    }
-  });
-
-  _battle.round++;
-  renderBattle();
-  checkBattleEnd();
+  // If auto just turned on and we're waiting for player, kick off auto-attack
+  if(_autoFight&&_battle.active&&!_battleLocked){
+    runAutoFightStep();
+  }
 };
 
-function checkBattleEnd(){
-  var monstersLeft=_battle.monsters.filter(function(m){return m.hp>0;});
-  var defendersLeft=_battle.defenders.filter(function(d){return !d.dead;});
+// Run one full round instantly (all defenders, then all monsters), loop
+function runAutoFightStep(){
+  if(!_autoFight||!_battle.active) return;
+  if(_battleLocked) return; // wait for current animation
 
-  if(monstersLeft.length===0){
-    // Victory!
+  // Find any alive unattacked defender
+  var unattacked=_battle.defenders.filter(function(d){ return !d.dead&&!d._attacked; });
+  if(unattacked.length){
+    // Auto-attack with first available defender
+    var def=unattacked[0];
+    def._attacked=true;
+    var action=resolveAction(def, false);
+    if(action&&!action.skipped) resolveHits(action);
+    // Update HP bars
+    renderBattlefield();
+    highlightActive();
+    // Schedule next step
+    setTimeout(runAutoFightStep, 120);
+    return;
+  }
+
+  // All defenders done — run monster phase instantly
+  var aliveMons=_battle.monsters.filter(function(m){return m.hp>0;});
+  aliveMons.forEach(function(mon){
+    if(!_battle.active) return;
+    var action=resolveAction(mon, true);
+    if(action&&!action.skipped&&!action.dodged) resolveHits(action);
+  });
+
+  // End round
+  _battle.defenders.forEach(function(d){ d._attacked=false; });
+  _battle.round++;
+
+  renderBattlefield();
+  highlightActive();
+  var ph=document.getElementById('battlePhaseLabel');
+  if(ph) ph.textContent='Round '+_battle.round;
+  var ht=document.getElementById('battleTurnHint');
+  if(ht) ht.textContent='⚡ Auto-fighting... Round '+_battle.round;
+
+  checkBattleEnd();
+  if(_battle.active&&_autoFight){
+    setTimeout(runAutoFightStep, 180);
+  }
+}
+
+function renderBattlefield(){
+  _tokenEls={};
+  var defRow=document.getElementById('defenderRow');
+  var monRow=document.getElementById('monsterRow');
+  if(!defRow||!monRow) return;
+
+  defRow.innerHTML='';
+  monRow.innerHTML='';
+
+  _battle.defenders.forEach(function(c){
+    var el=makeTokenEl(c,false);
+    defRow.appendChild(el);
+    _tokenEls['def_'+c.name]=el;
+  });
+  _battle.monsters.forEach(function(c){
+    var el=makeTokenEl(c,true);
+    monRow.appendChild(el);
+    _tokenEls['mon_'+c.name]=el;
+  });
+}
+
+function makeTokenEl(c, isMonster){
+  var isDead=isMonster?(c.hp<=0):c.dead;
+  var hasAttacked=!isMonster&&c._attacked; // defender already used their turn
+  var isClickable=!isMonster&&!isDead&&!hasAttacked;
+
+  var rc={common:'#ef476f44',uncommon:'#06d6a044',rare:'#118ab244',epic:'#9b59b644',legendary:'#ffd70044'};
+  var rb={common:'#ef476f88',uncommon:'#06d6a088',rare:'#118ab2aa',epic:'#9b59b6aa',legendary:'#ffd700cc'};
+  var bg=isMonster?(rc[c.rarity]||rc.common):'#06d6a018';
+  var border=isMonster?(rb[c.rarity]||rb.common):'#06d6a044';
+  if(isClickable){ bg='#06d6a030'; border='#06d6a0'; }
+  if(hasAttacked){ bg='#06d6a008'; border='#06d6a022'; }
+
+  var wrap=document.createElement('div');
+  wrap.id='tok_'+(isMonster?'mon':'def')+'_'+c.name.replace(/\s/g,'_');
+  wrap.style.cssText='position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;'
+    +'background:'+bg+';border:2px solid '+border+';border-radius:12px;padding:7px 8px 5px;'
+    +'min-width:62px;transition:border-color 0.3s,background 0.3s,opacity 0.3s,filter 0.3s;'
+    +(isDead?'opacity:0.35;filter:grayscale(1);':'')
+    +(hasAttacked?'opacity:0.45;filter:brightness(0.5);':'')
+    +(isClickable?'box-shadow:0 0 14px #06d6a0, inset 0 0 8px rgba(6,214,160,0.15);cursor:pointer;':'');
+
+  var iconSize=c.giant?'3.2rem':'2.4rem';
+  var iconEl=document.createElement('div');
+  iconEl.className='tok-icon';
+  iconEl.style.cssText='font-size:'+iconSize+';line-height:1;position:relative;';
+  iconEl.textContent=isDead?'💀':c.emoji;
+
+  // Slash mark if dead
+  if(isDead){
+    var slash=document.createElement('div');
+    slash.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-40deg);'
+      +'font-size:2rem;opacity:0.8;pointer-events:none;color:#ef476f;line-height:1;';
+    slash.textContent='✂';
+    iconEl.appendChild(slash);
+    var deadLbl=document.createElement('div');
+    deadLbl.style.cssText='font-size:0.52rem;font-weight:900;color:#ef476f;letter-spacing:1px;animation:deadFade 0.4s ease;';
+    deadLbl.textContent='DEAD';
+    wrap.appendChild(iconEl);
+    wrap.appendChild(deadLbl);
+  } else {
+    wrap.appendChild(iconEl);
+    var namEl=document.createElement('div');
+    namEl.style.cssText='font-size:0.52rem;font-weight:900;color:'+(isMonster?'#ffb3b3':'#c8f0e0')+';text-align:center;max-width:72px;';
+    namEl.textContent=c.name;
+    wrap.appendChild(namEl);
+
+    // HP bar
+    var pct=Math.round(c.hp/c.maxHp*100);
+    var barCol=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
+    var hpWrap=document.createElement('div');
+    hpWrap.style.cssText='width:52px;height:4px;background:#1e3a5f;border-radius:3px;overflow:hidden;';
+    var hpFill=document.createElement('div');
+    hpFill.style.cssText='width:'+pct+'%;height:100%;background:'+barCol+';border-radius:3px;transition:width 0.3s;';
+    hpWrap.appendChild(hpFill);
+    wrap.appendChild(hpWrap);
+
+    var hpNum=document.createElement('div');
+    hpNum.style.cssText='font-size:0.46rem;color:#7a8fb5;';
+    hpNum.textContent='❤️'+c.hp+'/'+c.maxHp;
+    wrap.appendChild(hpNum);
+
+    // Click-to-attack for any unattacked alive defender
+    if(isClickable){
+      wrap.title='Tap to attack!';
+      wrap.onclick=(function(cc){ return function(){ battleRollFor(cc); }; })(c);
+    }
+  }
+  return wrap;
+}
+
+// Float text above a token el
+function floatAboveToken(tokenEl, text, color, large){
+  if(!tokenEl) return;
+  var layer=document.getElementById('floatLayer');
+  if(!layer) return;
+  var r=tokenEl.getBoundingClientRect();
+  var lr=layer.getBoundingClientRect();
+  var el=document.createElement('div');
+  el.textContent=text;
+  el.style.cssText='position:absolute;left:'+(r.left-lr.left+r.width/2)+'px;top:'+(r.top-lr.top)+'px;'
+    +'transform:translateX(-50%);font-size:'+(large?'1.3rem':'0.85rem')+';font-weight:900;color:'+color+';'
+    +'text-shadow:0 2px 8px rgba(0,0,0,0.9);pointer-events:none;white-space:nowrap;'
+    +'animation:floatUp 1.4s ease-out forwards;';
+  layer.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },1450);
+}
+
+// Animate attacker lunging toward target, then fly emoji, then hit
+// Returns a promise-like: calls cb after full sequence
+function animateAttack(attackerEl, targetEl, projectileEmoji, isAttackerMonster, onHit, onDone){
+  if(!attackerEl||!targetEl){ onHit&&onHit(); setTimeout(onDone||function(){},_autoMode?10:100); return; }
+
+  // AUTO mode: skip all animation, just call callbacks instantly
+  if(_autoMode){
+    onHit&&onHit();
+    setTimeout(onDone||function(){},30);
+    return;
+  }
+
+  var lungeAnim=isAttackerMonster?'lungeLeft':'lungeRight';
+  attackerEl.style.animation=lungeAnim+' 0.26s ease-in-out';
+
+  setTimeout(function(){
+    var layer=document.getElementById('projectileLayer');
+    var ar=attackerEl.getBoundingClientRect();
+    var tr=targetEl.getBoundingClientRect();
+    var lr=layer?layer.getBoundingClientRect():{left:0,top:0};
+
+    var startX=ar.left-lr.left+ar.width/2;
+    var startY=ar.top-lr.top+ar.height/2;
+    var endX=tr.left-lr.left+tr.width/2;
+    var endY=tr.top-lr.top+tr.height/2;
+    var angle=Math.atan2(endY-startY,endX-startX)*180/Math.PI;
+
+    var proj=document.createElement('div');
+    proj.textContent=projectileEmoji;
+    proj.style.cssText='position:absolute;left:'+startX+'px;top:'+startY+'px;font-size:1.8rem;'
+      +'transform-origin:center;transform:translate(-50%,-50%) rotate('+angle+'deg);'
+      +'transition:left 0.34s ease-in, top 0.34s ease-in, opacity 0.34s;pointer-events:none;z-index:200;';
+    if(layer) layer.appendChild(proj);
+
+    setTimeout(function(){
+      proj.style.left=endX+'px';
+      proj.style.top=endY+'px';
+      proj.style.opacity='0';
+      proj.style.transform='translate(-50%,-50%) rotate('+angle+'deg) scale(1.8)';
+    },20);
+
+    setTimeout(function(){
+      if(proj.parentNode) proj.parentNode.removeChild(proj);
+      targetEl.style.animation='hitFlash 0.3s ease';
+      onHit&&onHit();
+      setTimeout(function(){
+        targetEl.style.animation='';
+        attackerEl.style.animation='';
+        onDone&&onDone();
+      },315);
+    },360);
+  },150);
+}
+
+// Show slash → oh noes floats up slowly → DEAD label after 2.5s
+function showDeathOnToken(tokenEl, c, isMonster){
+  if(!tokenEl) return;
+  tokenEl.onclick=null; tokenEl.style.cursor='default';
+
+  // Slash mark appears on icon
+  var iconEl=tokenEl.querySelector('.tok-icon');
+  if(iconEl){
+    var slash=document.createElement('div');
+    slash.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-40deg);'
+      +'font-size:2rem;color:#ef476f;opacity:0;line-height:1;transition:opacity 0.35s;pointer-events:none;';
+    slash.textContent='✂';
+    iconEl.appendChild(slash);
+    setTimeout(function(){ slash.style.opacity='0.9'; },80);
+  }
+
+  // "oh noes..!" — appears, then slowly drifts up and fades over 2s
+  var ohNoes=document.createElement('div');
+  ohNoes.style.cssText='font-size:0.85rem;font-weight:900;color:#ffd700;letter-spacing:0.5px;margin-top:4px;'
+    +'opacity:1;transform:translateY(0);transition:opacity 2s ease, transform 2s ease;display:block;';
+  ohNoes.textContent='oh noes..!';
+  tokenEl.appendChild(ohNoes);
+  // Start the float-up after a tick so transition fires
+  setTimeout(function(){ ohNoes.style.opacity='0'; ohNoes.style.transform='translateY(-32px)'; }, 120);
+
+  // DEAD appears after 2.5s — enough time to read oh noes floating away
+  setTimeout(function(){
+    if(ohNoes.parentNode) ohNoes.parentNode.removeChild(ohNoes);
+    tokenEl.style.transition='opacity 0.6s, filter 0.6s';
+    tokenEl.style.opacity='0.38';
+    tokenEl.style.filter='grayscale(1)';
+    var deadLbl=document.createElement('div');
+    deadLbl.style.cssText='font-size:0.7rem;font-weight:900;color:#ef476f;letter-spacing:2px;'
+      +'margin-top:3px;animation:deadFade 0.5s ease;';
+    deadLbl.textContent='💀 DEAD';
+    tokenEl.appendChild(deadLbl);
+  }, _autoMode?100:2500);
+}
+
+// Update HP bar on a token without full re-render
+function updateTokenHP(c, isMonster){
+  var key=(isMonster?'mon':'def')+'_'+c.name.replace(/\s/g,'_');
+  var el=document.getElementById('tok_'+key);
+  if(!el) return;
+  var pct=Math.round(Math.max(0,c.hp)/c.maxHp*100);
+  var barCol=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
+  var fill=el.querySelector('div[style*="border-radius:3px;transition"]');
+  if(fill){ fill.style.width=pct+'%'; fill.style.background=barCol; }
+  var hpNum=el.querySelector('div[style*="0.46rem"]');
+  if(hpNum) hpNum.textContent='❤️'+Math.max(0,c.hp)+'/'+c.maxHp;
+}
+
+// Highlight active token (gold border) and show/hide ATTACK button
+function highlightActive(){
+  // Only reset non-attacked, non-dead defender glows
+  _battle.defenders.forEach(function(c){
+    if(c.dead||c._attacked) return; // keep dim/dead state
+    var key='tok_def_'+c.name.replace(/\s/g,'_');
+    var el=document.getElementById(key); if(!el) return;
+    el.style.boxShadow=''; el.style.cursor='default'; el.onclick=null;
+  });
+  _battle.monsters.forEach(function(c){
+    var key='tok_mon_'+c.name.replace(/\s/g,'_');
+    var el=document.getElementById(key); if(!el) return;
+    el.style.boxShadow='';
+  });
+
+  var entry=_battle.turnQueue[_battle.qIdx]; if(!entry) return;
+  var isDefenderPhase=entry.side==='defender';
+
+  if(isDefenderPhase){
+    _battle.defenders.forEach(function(c){
+      if(c.dead||c._attacked) return;
+      var key='tok_def_'+c.name.replace(/\s/g,'_');
+      var el=document.getElementById(key); if(!el) return;
+      el.style.cursor='pointer';
+      el.style.boxShadow='0 0 14px #06d6a0, inset 0 0 8px rgba(6,214,160,0.15)';
+      el.style.borderColor='#06d6a0';
+      el.onclick=(function(cc){ return function(){ battleRollFor(cc); }; })(c);
+    });
+  } else if(!isDefenderPhase){
+    var c=entry.ref;
+    var key='tok_mon_'+c.name.replace(/\s/g,'_');
+    var el=document.getElementById(key);
+    if(el&&c.hp>0){ el.style.boxShadow='0 0 14px #ef476f'; el.style.borderColor='#ef476f'; }
+  }
+}
+
+// ── BUILD TURN QUEUE — all defenders first, then all monsters ────────────────
+function buildQueue(){
+  var q=[];
+  _battle.defenders.forEach(function(d){ q.push({side:'defender',ref:d}); });
+  _battle.monsters.forEach(function(m){ q.push({side:'monster',ref:m}); });
+  return q;
+}
+
+// ── RENDER DUEL ARENA ────────────────────────────────────────────────────────
+function renderDuelArena(hint){
+  renderBattlefield();
+  highlightActive();
+  var ht=document.getElementById('battleTurnHint');
+  if(ht) ht.textContent=hint||'';
+  var ph=document.getElementById('battlePhaseLabel');
+  if(ph) ph.textContent='Round '+_battle.round;
+
+  // Auto-fight: auto-click the next unattacked defender
+  if(_autoMode&&_battle.active&&!_battleLocked){
+    clearTimeout(_battle._autoTimer);
+    _battle._autoTimer=setTimeout(function(){
+      if(!_autoMode||!_battle.active||_battleLocked) return;
+      var unattacked=_battle.defenders.filter(function(d){return !d.dead&&!d._attacked;});
+      if(unattacked.length) battleRollFor(unattacked[0]);
+    }, 120);
+  }
+}
+
+// Death toasts — auto-fade above the battlefield, no blocking modal
+var _deathPopupQueue=[];
+var _deathPopupOpen=false;
+
+function queueDeathPopup(emoji, title, msg){
+  // Show as a brief floating toast on battlefield, not a blocking popup
+  showDeathToast(emoji, title);
+}
+
+function showDeathToast(emoji, title){
+  var layer=document.getElementById('floatLayer');
+  if(!layer) return;
+  var el=document.createElement('div');
+  el.innerHTML=emoji+' '+title;
+  el.style.cssText='position:absolute;left:50%;top:30%;transform:translateX(-50%);'
+    +'background:rgba(20,0,10,0.92);border:2px solid #ef476f;border-radius:10px;'
+    +'padding:8px 16px;font-size:0.82rem;font-weight:900;color:#ef476f;'
+    +'white-space:nowrap;text-align:center;pointer-events:none;'
+    +'animation:floatUp 2.5s ease-out forwards;z-index:300;';
+  layer.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },2600);
+}
+
+// Kept for backwards compat — no-op since toasts are auto
+function drainDeathPopup(){}
+window.closeBattleDeathPopup=function(){
+  document.getElementById('battleDeathPopup').style.display='none';
+  _deathPopupOpen=false;
+  if(!_battle.active) return;
+  var monsLeft=_battle.monsters.filter(function(m){return m.hp>0;});
+  var defsLeft=_battle.defenders.filter(function(d){return !d.dead;});
+  if(!monsLeft.length||(_battle.defenders.length>0&&!defsLeft.length)){ checkBattleEnd(); return; }
+  clearTimeout(_battle._autoTimer);
+  var nextEntry=_battle.turnQueue[_battle.qIdx];
+  if(nextEntry&&nextEntry.side==='monster'){
+    _battle._autoTimer=setTimeout(function(){ if(_battle.active&&!_battleLocked) battleRoll(); },1200);
+  } else {
+    renderDuelArena('');
+  }
+};
+
+// ── RESOLVE ONE ACTION ───────────────────────────────────────────────────────
+// battleRollFor — called when player clicks a specific defender token
+// battleRoll — called for the monster phase (auto)
+function resolveAction(attacker, isMonster){
+  var action={ side:isMonster?'monster':'defender', attacker:attacker, target:null,
+               dmg:0, heal:0, isHeal:false, skipped:false, dodged:false,
+               deaths:[], aoe:false, hint:'' };
+
+  if(!isMonster){
+    var def=attacker;
+    var targets=_battle.monsters.filter(function(m){return m.hp>0;});
+    if(!targets.length){ return null; }
+    if(def.healer){
+      var wounded=_battle.defenders.filter(function(d){return !d.dead&&d.hp<d.maxHp;});
+      if(wounded.length){
+        wounded.sort(function(a,b){return a.hp-b.hp;});
+        action.isHeal=true; action.target=wounded[0];
+        action.heal=Math.floor(def.atk*2+Math.random()*10);
+        action.hint='✨ '+def.name+' heals '+wounded[0].name+' for +'+action.heal+'!';
+      } else { action.skipped=true; action.hint='✨ '+def.name+' — all healthy!'; }
+    } else if(def.aoe){
+      action.aoe=true; action.target=targets[0];
+      action.dmg=Math.max(1,Math.round((def.atk+Math.floor(Math.random()*def.atk*0.4))*0.65));
+      action.hint=def.name+' BLASTS all enemies for '+action.dmg+'!';
+    } else {
+      action.target=targets[Math.floor(Math.random()*targets.length)];
+      action.dmg=Math.max(1,def.atk+Math.floor(Math.random()*Math.ceil(def.atk*0.5))-Math.floor(Math.random()*3));
+      if(def.stun&&Math.random()<0.30) action.target.stunned=true;
+      action.hint=def.name+' attacks '+action.target.name+' for '+action.dmg+'!';
+    }
+  } else {
+    var mon=attacker;
+    if(mon.stunned){
+      mon.stunned=false; action.skipped=true; action.hint=mon.name+' is stunned — skips!';
+    } else {
+      var defTargets=_battle.defenders.filter(function(d){return !d.dead;});
+      if(!defTargets.length){
+        action.skipped=true; action.hint=mon.name+' smashes the castle! 💥';
+      } else if(mon.aoe){
+        action.aoe=true; action.target=defTargets[0];
+        action.dmg=Math.max(1,Math.round((mon.atk+Math.floor(Math.random()*4))*0.7));
+        action.hint=mon.name+' BLASTS all defenders for '+action.dmg+'!';
+      } else {
+        action.target=defTargets[Math.floor(Math.random()*defTargets.length)];
+        if(action.target.dodge&&Math.random()<0.35){
+          action.dodged=true; action.hint=action.target.name+' DODGES! 🥷';
+        } else {
+          action.dmg=Math.max(1,mon.atk+Math.floor(Math.random()*5)-1);
+          action.hint=mon.name+' hits '+action.target.name+' for '+action.dmg+'!';
+        }
+      }
+    }
+  }
+  return action;
+}
+
+function executeAction(action, onDone){
+  // In auto mode — skip all animations, resolve instantly
+  if(_autoFight){
+    resolveHits(action);
+    onDone&&onDone();
+    return;
+  }
+
+  var ht=document.getElementById('battleTurnHint');
+  if(ht) ht.textContent=action.hint;
+
+  var aKey='tok_'+(action.side==='monster'?'mon':'def')+'_'+action.attacker.name.replace(/\s/g,'_');
+  var tKey=action.target?('tok_'+(action.side==='defender'?'mon':'def')+'_'+action.target.name.replace(/\s/g,'_')):null;
+  var attackerEl=document.getElementById(aKey);
+  var targetEl=tKey?document.getElementById(tKey):null;
+
+  if(action.skipped||action.dodged){
+    if(action.dodged&&targetEl&&!_autoMode){ targetEl.style.animation='battleShake 0.3s ease'; }
+    setTimeout(function(){ resolveHits(action); onDone&&onDone(); },_autoMode?30:450);
+    return;
+  }
+
+  animateAttack(attackerEl, targetEl, action.attacker.emoji, action.side==='monster',
+    function onHit(){ resolveHits(action); },
+    function(){ onDone&&onDone(); }
+  );
+}
+
+function resolveHits(action){
+  if(action.skipped||action.dodged) return; // nothing to apply
+  if(action.isHeal){
+    if(!action.target) return;
+    action.target.hp=Math.min(action.target.maxHp, action.target.hp+action.heal);
+    updateTokenHP(action.target, false);
+    var tEl=document.getElementById('tok_def_'+action.target.name.replace(/\s/g,'_'));
+    floatAboveToken(tEl, '+'+action.heal, '#06d6a0', true);
+  } else if(action.aoe){
+    var victims=(action.side==='defender')?_battle.monsters.filter(function(m){return m.hp>0;}):_battle.defenders.filter(function(d){return !d.dead;});
+    victims.forEach(function(v){
+      v.hp=Math.max(0,v.hp-action.dmg);
+      var vSide=action.side==='defender'?'mon':'def';
+      var vEl=document.getElementById('tok_'+vSide+'_'+v.name.replace(/\s/g,'_'));
+      updateTokenHP(v, action.side==='defender');
+      floatAboveToken(vEl, '-'+action.dmg, '#ef476f', true);
+      if(v.hp<=0){
+        if(action.side==='defender'){ _battle.creditsEarned+=v.reward; trackKill(v); }
+        else { v.dead=true; defenderKilled(v,action.attacker); }
+        action.deaths.push(v);
+        showDeathOnToken(vEl, v, action.side==='defender');
+      }
+    });
+    // random fact-knock event on monster aoe
+    if(action.side==='monster') maybeKnockFact(action.attacker);
+  } else {
+    var t=action.target;
+    t.hp=Math.max(0,t.hp-action.dmg);
+    var tSide=action.side==='defender'?'mon':'def';
+    var targetEl=document.getElementById('tok_'+tSide+'_'+t.name.replace(/\s/g,'_'));
+    updateTokenHP(t, action.side==='defender');
+    floatAboveToken(targetEl, '-'+action.dmg, '#ef476f', true);
+    if(t.hp<=0){
+      if(action.side==='defender'){ _battle.creditsEarned+=t.reward; trackKill(t); }
+      else { t.dead=true; defenderKilled(t,action.attacker); }
+      action.deaths.push(t);
+      showDeathOnToken(targetEl, t, action.side==='defender');
+    }
+    // random fact-knock on single hit
+    if(action.side==='monster'&&Math.random()<0.15) maybeKnockFact(action.attacker);
+  }
+  // death toasts
+  action.deaths.forEach(function(d){
+    var dSide=action.side==='defender'?'mon':'def';
+    var dEl=document.getElementById('tok_'+dSide+'_'+d.name.replace(/\s/g,'_'));
+    if(action.side==='monster') showDeathToast('💀', action.attacker.name+' slew your '+d.name+'!');
+    else showDeathToast(d.emoji, action.attacker.name+' defeated '+d.name+'!');
+  });
+}
+
+// Player clicks a specific defender to attack
+window.battleRollFor=function(def){
+  if(!_battle.active||def.dead||def._attacked||_autoFight) return;
+  var monsLeft=_battle.monsters.filter(function(m){return m.hp>0;});
+  if(!monsLeft.length){ checkBattleEnd(); return; }
+
+  // Mark this defender as acted and dim immediately — no global lock!
+  def._attacked=true;
+  var defKey='tok_def_'+def.name.replace(/\s/g,'_');
+  var defEl=document.getElementById(defKey);
+  if(defEl){
+    defEl.style.opacity='0.45';
+    defEl.style.filter='brightness(0.5)';
+    defEl.style.cursor='default';
+    defEl.style.boxShadow='none';
+    defEl.style.borderColor='#06d6a022';
+    defEl.onclick=null;
+  }
+  clearTimeout(_battle._autoTimer);
+
+  var action=resolveAction(def, false);
+  if(!action){ checkBattleDefendersDone(); return; }
+
+  // Execute without locking — other defenders can be clicked during animation
+  executeAction(action, function(){
+    checkBattleDefendersDone();
+  });
+};
+
+// After a defender attacks, re-highlight remaining defenders or start monster phase
+function checkBattleDefendersDone(){
+  if(!_battle.active){ checkBattleEnd(); return; }
+  var aliveNotAttacked=_battle.defenders.filter(function(d){ return !d.dead&&!d._attacked; });
+  if(aliveNotAttacked.length){
+    // Still defenders left to attack — just re-render so they stay clickable
+    renderDuelArena('Tap your fighters to attack!');
+    return;
+  }
+  // All defenders have attacked — monster phase
+  startMonsterPhase();
+}
+
+function startMonsterPhase(){
+  if(!_battle.active){ checkBattleEnd(); return; }
+  var monsLeft=_battle.monsters.filter(function(m){return m.hp>0;});
+  if(!monsLeft.length){ endDefenderRound(); return; }
+  // Filter to live, non-stunned monsters in order
+  _battle._monPhaseIdx=0;
+  renderDuelArena('Enemies are attacking…');
+  runNextMonsterAttack();
+}
+
+function runNextMonsterAttack(){
+  if(!_battle.active){ checkBattleEnd(); return; }
+  var aliveMons=_battle.monsters.filter(function(m){return m.hp>0;});
+  if(_battle._monPhaseIdx>=aliveMons.length){
+    endDefenderRound(); return;
+  }
+  var mon=aliveMons[_battle._monPhaseIdx];
+  _battle._monPhaseIdx++;
+  _battleLocked=true;
+
+  var action=resolveAction(mon, true);
+  if(!action){ _battleLocked=false; setTimeout(runNextMonsterAttack,300); return; }
+
+  executeAction(action, function(){
+    _battleLocked=false;
+    checkBattleEnd();
+    if(_battle.active){
+      setTimeout(runNextMonsterAttack, _autoMode?80:600);
+    }
+  });
+}
+
+function endDefenderRound(){
+  // Reset attacked flags and restore token brightness for new round
+  _battle.defenders.forEach(function(d){
+    d._attacked=false;
+    var key='tok_def_'+d.name.replace(/\s/g,'_');
+    var el=document.getElementById(key);
+    if(el&&!d.dead){
+      el.style.opacity='1';
+      el.style.filter='';
+      el.style.borderColor='#06d6a0';
+    }
+  });
+  _battle.round++;
+  renderDuelArena('Round '+_battle.round+' — tap your fighters!');
+  checkBattleEnd();
+}
+
+// Legacy battleRoll for any remaining references
+window.battleRoll=function(){
+  if(!_battle.active||_battleLocked) return;
+  var entry=_battle.turnQueue[_battle.qIdx];
+  if(!entry||entry.side!=='defender') return;
+  window.battleRollFor(entry.ref);
+};
+
+function applyActionAndAdvance(action){ resolveHits(action); renderDuelArena(action.hint); checkBattleEnd(); }
+function advanceQueueAndRender(){ _battleLocked=false; renderDuelArena(''); checkBattleEnd(); }
+
+
+// ── KILL TRACKING & TROPHY ROOM ─────────────────────────────────────────────
+function trackKill(monster){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  if(!ud.trophies) ud.trophies={};
+  ud.trophies[monster.id]=(ud.trophies[monster.id]||0)+1;
+  saveData(d);
+  // Show special secret kill banner
+  var isSecret=SECRET_MONSTERS.find(function(s){return s.id===monster.id;});
+  if(isSecret && ud.trophies[monster.id]===1){
+    showSecretKillBanner(monster);
+  }
+}
+
+function showSecretKillBanner(monster){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;top:12%;left:50%;transform:translateX(-50%);z-index:9400;'+
+    'background:rgba(0,0,0,0.97);border:2px solid #ffd700;border-radius:16px;'+
+    'padding:18px 28px;max-width:300px;text-align:center;font-family:inherit;animation:popIn 0.4s ease;pointer-events:none;';
+  el.innerHTML='<div style="font-size:0.55rem;font-weight:900;color:#ffd700;letter-spacing:3px;text-transform:uppercase;">🏆 Secret Trophy Unlocked!</div>'+
+    '<div style="font-size:2.2rem;margin:8px 0;">'+monster.emoji+'</div>'+
+    '<div style="font-size:0.85rem;font-weight:900;color:#fff;">'+monster.name+'</div>'+
+    '<div style="font-size:0.58rem;color:#aaa;margin-top:5px;">Added to your Trophy Room!</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 1s'; },3500);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },4600);
+}
+
+// ── OMINOUS WARNING SYSTEM ───────────────────────────────────────────────────
+var OMINOUS_MSGS=[
+  '🌑 Something stirs in the darkness...',
+  '⚡ The ground trembles. Something is coming...',
+  '🌩️ Ravens scatter. A great evil approaches...',
+  '🔥 The air grows cold. It is nearly here...',
+  '💀 They say even the monsters flee before it...',
+];
+function checkOminousWarning(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var wins=ud.mp.battleWins||0;
+  var warned=ud.mp.ominousWarned||0;
+  var bossIn=ud.mp.bossCountdown||0;
+  // Every 5 wins, warn; boss arrives 3 battles after warning
+  if(bossIn>0){
+    ud.mp.bossCountdown=bossIn-1;
+    saveData(d);
+    return;
+  }
+  if(wins>0 && wins%5===0 && wins!==(warned)){
+    ud.mp.ominousWarned=wins;
+    ud.mp.bossCountdown=3;
+    saveData(d);
+    showOminousWarning(OMINOUS_MSGS[Math.floor(Math.random()*OMINOUS_MSGS.length)]);
+  }
+}
+
+var _ominousBossNext=false;
+function showOminousWarning(msg){
+  _ominousBossNext=true;
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:9100;display:flex;align-items:center;justify-content:center;'
+    +'pointer-events:none;';
+  el.innerHTML='<div style="background:rgba(5,0,15,0.96);border:2px solid #9b59b6;border-radius:16px;'+
+    'padding:28px 32px;max-width:320px;text-align:center;font-family:inherit;animation:popIn 0.4s ease;">'+
+    '<div style="font-size:2.5rem;margin-bottom:10px;">🌑</div>'+
+    '<div style="font-size:0.95rem;font-weight:900;color:#9b59b6;line-height:1.5;">'+msg+'</div>'+
+    '<div style="font-size:0.6rem;color:#7a3f90;margin-top:10px;font-weight:700;">Prepare your defenses...</div>'+
+    '</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 1s'; },3500);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },4600);
+}
+
+// ── FACT KNOCK-DOWN SYSTEM ───────────────────────────────────────────────────
+var SPEED_ZONES=[
+  {name:'Gold',color:'#ffd700',max:1000},
+  {name:'Green',color:'#06d6a0',max:2000},
+  {name:'Blue',color:'#118ab2',max:3000},
+  {name:'Orange',color:'#f4a261',max:5000},
+  {name:'Red',color:'#ef476f',max:Infinity},
+];
+function getZone(ms){
+  for(var i=0;i<SPEED_ZONES.length;i++) if(ms<SPEED_ZONES[i].max) return i;
+  return SPEED_ZONES.length-1;
+}
+function maybeKnockFact(monster){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.facts) return;
+  var keys=Object.keys(ud.facts);
+  if(!keys.length) return;
+  // Only knock gold/green/blue facts (not already in red)
+  var eligible=keys.filter(function(k){
+    var f=ud.facts[k]; if(!f||!f.best) return false;
+    return getZone(f.best)<SPEED_ZONES.length-1;
+  });
+  if(!eligible.length) return;
+  var k=eligible[Math.floor(Math.random()*eligible.length)];
+  var f=ud.facts[k];
+  var oldZone=getZone(f.best);
+  // Knock speed up by 30-60% (makes it slower = worse zone)
+  var penalty=Math.round(f.best*(0.3+Math.random()*0.3));
+  f.best+=penalty;
+  // Update recent10 similarly
+  if(f.recent10&&f.recent10.length) f.recent10.push(f.best);
+  saveData(d);
+  var newZone=getZone(f.best);
+  if(newZone>oldZone){
+    var parts=k.split('x');
+    var msg=monster.emoji+' '+monster.name+' attacked '+parts[0]+'×'+parts[1]+'!  '+
+      SPEED_ZONES[oldZone].name+' → '+SPEED_ZONES[newZone].name+'!';
+    showFactKnockBanner(msg, SPEED_ZONES[oldZone].color, SPEED_ZONES[newZone].color);
+  }
+}
+function showFactKnockBanner(msg, fromColor, toColor){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;top:18%;left:50%;transform:translateX(-50%);z-index:9200;'+
+    'background:rgba(10,0,20,0.96);border:2px solid '+toColor+';'+
+    'border-radius:14px;padding:14px 22px;max-width:320px;text-align:center;'+
+    'font-family:inherit;animation:popIn 0.35s ease;pointer-events:none;';
+  el.innerHTML='<div style="font-size:0.75rem;font-weight:900;color:'+toColor+';line-height:1.5;">'+msg+'</div>'+
+    '<div style="font-size:0.6rem;color:#7a8fb5;margin-top:6px;">Practice it to get it back!</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.8s'; },3800);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },4700);
+}
+
+// Handle defender death — 30% permanent, save
+function defenderKilled(def, mon){
+  if(Math.random()<0.30&&def.gridKey){
+    def.permaDied=true;
+    var pd=getData(), pud=pd[userKey];
+    if(pud&&pud.mp){
+      if(!pud.mp.permaDead) pud.mp.permaDead={};
+      pud.mp.permaDead[def.gridKey]=true;
+      saveData(pd);
+    }
+  }
+}
+
+// ── CHECK WIN/LOSS ───────────────────────────────────────────────────────────
+function checkBattleEnd(){
+  if(!_battle.active) return;
+  var monsLeft=_battle.monsters.filter(function(m){return m.hp>0;});
+  var defsLeft=_battle.defenders.filter(function(d){return !d.dead;});
+
+  if(monsLeft.length===0){
     _battle.active=false;
     var totalReward=_battle.creditsEarned;
     var d=getData(), ud=d[userKey];
     if(ud&&ud.mp){
       ud.mp.credits=(ud.mp.credits||0)+totalReward;
-      ud.mp.scareIdx=0; // reset scare counter after real battle
+      ud.mp.scareIdx=0;
+      ud.mp.battleWins=(ud.mp.battleWins||0)+1;
       saveData(d);
     }
+    checkOminousWarning();
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
-      showBattleResult(true, '🏆 Your defenders crushed the attackers!\n\nYou earned 🪙'+totalReward+' credits!', totalReward);
-    }, 600);
+      showBattleResult(true,'🏆 Your defenders crushed the attackers!\n\nYou earned 🪙'+totalReward+' credits!',totalReward);
+    },2800);
     return;
   }
 
-  if(_battle.defenders.length>0 && defendersLeft.length===0){
-    // All defenders dead — monsters win
+  if(_battle.defenders.length>0&&defsLeft.length===0){
     _battle.active=false;
     var d=getData(), ud=d[userKey];
+    var destroyMsgs=[];
     if(ud&&ud.mp){
-      ud.mp.scareIdx=0; // reset scare counter
-      var keys=Object.keys(ud.mp.baseGrid||{});
-      var dmgCount=Math.min(3, Math.floor(keys.length*0.4));
-      for(var i=0;i<dmgCount&&keys.length;i++){
-        var k=keys.splice(Math.floor(Math.random()*keys.length),1)[0];
-        if(ud.mp.baseGrid[k]&&!ud.mp.baseGrid[k].damaged){
-          ud.mp.baseGrid[k].damaged=true;
-          ud.mp.baseGrid[k].repairCost=10;
+      ud.mp.scareIdx=0;
+      var gridKeys=Object.keys(ud.mp.baseGrid||{}).filter(function(k){ return ud.mp.baseGrid[k]&&!ud.mp.baseGrid[k].damaged; });
+      _battle.monsters.forEach(function(mon){
+        var chance=DESTROY_CHANCE[mon.rarity]||0.10;
+        if(Math.random()<chance&&gridKeys.length){
+          var k=gridKeys.splice(Math.floor(Math.random()*gridKeys.length),1)[0];
+          var cell=ud.mp.baseGrid[k];
+          if(cell){
+            var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+            if(item){
+              cell.destroyed=true; cell.damaged=true;
+              cell.repairCost=Math.round(item.cost*0.6)||15;
+              destroyMsgs.push({mEmoji:mon.emoji,mName:mon.name,iEmoji:item.emoji,iName:item.name});
+            }
+          }
+        } else if(Math.random()<0.4&&gridKeys.length){
+          var k2=gridKeys[Math.floor(Math.random()*gridKeys.length)];
+          if(ud.mp.baseGrid[k2]&&!ud.mp.baseGrid[k2].damaged){
+            ud.mp.baseGrid[k2].damaged=true; ud.mp.baseGrid[k2].repairCost=10;
+          }
         }
-      }
+      });
       saveData(d);
     }
+    _battle.pendingDestroyNotifs=destroyMsgs;
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
-      showBattleResult(false, '💀 Your defenders were overwhelmed!\n\nSome buildings were damaged. Buy more defenders!', 0);
-    }, 600);
+      if(_battle.pendingDestroyNotifs.length){ showNextDestroyNotif(); }
+      else { showBattleResult(false,'💀 Your defenders were overwhelmed!\n\nThe dark forces damaged your castle!',0); }
+    },2800);
     return;
   }
 
-  if(_battle.defenders.length===0 && _battle.round>3){
-    // No defenders, monsters trash the base
+  if(_battle.defenders.length===0&&_battle.round>3){
     _battle.active=false;
     var d2=getData(), ud2=d2[userKey];
     if(ud2&&ud2.mp){
       var keys2=Object.keys(ud2.mp.baseGrid||{});
-      keys2.forEach(function(k){
-        if(ud2.mp.baseGrid[k]) ud2.mp.baseGrid[k].damaged=true, ud2.mp.baseGrid[k].repairCost=15;
-      });
+      keys2.forEach(function(k){ if(ud2.mp.baseGrid[k]){ ud2.mp.baseGrid[k].damaged=true; ud2.mp.baseGrid[k].repairCost=15; } });
       saveData(d2);
     }
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
-      showBattleResult(false, '💥 The monsters destroyed your base!\n\nYou had no defenders. Everything needs repair!', 0);
-    }, 600);
+      showBattleResult(false,'💥 The monsters destroyed your base!\n\nYou had no defenders!',0);
+    },2800);
   }
 }
 
+// ── DESTRUCTION NOTIFICATION QUEUE ──────────────────────────────────────────
+function showNextDestroyNotif(){
+  if(!_battle.pendingDestroyNotifs.length){
+    showBattleResult(false,'💀 Your defenders were overwhelmed!\n\nCheck your castle for damage!',0);
+    return;
+  }
+  var n=_battle.pendingDestroyNotifs.shift();
+  document.getElementById('destroyNotifEmoji').textContent=n.iEmoji;
+  document.getElementById('destroyNotifTitle').textContent='PERMANENTLY DESTROYED!';
+  document.getElementById('destroyNotifMsg').innerHTML=
+    '<b style="color:#ef476f;">'+n.mEmoji+' '+n.mName+'</b><br>permanently destroyed your<br>'
+    +'<b style="font-size:1.1rem;">'+n.iEmoji+' '+n.iName+'</b>!<br>'
+    +'<span style="color:#7a8fb5;font-size:0.75rem;">(Removed from your base)</span>';
+  document.getElementById('destroyNotifOverlay').style.display='flex';
+}
+
+window.closeDestroyNotif=function(){
+  document.getElementById('destroyNotifOverlay').style.display='none';
+  showNextDestroyNotif();
+};
+
+// ── RESULT SCREEN ─────────────────────────────────────────────────────────────
 function showBattleResult(victory, msg, credits){
+  _autoFight=false;
+  var btn=document.getElementById('autoFightBtn');
+  if(btn){ btn.textContent='⚡ AUTO'; btn.style.background='rgba(255,209,102,0.12)'; btn.style.borderColor='rgba(255,209,102,0.3)'; btn.style.boxShadow='none'; }
   var overlay=document.getElementById('battleResultOverlay');
   document.getElementById('battleResultEmoji').textContent=victory?'🏆':'💀';
   document.getElementById('battleResultTitle').textContent=victory?'VICTORY!':'DEFEAT...';
   document.getElementById('battleResultTitle').style.color=victory?'#06d6a0':'#ef476f';
-  document.getElementById('battleResultMsg').textContent=msg;
-  document.getElementById('battleResultBtn').textContent=victory?'Collect Rewards! 🪙':'Fix My Base 🔨';
+  // Clean message — strip the credits line since we show it separately
+  var cleanMsg=msg.replace(/\s*You earned.*$/,'').replace(/\s*🪙.*credits.*$/,'').trim();
+  document.getElementById('battleResultMsg').textContent=cleanMsg;
+  // Show reward box only if credits earned
+  var rewardBox=document.getElementById('battleResultReward');
+  var rewardAmt=document.getElementById('battleResultRewardAmt');
+  if(victory && credits>0){
+    rewardBox.style.display='block';
+    rewardAmt.textContent='🪙 +'+credits;
+  } else {
+    rewardBox.style.display='none';
+  }
+  document.getElementById('battleResultBtn').textContent=victory?'Collect Rewards! 🪙':'Back to Castle 🏰';
   overlay.style.display='flex';
   if(victory) doConfetti&&doConfetti();
 }
 
 window.closeBattleResult=function(){
   document.getElementById('battleResultOverlay').style.display='none';
-  // Refresh castle UI
   var d=getData(), ud=d[userKey];
   if(ud&&ud.mp) document.getElementById('mpCredits').textContent=ud.mp.credits||0;
   renderBaseGrid();
@@ -2523,14 +3426,16 @@ window.destroyBaseStep=function(step){
     // Show explosion
     document.getElementById('explosionEmojis').textContent='💥 🔥 💣 ☠️ 🌋 ⚡ 💥 🔥 💥';
     explosion.style.display='flex';
-    // Return all placed items to inventory
+    // Return all placed items to inventory (except permaDead — they stay)
     var d=getData(), ud=d[userKey];
     if(ud&&ud.mp&&ud.mp.baseGrid){
+      var permaDead=ud.mp.permaDead||{};
       Object.keys(ud.mp.baseGrid).forEach(function(k){
         var cell=ud.mp.baseGrid[k]; if(!cell||!cell.id) return;
+        if(permaDead[k]) return; // cemetery stays
         ud.mp.inventory[cell.id]=Math.min(99,(ud.mp.inventory[cell.id]||0)+1);
+        delete ud.mp.baseGrid[k];
       });
-      ud.mp.baseGrid={};
       saveData(d);
     }
     setTimeout(function(){
@@ -2540,6 +3445,173 @@ window.destroyBaseStep=function(step){
       showMPToast('💥 Base cleared! Items returned to inventory.');
     }, 1800);
   }
+};
+
+// ── FUNERAL SYSTEM ──────────────────────────────────────────────────────────
+var EULOGY_PARTS=[
+  // Part 1: "These brave heroes / These weaklings / ..."
+  [
+    'These brave heroes',
+    'These weaklings',
+    'These absolute disasters',
+    'These confused individuals',
+    'These so-called warriors',
+    'These guys who panicked immediately',
+    'These legends (in their own minds)',
+    'These poor unfortunate souls',
+    'These very expensive mistakes',
+    'These fighters of questionable skill',
+    'These sandwich-break enthusiasts',
+    'These brave (and slightly sweaty) heroes',
+  ],
+  // Part 2: "...shall never be forgotten / ...ate too much food / ..."
+  [
+    '...shall never be forgotten',
+    '...ate too much food',
+    '...should have stayed home cleaning toilets',
+    '...tripped on the way to the battle',
+    '...forgot to bring their weapons',
+    '...were distracted by a butterfly',
+    '...had other plans but showed up anyway',
+    '...died as they lived: confused',
+    '...definitely could have dodged that',
+    '...left their armor at home',
+    '...were clearly undertrained',
+    '...gave it like 40% effort',
+    '...were doing their best (allegedly)',
+  ],
+  // Part 3: "...but vengeance will be mine / ...we will rebuild / ..."
+  [
+    '...but vengeance will be mine!',
+    '...we will rebuild!',
+    '...but more will replace them!',
+    '...and I will NOT be hiring from the same agency!',
+    '...so I ordered better ones online.',
+    '...but honestly this is on them.',
+    '...yet their memory fuels my mediocre rage!',
+    '...and I already forgot most of their names.',
+    '...their sacrifice saved approximately nothing.',
+    '...and their families have been notified by text.',
+    '...but the snack budget has been reallocated.',
+    '...anyway, moving on.',
+    '...I\'ve already posted their positions on the job board.',
+  ],
+];
+
+var HERO_NAMES=['Aldric','Brynn','Corvus','Dael','Elara','Fenwick','Gwin','Hazel',
+  'Idris','Jorn','Kael','Lyra','Maro','Nessa','Oswin','Prim','Quill','Reva',
+  'Solan','Tilda','Ulfric','Vess','Wren','Xyla','Yorn','Ziva','Barlo','Cress',
+  'Dorn','Emra','Flyn','Garet','Hilde','Innis','Jask','Kira','Lund','Myra'];
+
+function getHeroName(gridKey){
+  // Deterministic name based on key so it stays consistent
+  var d=getData(), ud=d[userKey];
+  if(ud&&ud.mp&&ud.mp.permaDeadNames&&ud.mp.permaDeadNames[gridKey]) return ud.mp.permaDeadNames[gridKey];
+  var name=HERO_NAMES[Math.floor(Math.random()*HERO_NAMES.length)];
+  // Save it
+  if(ud&&ud.mp){
+    if(!ud.mp.permaDeadNames) ud.mp.permaDeadNames={};
+    ud.mp.permaDeadNames[gridKey]=name;
+    saveData(d);
+  }
+  return name;
+}
+
+var _funeralChoices=[null,null,null];
+var _funeralStep=0;
+
+window.openFuneral=function(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var permaDead=ud.mp.permaDead||{};
+  var grid=ud.mp.baseGrid||{};
+  var fallen=[];
+  Object.keys(permaDead).forEach(function(k){
+    var cell=grid[k]; if(!cell) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(item) fallen.push({item:item, gridKey:k, heroName:getHeroName(k)});
+  });
+  if(!fallen.length){ showMPToast('No fallen heroes to honor.'); return; }
+  _funeralChoices=[null,null,null];
+  _funeralStep=0;
+  var icons=fallen.map(function(f){
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">'
+      +'<span style="font-size:2.4rem;filter:grayscale(0.3);">'+f.item.emoji+'</span>'
+      +'<span style="font-size:0.5rem;color:#9b59b6;font-weight:900;">'+f.heroName+'</span>'
+      +'</div>';
+  }).join('');
+  document.getElementById('funeralHeroIcons').innerHTML=icons;
+  document.getElementById('funeralHeroIconsEulogy').innerHTML=icons;
+  document.getElementById('funeralStepScreen').style.display='';
+  document.getElementById('funeralEulogyScreen').style.display='none';
+  document.getElementById('funeralOverlay').style.display='flex';
+  renderFuneralStep();
+};
+
+function renderFuneralStep(){
+  var prompts=['Choose your opening words…','How shall we remember them…','And in conclusion…'];
+  document.getElementById('funeralStepLabel').textContent='Step '+(_funeralStep+1)+' of 3';
+  document.getElementById('funeralStepPrompt').textContent=prompts[_funeralStep];
+  // Pick 3 random options from the pool (no repeats)
+  var pool=EULOGY_PARTS[_funeralStep].slice();
+  var opts=[];
+  while(opts.length<3&&pool.length){
+    var i=Math.floor(Math.random()*pool.length);
+    opts.push(pool.splice(i,1)[0]);
+  }
+  var container=document.getElementById('funeralChoices');
+  container.innerHTML=opts.map(function(txt,i){
+    return '<button onclick="funeralChoose('+i+')" data-txt="'+txt.replace(/"/g,'&quot;')+'" style="'
+      +'width:100%;padding:12px 14px;background:rgba(155,89,182,0.12);border:1.5px solid rgba(155,89,182,0.35);'
+      +'color:#d4a0ff;border-radius:10px;font-family:inherit;font-weight:700;font-size:0.82rem;cursor:pointer;'
+      +'text-align:left;line-height:1.4;transition:all 0.15s;">'
+      +txt+'</button>';
+  }).join('');
+  // Store opts for retrieval
+  container._opts=opts;
+}
+
+window.funeralChoose=function(idx){
+  var container=document.getElementById('funeralChoices');
+  var opts=container._opts||[];
+  _funeralChoices[_funeralStep]=opts[idx]||'';
+  _funeralStep++;
+  if(_funeralStep>=3){
+    showFuneralEulogy();
+  } else {
+    renderFuneralStep();
+  }
+};
+
+function showFuneralEulogy(){
+  document.getElementById('funeralStepScreen').style.display='none';
+  var eulogyEl=document.getElementById('funeralEulogyScreen');
+  eulogyEl.style.display='';
+  eulogyEl.style.opacity='0';
+  eulogyEl.style.transition='opacity 1.2s ease';
+  var sentence=_funeralChoices[0]+' '+_funeralChoices[1]+' '+_funeralChoices[2];
+  document.getElementById('funeralEulogyText').textContent='" '+sentence+' "';
+  setTimeout(function(){ eulogyEl.style.opacity='1'; },50);
+}
+
+window.closeFuneral=function(){
+  // Clear permaDead from grid — remove their cells entirely (they've been honored)
+  var d=getData(), ud=d[userKey];
+  if(ud&&ud.mp){
+    var permaDead=ud.mp.permaDead||{};
+    Object.keys(permaDead).forEach(function(k){
+      delete ud.mp.baseGrid[k];
+    });
+    ud.mp.permaDead={};
+    ud.mp.permaDeadNames={};
+    saveData(d);
+  }
+  document.getElementById('funeralOverlay').style.display='none';
+  renderBaseGrid();
+  renderInventory();
+  // Hide funeral button
+  var btn=document.getElementById('mptab-funeral');
+  if(btn) btn.style.display='none';
+  showMPToast('🕊️ May they rest in peace.');
 };
 
 // ── SHOP ──
@@ -2748,29 +3820,46 @@ function renderBaseGrid(){
     var damaged=cell.damaged;
     var permaDead=(ud.mp&&ud.mp.permaDead&&ud.mp.permaDead[key])||false;
     var block=document.createElement('div');
-    block.className='base-item-block'+(damaged?' damaged':'')+(permaDead?' perma-dead':'');
-    block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;padding:0;overflow:hidden;'+(permaDead?'filter:grayscale(1);opacity:0.4;':'');
     block.dataset.key=key;
 
-    if(item.rotatable){
-      block.style.cssText+='background:transparent;border:1.5px solid rgba(255,255,255,0.1);';
-      block.innerHTML='<div title="Tap to rotate" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">'
-        +makeRotatableSVG(item.id, rot)
-        +'</div>'
-        +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+    if(permaDead){
+      // Cemetery grave — no interaction, special styling
+      block.className='base-item-block perma-dead';
+      block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;'
+        +'padding:0;overflow:hidden;background:rgba(60,0,80,0.35);border:1.5px solid rgba(155,89,182,0.5);'
+        +'border-radius:6px;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+      var fs=Math.min(width,height)*0.38; fs=Math.max(12,Math.min(32,fs));
+      block.innerHTML='<span style="font-size:'+fs+'px;filter:grayscale(1);opacity:0.5;">'+item.emoji+'</span>'
+        +'<span style="font-size:0.42rem;color:#9b59b6;font-weight:900;letter-spacing:0.5px;">⚰️RIP</span>';
+      // No click handlers
     } else {
-      var fontSize=Math.min(width,height)*0.45;
-      fontSize=Math.max(14,Math.min(40,fontSize));
-      block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
-        +'<span class="bi-name">'+item.name+'</span>'
-        +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'')
-        +(permaDead?'<span class="bi-dmg" style="color:#9b59b6;">💀RIP</span>':'');
+      block.className='base-item-block'+(damaged?' damaged':'');
+      block.style.cssText='top:'+top+'px;left:'+left+'px;width:'+width+'px;height:'+height+'px;padding:0;overflow:hidden;';
+
+      if(item.rotatable){
+        block.style.cssText+='background:transparent;border:1.5px solid rgba(255,255,255,0.1);';
+        block.innerHTML='<div title="Tap to rotate" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">'
+          +makeRotatableSVG(item.id, rot)
+          +'</div>'
+          +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+      } else {
+        var fontSize=Math.min(width,height)*0.45;
+        fontSize=Math.max(14,Math.min(40,fontSize));
+        block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
+          +'<span class="bi-name">'+item.name+'</span>'
+          +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+      }
+      block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
+      block.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); cellRightClick(e, this.dataset.key); });
     }
 
-    block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
-    block.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); cellRightClick(e, this.dataset.key); });
     canvas.appendChild(block);
   });
+
+  // Show/hide Funeral tab button
+  var hasGraves=Object.keys(ud.mp.permaDead||{}).length>0;
+  var funeralBtn=document.getElementById('mptab-funeral');
+  if(funeralBtn) funeralBtn.style.display=hasGraves?'':'none';
 
   var lastLogin=(ud.mp&&ud.mp.lastLogin)||Date.now();
   var hrs=Math.floor((Date.now()-lastLogin)/3600000);
@@ -2873,6 +3962,10 @@ window.cellClick=function(key){
   // NOT placing
   if(!cellItem) return;
 
+  // PermaDead defenders stay in the cemetery — no interaction
+  var isPermaDead=(ud.mp&&ud.mp.permaDead&&ud.mp.permaDead[originKey])||false;
+  if(isPermaDead){ showMPToast('⚰️ This hero rests here forever. Hold a funeral.'); return; }
+
   var item=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
 
   // Rotatable item → rotate on tap
@@ -2941,6 +4034,10 @@ window.cellRightClick=function(e, key){
   }
   if(!cellItem) return;
 
+  // Never allow removing permaDead defenders — they stay in the cemetery
+  var permaDead=(ud.mp&&ud.mp.permaDead&&ud.mp.permaDead[originKey])||false;
+  if(permaDead){ showMPToast('⚰️ This hero fell in battle. Hold a funeral to honor them.'); return; }
+
   // Remove all cells this item covers and return to inventory
   var item=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
   var w=item?item.w||1:1, h=item?item.h||1:1;
@@ -2956,16 +4053,81 @@ window.cellRightClick=function(e, key){
 };
 
 function switchMPTab(tab){
-  ['base','shop'].forEach(function(t){
+  ['base','shop','trophy'].forEach(function(t){
     var el=document.getElementById('mp-'+t+'-view');
     if(el) el.style.display=t===tab?'':'none';
     var btn=document.getElementById('mptab-'+t);
     if(btn) btn.classList.toggle('active',t===tab);
   });
   if(tab==='shop') renderShop();
+  else if(tab==='trophy') renderTrophyRoom();
   else { renderBaseGrid(); renderInventory(); }
 }
 window.switchMPTab=switchMPTab;
+
+function renderTrophyRoom(){
+  var d=getData(), ud=d[userKey];
+  var trophies=(ud&&ud.trophies)||{};
+  var grid=document.getElementById('trophyGrid');
+  var empty=document.getElementById('trophyEmpty');
+  if(!grid) return;
+  if(empty) empty.style.display='none';
+
+  var secretIds=SECRET_MONSTERS.map(function(s){return s.id;});
+  var normalKeys=Object.keys(trophies).filter(function(k){
+    return trophies[k]>0 && secretIds.indexOf(k)<0;
+  });
+  normalKeys.sort(function(a,b){ return trophies[b]-trophies[a]; });
+
+  var rc={common:'#888',uncommon:'#06d6a0',rare:'#118ab2',epic:'#9b59b6',legendary:'#ffd700',secret:'#ffd700'};
+
+  var normalHtml='';
+  if(normalKeys.length){
+    normalHtml='<div style="grid-column:1/-1;font-size:0.58rem;font-weight:900;color:#7a8fb5;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">⚔️ Defeated</div>';
+    normalHtml+=normalKeys.map(function(id){
+      var mt=MONSTER_TYPES.find(function(m){return m.id===id;}); if(!mt) return '';
+      var count=trophies[id];
+      var col=rc[mt.rarity]||'#888';
+      return '<div style="background:rgba(255,255,255,0.04);border:1.5px solid '+col+'33;border-radius:10px;padding:8px 5px;text-align:center;">'
+        +'<div style="font-size:1.8rem;">'+mt.emoji+'</div>'
+        +'<div style="font-size:0.5rem;font-weight:900;color:'+col+';margin-top:2px;line-height:1.2;">'+mt.name+'</div>'
+        +'<div style="font-size:0.65rem;color:#ffd700;font-weight:900;margin-top:1px;">×'+count+'</div>'
+        +'<div style="font-size:0.4rem;color:#4a5f80;text-transform:uppercase;letter-spacing:1px;">'+mt.rarity+'</div>'
+        +'</div>';
+    }).join('');
+  } else {
+    normalHtml='<div style="grid-column:1/-1;text-align:center;padding:20px;color:#3a4f6b;font-size:0.7rem;">Win battles to fill this room!</div>';
+  }
+
+  // Secret creatures section — always shows all 15
+  var unlockedCount=SECRET_MONSTERS.filter(function(s){return (trophies[s.id]||0)>0;}).length;
+  var secretHeader='<div style="grid-column:1/-1;margin:18px 0 8px;border-top:1px solid rgba(255,215,0,0.1);padding-top:14px;">'
+    +'<div style="font-size:0.65rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;text-align:center;">⚗️ Secret Creatures</div>'
+    +'<div style="font-size:0.52rem;color:#4a5f80;text-align:center;margin-top:3px;">'+unlockedCount+' / '+SECRET_MONSTERS.length+' discovered</div>'
+    +'<div style="font-size:0.48rem;color:#2a3545;text-align:center;margin-top:2px;">Hidden in battle. Extremely rare...</div>'
+    +'</div>';
+
+  var secretGrid=SECRET_MONSTERS.map(function(sm){
+    var count=trophies[sm.id]||0;
+    if(count>0){
+      return '<div style="background:rgba(255,215,0,0.07);border:1.5px solid #ffd70055;border-radius:10px;padding:8px 5px;text-align:center;position:relative;">'
+        +'<div style="position:absolute;top:3px;right:4px;font-size:0.45rem;color:#ffd700;">★</div>'
+        +'<div style="font-size:1.8rem;">'+sm.emoji+'</div>'
+        +'<div style="font-size:0.5rem;font-weight:900;color:#ffd700;margin-top:2px;line-height:1.2;">'+sm.name+'</div>'
+        +'<div style="font-size:0.62rem;color:#ffd700;font-weight:900;margin-top:1px;">×'+count+'</div>'
+        +'<div style="font-size:0.4rem;color:#8a7a30;margin-top:1px;">'+sm.desc.split('—')[0].trim()+'</div>'
+        +'</div>';
+    } else {
+      return '<div style="background:rgba(255,255,255,0.015);border:1.5px solid #ffffff0d;border-radius:10px;padding:8px 5px;text-align:center;">'
+        +'<div style="font-size:1.8rem;opacity:0.15;">🔮</div>'
+        +'<div style="font-size:0.52rem;font-weight:900;color:#2a3545;margin-top:2px;">???</div>'
+        +'<div style="font-size:0.4rem;color:#1e2a38;margin-top:2px;">not yet found</div>'
+        +'</div>';
+    }
+  }).join('');
+
+  grid.innerHTML=normalHtml+secretHeader+secretGrid;
+}
 
 function showMyPlace(){
   _selectedItemId=null;
