@@ -1410,6 +1410,8 @@ function handleLogin(){
     var ud=initUser(name);
     // God account — seed with test data on first login
     if(userKey==='god') seedGodAccount();
+    // ONE-TIME castle reset (March 2026) — clears accumulated items, starts fresh at 200 gold
+    applyCastleReset(ud);
     document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
     selMode=null; activeAttackZone=null;
     document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
@@ -1423,6 +1425,11 @@ function handleLogin(){
     if(errMsg){ errMsg.textContent='Login error: '+err.message+' — try refreshing the page.'; errMsg.style.display='block'; }
     setTimeout(function(){ nameInput.style.borderColor=''; },2000);
   }
+}
+
+function applyCastleReset(ud){
+  // DISABLED — already ran, caused data loss issues. Do not re-enable.
+  return;
 }
 
 function seedGodAccount(){
