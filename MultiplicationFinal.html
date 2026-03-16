@@ -3225,7 +3225,7 @@ var SPEED_ZONES=[
   {name:'Orange',color:'#f4a261',max:5000},
   {name:'Red',color:'#ef476f',max:Infinity},
 ];
-function getZone(ms){
+function getBattleZone(ms){
   for(var i=0;i<SPEED_ZONES.length;i++) if(ms<SPEED_ZONES[i].max) return i;
   return SPEED_ZONES.length-1;
 }
@@ -3236,19 +3236,19 @@ function maybeKnockFact(monster){
   // Only knock gold/green/blue facts (not already in red)
   var eligible=keys.filter(function(k){
     var f=ud.facts[k]; if(!f||!f.best) return false;
-    return getZone(f.best)<SPEED_ZONES.length-1;
+    return getBattleZone(f.best)<SPEED_ZONES.length-1;
   });
   if(!eligible.length) return;
   var k=eligible[Math.floor(Math.random()*eligible.length)];
   var f=ud.facts[k];
-  var oldZone=getZone(f.best);
+  var oldZone=getBattleZone(f.best);
   // Knock speed up by 30-60% (makes it slower = worse zone)
   var penalty=Math.round(f.best*(0.3+Math.random()*0.3));
   f.best+=penalty;
   // Update recent10 similarly
   if(f.recent10&&f.recent10.length) f.recent10.push(f.best);
   saveData(d);
-  var newZone=getZone(f.best);
+  var newZone=getBattleZone(f.best);
   if(newZone>oldZone){
     var parts=k.split('x');
     var msg=monster.emoji+' '+monster.name+' attacked '+parts[0]+'×'+parts[1]+'!  '+
