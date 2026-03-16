@@ -1172,6 +1172,26 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   </div>
 </div>
 
+<!-- Gods Rebalanced Overlay -->
+<div id="godsRebalancedOverlay" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;flex-direction:column;">
+  <div style="max-width:340px;width:90%;text-align:center;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:4rem;margin-bottom:12px;animation:mBounce 1s ease infinite;">⚖️</div>
+    <div style="font-size:0.65rem;font-weight:900;letter-spacing:4px;color:#9b59b6;text-transform:uppercase;margin-bottom:8px;">Divine Decree</div>
+    <div style="font-size:1.6rem;font-weight:900;color:#ffd700;margin-bottom:14px;line-height:1.2;">The Gods Have<br>Rebalanced the World</div>
+    <div style="font-size:0.82rem;color:#b89fd4;line-height:1.7;margin-bottom:20px;">
+      All accumulated gold and castle inventories have been swept away.<br><br>
+      <span style="color:#06d6a0;font-weight:900;">Your multiplication skills are untouched.</span><br><br>
+      From this day forward, gold must be <strong style="color:#ffd700;">earned through multiplication practice</strong> — the true source of a warrior's power.
+    </div>
+    <div style="background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.3);border-radius:12px;padding:12px 18px;margin-bottom:20px;">
+      <div style="font-size:0.6rem;color:#ffd700;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your New Balance</div>
+      <div style="font-size:2rem;font-weight:900;color:#ffd700;">🪙 200</div>
+      <div style="font-size:0.58rem;color:#7a8fb5;margin-top:3px;">Earn more by completing multiplication sessions</div>
+    </div>
+    <button onclick="closeGodsRebalanced()" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 20px rgba(155,89,182,0.4);">I Accept the Decree ⚖️</button>
+  </div>
+</div>
+
 <!-- Battle Result Overlay -->
 <div id="battleResultOverlay" style="display:none;position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;">
   <div style="background:linear-gradient(160deg,#0d1520,#1e3a5f);border:2px solid #118ab2;border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%;">
@@ -4136,10 +4156,47 @@ function renderTrophyRoom(){
   grid.innerHTML=normalHtml+secretHeader+secretGrid;
 }
 
+function applyCastleResetV2(ud, d){
+  // One-time castle wipe — clears gold/inventory/grid, preserves ALL multiplication data
+  if(ud.castleResetV2) return false;
+  ud.mp = {
+    credits: 200,
+    inventory: {},
+    baseGrid: {},
+    permaDead: {},
+    permaDeadNames: {},
+    battleWins: 0,
+    bossCountdown: 0,
+    ominousWarned: 0,
+    lastLogin: Date.now()
+  };
+  ud.castleResetV2 = true;
+  d[userKey] = ud;
+  saveData(d);
+  return true; // signals that reset happened, show the overlay
+}
+
+window.closeGodsRebalanced = function(){
+  document.getElementById('godsRebalancedOverlay').style.display = 'none';
+};
+
 function showMyPlace(){
   _selectedItemId=null;
-  // Sanitize any corrupted inventory values (Infinity, NaN, negatives, >99)
+  // One-time castle reset — fires once, shows divine decree overlay
   var d=getData(), ud=d[userKey];
+  if(ud && applyCastleResetV2(ud, d)){
+    // Reload after save so credits display correctly
+    d=getData(); ud=d[userKey];
+    // Show screen first, then overlay on top
+    var credits=(ud&&ud.mp&&ud.mp.credits)||0;
+    document.getElementById('mpCredits').textContent=credits;
+    switchMPTab('base');
+    show('myPlaceScreen');
+    document.getElementById('godsRebalancedOverlay').style.display='flex';
+    return;
+  }
+  // Sanitize any corrupted inventory values (Infinity, NaN, negatives, >99)
+  d=getData(); ud=d[userKey];
   if(ud&&ud.mp&&ud.mp.inventory){
     var dirty=false;
     Object.keys(ud.mp.inventory).forEach(function(k){
