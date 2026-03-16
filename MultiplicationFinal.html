@@ -15,6 +15,93 @@ body {
 #app { width: 100%; max-width: min(100%, 860px); margin: 24px auto 0; }
 .screen { display: none; }
 .screen.active { display: block; width: 100%; }
+
+/* ══ MASTERY THEMES — blue-master / green-master / golden-god ════════════════ */
+
+/* Shared shimmer bar */
+#masteryBanner {
+  display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+  height: 4px; pointer-events: none;
+  background-size: 200% 100%; animation: shimmerBar 2s linear infinite;
+}
+@keyframes shimmerBar { 0%{background-position:0%} 100%{background-position:200%} }
+@keyframes goldShimmer { 0%{background-position:0% 0%} 100%{background-position:200% 0%} }
+
+/* ── ALL BLUE THEME ── */
+body.blue-master { background: radial-gradient(ellipse at 20% 20%, #001528 0%, #000e1f 50%, #000810 100%) !important; }
+body.blue-master #masteryBanner { display:block !important; background: linear-gradient(90deg,#118ab2,#06d6a0,#118ab2,#0a5f82,#118ab2) !important; }
+body.blue-master .card { background: linear-gradient(160deg,#001020 0%,#001830 60%,#000e20 100%) !important; border:1px solid rgba(17,138,178,0.25) !important; box-shadow:0 8px 32px rgba(17,138,178,0.12) !important; }
+body.blue-master h1 { color: #118ab2 !important; text-shadow: 0 0 20px rgba(17,138,178,0.5); }
+body.blue-master .subtitle, body.blue-master label { color: #2a6a8a !important; }
+body.blue-master input[type="text"], body.blue-master input[type="number"] { background:#001020 !important; border-color:rgba(17,138,178,0.35) !important; color:#06d6a0 !important; }
+body.blue-master input:focus { border-color:#06d6a0 !important; }
+body.blue-master .btn { background:linear-gradient(135deg,#0a4a6a,#083a52) !important; color:#a0e0f0 !important; }
+body.blue-master .btn-yellow { background:linear-gradient(135deg,#118ab2,#0a6080) !important; color:#e0f8ff !important; }
+body.blue-master .stat-box, body.blue-master .stat-card { background:#001020 !important; border-color:rgba(17,138,178,0.2) !important; }
+body.blue-master .tab.active { border-color:#118ab2 !important; color:#06d6a0 !important; background:rgba(17,138,178,0.12) !important; }
+body.blue-master .screen-title, body.blue-master .info-section-title { color:#06d6a0 !important; }
+body.blue-master #answerInput { border-color:#118ab2 !important; background:#001020 !important; color:#06d6a0 !important; box-shadow:0 0 20px rgba(17,138,178,0.25) !important; }
+body.blue-master .problem-display { color:#06d6a0 !important; text-shadow:0 0 30px rgba(6,214,160,0.3); }
+body.blue-master .timer-bar { background:linear-gradient(90deg,#118ab2,#06d6a0) !important; }
+body.blue-master .level-bar-fill { background:linear-gradient(90deg,#118ab2,#06d6a0) !important; }
+body.blue-master .mode-btn { border-color:rgba(17,138,178,0.3) !important; background:rgba(17,138,178,0.05) !important; }
+body.blue-master .mode-btn.selected { border-color:#118ab2 !important; background:rgba(17,138,178,0.15) !important; }
+body.blue-master .myplace-tab.active { background:rgba(17,138,178,0.2) !important; color:#06d6a0 !important; border-color:#118ab2 !important; }
+body.blue-master .base-canvas { background:#000e1a !important; border-color:rgba(17,138,178,0.25) !important; }
+body.blue-master ::-webkit-scrollbar-thumb { background:rgba(17,138,178,0.3) !important; }
+
+/* ── ALL GREEN THEME ── */
+body.green-master { background: radial-gradient(ellipse at 20% 20%, #001a0f 0%, #001208 50%, #000d05 100%) !important; }
+body.green-master #masteryBanner { display:block !important; background: linear-gradient(90deg,#06d6a0,#00ff88,#06d6a0,#04a876,#06d6a0) !important; }
+body.green-master .card { background: linear-gradient(160deg,#001208 0%,#001a0e 60%,#000e08 100%) !important; border:1px solid rgba(6,214,160,0.2) !important; box-shadow:0 8px 32px rgba(6,214,160,0.1) !important; }
+body.green-master h1 { color: #06d6a0 !important; text-shadow: 0 0 20px rgba(6,214,160,0.5); }
+body.green-master .subtitle, body.green-master label { color: #2a7a5a !important; }
+body.green-master input[type="text"], body.green-master input[type="number"] { background:#001008 !important; border-color:rgba(6,214,160,0.3) !important; color:#06d6a0 !important; }
+body.green-master input:focus { border-color:#06d6a0 !important; }
+body.green-master .btn { background:linear-gradient(135deg,#045a38,#034028) !important; color:#a0f0d8 !important; }
+body.green-master .btn-yellow { background:linear-gradient(135deg,#06d6a0,#04a876) !important; color:#001208 !important; }
+body.green-master .stat-box, body.green-master .stat-card { background:#001008 !important; border-color:rgba(6,214,160,0.18) !important; }
+body.green-master .tab.active { border-color:#06d6a0 !important; color:#06d6a0 !important; background:rgba(6,214,160,0.1) !important; }
+body.green-master .screen-title, body.green-master .info-section-title { color:#06d6a0 !important; }
+body.green-master #answerInput { border-color:#06d6a0 !important; background:#001008 !important; color:#06d6a0 !important; box-shadow:0 0 20px rgba(6,214,160,0.2) !important; }
+body.green-master .problem-display { color:#06d6a0 !important; text-shadow:0 0 30px rgba(6,214,160,0.4); }
+body.green-master .timer-bar { background:linear-gradient(90deg,#06d6a0,#00ff88) !important; }
+body.green-master .level-bar-fill { background:linear-gradient(90deg,#06d6a0,#00ff88) !important; }
+body.green-master .mode-btn { border-color:rgba(6,214,160,0.25) !important; background:rgba(6,214,160,0.04) !important; }
+body.green-master .mode-btn.selected { border-color:#06d6a0 !important; background:rgba(6,214,160,0.12) !important; }
+body.green-master .myplace-tab.active { background:rgba(6,214,160,0.15) !important; color:#06d6a0 !important; border-color:#06d6a0 !important; }
+body.green-master .base-canvas { background:#000c06 !important; border-color:rgba(6,214,160,0.2) !important; }
+body.green-master ::-webkit-scrollbar-thumb { background:rgba(6,214,160,0.3) !important; }
+body.green-master .fire-badge-wrap { filter:drop-shadow(0 0 10px rgba(6,214,160,0.5)) !important; }
+
+/* ── ALL GOLD THEME ── */
+body.golden-god { background: radial-gradient(ellipse at 20% 20%, #2a1f00 0%, #1a1200 40%, #0d0900 100%) !important; }
+body.golden-god::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:0; background: radial-gradient(ellipse at 10% 10%,rgba(255,215,0,0.08) 0%,transparent 50%), radial-gradient(ellipse at 90% 80%,rgba(255,165,0,0.06) 0%,transparent 50%); }
+body.golden-god #app { position:relative; z-index:1; }
+body.golden-god #masteryBanner { display:block !important; background:linear-gradient(90deg,#ffd700,#ff9500,#ffd700,#ff6b00,#ffd700) !important; }
+body.golden-god .card { background:linear-gradient(160deg,#1a1200 0%,#241800 60%,#1a1000 100%) !important; border:1px solid rgba(255,215,0,0.22) !important; box-shadow:0 8px 32px rgba(255,165,0,0.18), inset 0 0 40px rgba(255,215,0,0.03) !important; }
+body.golden-god h1 { color:#ffd700 !important; text-shadow:0 0 20px rgba(255,215,0,0.5); }
+body.golden-god .subtitle, body.golden-god label { color:#b8972a !important; }
+body.golden-god input[type="text"], body.golden-god input[type="number"] { background:#1a1200 !important; border-color:rgba(255,215,0,0.3) !important; color:#ffd700 !important; }
+body.golden-god input:focus { border-color:#ffd700 !important; }
+body.golden-god .btn { background:linear-gradient(135deg,#b8860b,#8b6914) !important; color:#fff8e0 !important; }
+body.golden-god .btn-yellow { background:linear-gradient(135deg,#ffd700,#ff9500) !important; color:#1a0d00 !important; }
+body.golden-god .stat-box, body.golden-god .stat-card { background:#1a1200 !important; border-color:rgba(255,215,0,0.2) !important; }
+body.golden-god .tab.active { border-color:#ffd700 !important; color:#ffd700 !important; background:rgba(255,215,0,0.1) !important; }
+body.golden-god .screen-title, body.golden-god .info-section-title { color:#ffd700 !important; }
+body.golden-god #answerInput { border-color:#ffd700 !important; background:#1a1200 !important; color:#ffd700 !important; box-shadow:0 0 20px rgba(255,215,0,0.2) !important; }
+body.golden-god .problem-display { color:#ffd700 !important; text-shadow:0 0 30px rgba(255,215,0,0.4); }
+body.golden-god .timer-bar { background:linear-gradient(90deg,#ffd700,#ff9500) !important; }
+body.golden-god .level-bar-fill { background:linear-gradient(90deg,#ffd700,#ff9500) !important; }
+body.golden-god .mode-btn { border-color:rgba(255,215,0,0.3) !important; background:rgba(255,215,0,0.05) !important; }
+body.golden-god .mode-btn.selected { border-color:#ffd700 !important; background:rgba(255,215,0,0.15) !important; }
+body.golden-god .myplace-tab.active { background:rgba(255,215,0,0.18) !important; color:#ffd700 !important; border-color:#ffd700 !important; }
+body.golden-god .base-canvas { background:#0d0900 !important; border-color:rgba(255,215,0,0.2) !important; }
+body.golden-god .fact-row { background:#1a1200 !important; }
+body.golden-god .fire-badge-icon { filter:hue-rotate(-30deg) saturate(2) brightness(1.2) !important; }
+body.golden-god .fire-badge-wrap { filter:drop-shadow(0 0 12px rgba(255,215,0,0.6)) !important; }
+body.golden-god ::-webkit-scrollbar-thumb { background:rgba(255,215,0,0.3) !important; }
+
 .card { background: #16213e; border-radius: 18px; padding: 30px 26px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); width: 100%; box-sizing: border-box; }
 h1 { font-size: 2rem; font-weight: 900; text-align: center; color: #ffd166; margin-bottom: 4px; }
 .subtitle { text-align: center; color: #7a8fb5; font-size: 0.9rem; font-weight: 600; margin-bottom: 24px; }
@@ -397,7 +484,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .myplace-tab.active { background:rgba(17,138,178,0.25);color:#118ab2;border:1.5px solid #118ab2; }
 /* Base grid */
 .base-grid-wrap { flex:1;overflow:auto;padding:0 14px 10px;display:flex;flex-direction:column;align-items:center; }
-.base-canvas { display:grid;grid-template-columns:repeat(10,44px);grid-template-rows:repeat(8,44px);gap:2px;background:#0a1520;border:2px solid #1e3a5f;border-radius:10px;padding:6px;position:relative; }
+.base-canvas { display:grid;grid-template-columns:repeat(10,44px);grid-template-rows:repeat(8,44px);gap:2px;background:#0a1520;border:2px solid #1e3a5f;border-radius:10px;padding:6px;position:relative;max-width:100%;overflow-x:auto; }
 .base-cell { width:44px;height:44px;border-radius:5px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:background 0.15s;position:relative;user-select:none; }
 .base-cell:hover { background:rgba(255,255,255,0.08); }
 .base-cell.drag-over { background:rgba(17,138,178,0.3);border-color:#118ab2; }
@@ -643,6 +730,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 </style>
 </head>
 <body>
+<div id="masteryBanner"></div>
 <div id="app">
 
 <!-- ══ LOGIN ══ -->
@@ -827,6 +915,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div id="slowSection" style="display:none;"><div class="slow-title">&#x1F422; Needs Work (slowest this session)</div><div class="tag-grid" id="slowGrid"></div></div>
     <div id="wrongSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x274C; Most Wrong This Session</div><div class="tag-grid" id="wrongGrid"></div></div>
     <div id="fastSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x26A1; Fastest This Session</div><div class="tag-grid" id="fastGrid"></div></div>
+    <div id="resCreditsEarned" style="display:none;background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.35);border-radius:12px;padding:10px 16px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:0.58rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;">Gold Earned</div>
+      <div style="font-size:1.6rem;font-weight:900;color:#ffd700;" id="resCreditsAmt">💰 0</div>
+    </div>
     <div class="btn-row">
       <button class="btn" id="resMyPlaceBtn" style="background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
       <button class="btn btn-gray"   id="resMyInfoBtn">&#x1F4CA; My Info</button>
@@ -912,7 +1004,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="font-size:1rem;font-weight:900;color:#e8f0fe;">🏰 My Castle</div>
       <div style="display:flex;align-items:center;gap:8px;">
         <button onclick="destroyBaseStep(1)" style="background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:#ef476f;border-radius:6px;padding:4px 8px;font-size:0.6rem;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">💥 Destroy</button>
-        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
+        <div id="battleChargeDisplay" style="display:flex;align-items:center;gap:5px;background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.35);border-radius:20px;padding:5px 10px;font-size:0.75rem;font-weight:900;color:#ef476f;cursor:pointer;" onclick="trySpendCharge()" title="Battle charges — earned through multiplication practice!">
+          <span id="battleChargeIcons">⚔️</span>
+        </div>
+        <div class="myplace-credits"><span>💰</span><span id="mpCredits">0</span></div>
       </div>
     </div>
     <div class="myplace-tabs">
@@ -922,7 +1017,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <button class="myplace-tab" id="mptab-trophy" onclick="switchMPTab('trophy')">🏆 Trophies</button>
     </div>
     <!-- Build view: grid + inventory together, scrollable -->
-    <div id="mp-base-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;">
+    <div id="mp-base-view" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 10px 80px;">
       <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
       <div id="godBattleTestBtn" style="display:none;text-align:center;margin-bottom:6px;">
         <button onclick="startBattle(false)" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:8px;padding:6px 16px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">🧪 TEST BATTLE (GOD)</button>
@@ -1172,6 +1267,16 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   </div>
 </div>
 
+<!-- Ominous Warning Overlay -->
+<div id="ominousOverlay" style="display:none;position:fixed;inset:0;z-index:9100;pointer-events:none;align-items:center;justify-content:center;">
+  <div style="background:rgba(5,0,15,0.96);border:2px solid #9b59b6;border-radius:16px;padding:28px 32px;max-width:300px;width:88%;text-align:center;font-family:inherit;animation:popIn 0.4s ease;pointer-events:all;">
+    <div style="font-size:2.5rem;margin-bottom:10px;" id="ominousEmoji">🌑</div>
+    <div style="font-size:0.95rem;font-weight:900;color:#9b59b6;line-height:1.6;" id="ominousMsg">Something stirs...</div>
+    <div style="font-size:0.6rem;color:#5a3f80;margin-top:10px;font-weight:700;" id="ominousSub">Prepare your defenses...</div>
+    <button onclick="document.getElementById('ominousOverlay').style.display='none'" style="margin-top:14px;background:rgba(155,89,182,0.2);border:1px solid #9b59b6;color:#9b59b6;border-radius:8px;padding:8px 20px;font-family:inherit;font-weight:900;font-size:0.75rem;cursor:pointer;">Noted...</button>
+  </div>
+</div>
+
 <!-- Gods Rebalanced Overlay -->
 <div id="godsRebalancedOverlay" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;flex-direction:column;">
   <div style="max-width:340px;width:90%;text-align:center;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">
@@ -1185,7 +1290,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     </div>
     <div style="background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.3);border-radius:12px;padding:12px 18px;margin-bottom:20px;">
       <div style="font-size:0.6rem;color:#ffd700;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your New Balance</div>
-      <div style="font-size:2rem;font-weight:900;color:#ffd700;">🪙 200</div>
+      <div style="font-size:2rem;font-weight:900;color:#ffd700;">💰 200</div>
       <div style="font-size:0.58rem;color:#7a8fb5;margin-top:3px;">Earn more by completing multiplication sessions</div>
     </div>
     <button onclick="closeGodsRebalanced()" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 20px rgba(155,89,182,0.4);">I Accept the Decree ⚖️</button>
@@ -1438,6 +1543,7 @@ function handleLogin(){
     document.getElementById('startBtn').disabled=true;
     renderModeScreen();
     show('modeScreen');
+    try { applyGoldenTheme(); } catch(e){}
   } catch(err) {
     console.error('Login error:', err);
     nameInput.style.borderColor='#ef476f';
@@ -1753,6 +1859,91 @@ function getCurrentStreak(){
   var streak=0;
   last.times.forEach(function(t){ if(t.ok) streak++; else streak=0; });
   return streak;
+}
+
+// ── MASTERY THEME SYSTEM ─────────────────────────────────────────────────────
+var MASTERY_TIERS=[
+  {
+    id:'blue', cls:'blue-master',
+    check:function(facts){ return ALL_FACTS.every(function(ab){ var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null&&avg<3000; }); },
+    seenKey:'_blueMasterSeen',
+    emoji:'🧊', color:'#118ab2', accentColor:'#06d6a0',
+    title:'ICE MASTER',
+    subtitle:'All 64 facts answered in under 3 seconds each.',
+    desc:'Your speed is as cold and precise as ice.\nThe blue world is yours.',
+    btn:'Enter the Blue Realm 🧊',
+    bg:'radial-gradient(ellipse at center,#001528,#000)'
+  },
+  {
+    id:'green', cls:'green-master',
+    check:function(facts){ return ALL_FACTS.every(function(ab){ var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null&&avg<2000; }); },
+    seenKey:'_greenMasterSeen',
+    emoji:'⚡', color:'#06d6a0', accentColor:'#00ff88',
+    title:'LIGHTNING MASTER',
+    subtitle:'All 64 facts answered in under 2 seconds each.',
+    desc:'You move like lightning through numbers.\nThe green world bends to your will.',
+    btn:'Claim the Green Throne ⚡',
+    bg:'radial-gradient(ellipse at center,#001a0a,#000)'
+  },
+  {
+    id:'gold', cls:'golden-god',
+    check:function(facts){ return ALL_FACTS.every(function(ab){ var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null&&avg<1000; }); },
+    seenKey:'_goldenGodSeen',
+    emoji:'👑', color:'#ffd700', accentColor:'#ff9500',
+    title:'GOLDEN GOD',
+    subtitle:'All 64 facts answered in under 1 second each.',
+    desc:'You have achieved what few ever will.\nEvery number bows before you.',
+    btn:'CLAIM YOUR THRONE 👑',
+    bg:'radial-gradient(ellipse at center,#2a1a00,#000)'
+  }
+];
+
+function applyGoldenTheme(){ applyMasteryTheme(); } // legacy alias
+
+function applyMasteryTheme(){
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.facts) return;
+  var facts=ud.facts;
+
+  // Find highest earned tier
+  var earnedTier=null;
+  for(var i=MASTERY_TIERS.length-1;i>=0;i--){
+    if(MASTERY_TIERS[i].check(facts)){ earnedTier=MASTERY_TIERS[i]; break; }
+  }
+
+  // Remove all theme classes
+  MASTERY_TIERS.forEach(function(t){ document.body.classList.remove(t.cls); });
+
+  if(earnedTier){
+    document.body.classList.add(earnedTier.cls);
+    // First time seeing this tier — show popup
+    if(!ud[earnedTier.seenKey]){
+      ud[earnedTier.seenKey]=true;
+      d[userKey]=ud; saveData(d);
+      setTimeout(function(){ showMasteryUnlock(earnedTier); }, 600);
+    }
+  }
+}
+
+function showMasteryUnlock(tier){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:'+tier.bg+';';
+  var stars=tier.id==='gold'
+    ? [2,3,4,5,6,7,8,9].map(function(){ return '<span style="font-size:1.6rem;filter:drop-shadow(0 0 8px '+tier.color+');">'+tier.emoji+'</span>'; }).join('')
+    : [1,2,3,4,5,6].map(function(){ return '<span style="font-size:1.4rem;filter:drop-shadow(0 0 6px '+tier.color+');">⚡</span>'; }).join('');
+  el.innerHTML=
+    '<div style="text-align:center;max-width:360px;width:92%;padding:20px;animation:popIn 0.6s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="font-size:'+(tier.id==='gold'?'5':'4')+'rem;margin-bottom:8px;animation:mBounce 0.8s ease infinite;filter:drop-shadow(0 0 24px '+tier.color+');">'+tier.emoji+'</div>'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:6px;color:'+tier.accentColor+';text-transform:uppercase;margin-bottom:8px;">MASTERY UNLOCKED</div>'
+    +'<div style="font-size:2rem;font-weight:900;background:linear-gradient(135deg,'+tier.color+','+tier.accentColor+','+tier.color+');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;line-height:1.1;">'+tier.title+'</div>'
+    +'<div style="font-size:0.78rem;color:'+tier.color+';font-weight:700;margin-bottom:10px;">'+tier.subtitle+'</div>'
+    +'<div style="font-size:0.82rem;color:#aaa;line-height:1.7;margin-bottom:18px;white-space:pre-line;">'+tier.desc+'</div>'
+    +'<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:20px;">'+stars+'</div>'
+    +'<div style="font-size:0.68rem;color:#555;margin-bottom:16px;">Your entire interface has transformed to celebrate this achievement.</div>'
+    +'<button onclick="this.parentNode.parentNode.remove()" style="background:linear-gradient(135deg,'+tier.color+','+tier.accentColor+');color:#0a0a0a;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;box-shadow:0 0 28px '+tier.color+'88;letter-spacing:1px;">'+tier.btn+'</button>'
+    +'</div>';
+  document.body.appendChild(el);
+  if(tier.id==='gold') doConfetti&&doConfetti();
 }
 
 function checkAndSaveBadges(){
@@ -2126,6 +2317,7 @@ function earnSessionCredits(session){
   window._sessionFactFingerprint=null; // clear after use
 
   if(earned>0) awardCredits(earned);
+  return earned;
 }
 
 function showFarmingBustedPopup(repeatCount, penaltyMult){
@@ -2170,6 +2362,143 @@ function checkDailyLoginBonus(){
 }
 
 // Check for goblin attack based on time away
+// ── AUTO ATTACK & BATTLE CHARGE SYSTEM ──────────────────────────────────────
+
+var OMINOUS_MSGS_NEW=[
+  {emoji:'🌑', msg:'...something approaches...', sub:'Your scouts report movement in the dark forests.'},
+  {emoji:'⚡', msg:'The ground trembles. Something is near.', sub:'Enemy forces have been spotted. Prepare!'},
+  {emoji:'🌩️', msg:'Ravens scatter from the trees...', sub:'They say bad omens follow the dark hordes.'},
+  {emoji:'👁️', msg:'You are being watched.', sub:'Eyes in the dark. Battle comes soon.'},
+  {emoji:'🔥', msg:'Smoke on the horizon...', sub:'They will reach your walls before long.'},
+  {emoji:'💀', msg:'A cold wind blows from the north.', sub:'The dead walk. Your castle will be tested.'},
+];
+
+function showOminousOverlay(countdownSessions){
+  var m=OMINOUS_MSGS_NEW[Math.floor(Math.random()*OMINOUS_MSGS_NEW.length)];
+  var el=document.getElementById('ominousOverlay');
+  if(!el) return;
+  document.getElementById('ominousEmoji').textContent=m.emoji;
+  document.getElementById('ominousMsg').textContent=m.msg;
+  document.getElementById('ominousSub').textContent=m.sub+'\n(Battle in ~'+countdownSessions+' more session'+(countdownSessions===1?'':'s')+')';
+  el.style.display='flex';
+  // Auto-dismiss after 6s
+  setTimeout(function(){
+    if(el.style.display!=='none') el.style.display='none';
+  }, 6000);
+}
+
+// Called after each multiplication session — award charges + maybe trigger ominous
+function checkBattleChargesAfterSession(dur){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  // Each 30s block = 30% chance for 1 charge. 60s = 2 rolls, etc.
+  var rolls=Math.floor(dur/30);
+  var newCharges=0;
+  for(var i=0;i<rolls;i++){
+    if(Math.random()<0.30) newCharges++;
+  }
+  var maxCharges=3;
+  var prev=ud.mp.battleCharges||0;
+  ud.mp.battleCharges=Math.min(maxCharges, prev+newCharges);
+
+  // Ominous countdown: decrement; if hits 0 and they have no charges, force attack next castle visit
+  if(ud.mp.ominousCountdown>0){
+    ud.mp.ominousCountdown--;
+    if(ud.mp.ominousCountdown===0){
+      ud.mp.forcedAttackPending=true;
+    }
+  }
+
+  // Random ominous trigger: ~15% chance per session if no countdown active
+  if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&Math.random()<0.15){
+    var countdown=Math.floor(Math.random()*2)+1; // 1 or 2 sessions
+    ud.mp.ominousCountdown=countdown;
+    d[userKey]=ud; saveData(d);
+    setTimeout(function(){ showOminousOverlay(countdown); }, 1200);
+  } else {
+    d[userKey]=ud; saveData(d);
+  }
+
+  updateBattleChargeDisplay();
+
+  // Toast if charges earned
+  if(newCharges>0){
+    var chargeTotal=ud.mp.battleCharges;
+    setTimeout(function(){
+      showMPToastGlobal('⚔️ Battle charge earned! ('+chargeTotal+'/'+maxCharges+') — visit your castle!');
+    }, 800);
+  }
+}
+
+function showMPToastGlobal(msg){
+  // Show a floating toast anywhere (not just in castle)
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9000;'
+    +'background:rgba(17,138,178,0.95);color:#fff;border-radius:10px;padding:10px 20px;'
+    +'font-family:inherit;font-weight:900;font-size:0.78rem;white-space:nowrap;'
+    +'animation:floatUp 0.3s ease;pointer-events:none;';
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.5s'; },2500);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },3100);
+}
+
+function updateBattleChargeDisplay(){
+  var d=getData(), ud=d[userKey];
+  var charges=(ud&&ud.mp&&ud.mp.battleCharges)||0;
+  var el=document.getElementById('battleChargeIcons');
+  if(!el) return;
+  var now=Date.now();
+  var cooldownMs=20*60*1000;
+  var lastBattle=(ud&&ud.mp&&ud.mp.lastBattleTime)||0;
+  var onCooldown=(now-lastBattle)<cooldownMs;
+  var remainMin=Math.ceil((cooldownMs-(now-lastBattle))/60000);
+  if(onCooldown){
+    el.parentNode.style.borderColor='rgba(100,100,100,0.4)';
+    el.parentNode.style.color='#4a5f80';
+    el.parentNode.style.boxShadow='none';
+    el.parentNode.style.cursor='default';
+    el.innerHTML='⏳ '+remainMin+'m';
+    el.parentNode.title='Warriors resting — ready in '+remainMin+' min';
+  } else if(charges===0){
+    el.parentNode.style.borderColor='rgba(239,71,111,0.2)';
+    el.parentNode.style.color='#5a3050';
+    el.parentNode.style.boxShadow='none';
+    el.innerHTML='<span style="font-size:0.6rem;">⚔️ 0</span>';
+    el.parentNode.style.cursor='default';
+    el.parentNode.title='No battle charges — earn them by practicing multiplication!';
+  } else {
+    el.parentNode.style.borderColor='rgba(239,71,111,0.7)';
+    el.parentNode.style.color='#ef476f';
+    el.parentNode.style.boxShadow='0 0 8px rgba(239,71,111,0.4)';
+    el.parentNode.style.cursor='pointer';
+    el.innerHTML='⚔️ '+charges;
+    el.parentNode.title='You have '+charges+' battle charge'+(charges===1?'':'s')+'! Tap to launch a battle.';
+  }
+}
+
+window.trySpendCharge=function(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var charges=ud.mp.battleCharges||0;
+  if(charges<=0){
+    showMPToast('No battle charges! Earn them by completing multiplication sessions. ⚔️');
+    return;
+  }
+  // Cooldown: 20 minutes between battles
+  var now=Date.now();
+  var cooldownMs=20*60*1000;
+  var lastBattle=ud.mp.lastBattleTime||0;
+  var remaining=Math.ceil((cooldownMs-(now-lastBattle))/60000);
+  if(now-lastBattle<cooldownMs){
+    showMPToast('⏳ Your warriors are resting! Battle available in '+remaining+' min.');
+    return;
+  }
+  ud.mp.battleCharges=charges-1;
+  ud.mp.lastBattleTime=now;
+  d[userKey]=ud; saveData(d);
+  updateBattleChargeDisplay();
+  showAttackWarning(0);
+};
+
 function checkGoblinAttack(){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   var mp=getMPData(); if(!mp) return;
@@ -2177,14 +2506,38 @@ function checkGoblinAttack(){
   var last=mp.lastLogin||now;
   var hoursAway=Math.floor((now-last)/3600000);
   mp.lastLogin=now;
+
+  // Check for forced attack from ominous countdown
+  if(mp.forcedAttackPending){
+    mp.forcedAttackPending=false;
+    saveData(d);
+    setTimeout(function(){ showAttackWarning(0); }, 1200);
+    return;
+  }
+
+  // Random castle visit raid: 25% chance if been away ≥1 hour, max once per 2 hours
+  // Also respects 10min battle cooldown so visit-spamming doesn't trigger raids
+  var lastRaid=mp.lastRaidTime||0;
+  var lastBattle=mp.lastBattleTime||0;
+  var twoHours=7200000;
+  var tenMin=600000;
+  if(hoursAway>=1 && (now-lastRaid)>twoHours && (now-lastBattle)>tenMin && Math.random()<0.25){
+    mp.lastRaidTime=now;
+    mp.lastBattleTime=now;
+    saveData(d);
+    setTimeout(function(){ showAttackWarning(hoursAway); }, 1000);
+    return;
+  }
+
+  // Legacy: attack after 24h away (original goblin system)
+  if(hoursAway>=24){
+    mp.lastRaidTime=now;
+    saveData(d);
+    setTimeout(function(){ showAttackWarning(hoursAway); }, 800);
+    return;
+  }
+
   saveData(d);
-
-  if(hoursAway<24) return; // No attack under 24h
-
-  // Trigger a battle!
-  setTimeout(function(){
-    showAttackWarning(hoursAway);
-  }, 800);
 }
 
 function showGoblinPopup(hoursAway, damages){
@@ -2561,6 +2914,9 @@ window.dismissAttackWarning=function(){
 };
 
 window.startBattle=function(forced, prebuiltWave){
+  // Stamp lastBattleTime so cooldown is measured from actual fight start
+  var _d=getData(), _ud=_d[userKey];
+  if(_ud&&_ud.mp){ _ud.mp.lastBattleTime=Date.now(); _d[userKey]=_ud; saveData(_d); }
   _battle.defenders=buildDefenders();
   _battle.monsters=prebuiltWave||buildWave(forced===true);
   _battle.round=1;
@@ -3481,7 +3837,7 @@ function showBattleResult(victory, msg, credits){
   var rewardAmt=document.getElementById('battleResultRewardAmt');
   if(victory && credits>0){
     rewardBox.style.display='block';
-    rewardAmt.textContent='🪙 +'+credits;
+    rewardAmt.textContent='💰 +'+credits;
   } else {
     rewardBox.style.display='none';
   }
@@ -3742,7 +4098,7 @@ function renderShop(){
       var lockMsg='';
       if(specialLocked) lockMsg='Unlock: get ×6 & ×7 to 🟢 green!';
       else if(!hasLeg) lockMsg='Need '+item.leg+'⚔️ (have '+legDefeats+')';
-      else if(!canAfford) lockMsg='Need 🪙'+item.cost;
+      else if(!canAfford) lockMsg='Need 💰'+item.cost;
       var w=item.w||1, h=item.h||1;
       var sizeStr=(w>1||h>1)?'<div style="font-size:0.5rem;color:#3a4f6b;margin-bottom:1px;">'+w+'×'+h+'</div>':'';
       var defStats=item.defender?'<div class="shop-def-stats">⚔️'+item.atk+' ❤️'+item.hp+(item.range>1?' 🏹':'⚔️')+(item.healer?' ✨heal':'')+(item.aoe?' 💥aoe':'')+(item.dodge?' 🥷dodge':'')+(item.stun?' ⚡stun':'')+'</div>':'';
@@ -3768,7 +4124,7 @@ window.buyItem=function(itemId){
   var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
   if(!item) return;
   var legDefeats=ud.legendaryDefeats||0;
-  if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! Need 🪙'+item.cost); return; }
+  if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! Need 💰'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
   ud.mp.credits=Math.max(0, ud.mp.credits-item.cost);
   var newQty=((ud.mp.inventory[item.id]||0)+(item.qty||1));
@@ -4077,7 +4433,7 @@ window.cellClick=function(key){
       showMPToast('Repaired! 🔨');
       renderBaseGrid();
     } else {
-      showMPToast('Need 🪙'+cost+' to repair!');
+      showMPToast('Need 💰'+cost+' to repair!');
     }
   } else {
     // Pick up to move
@@ -4232,6 +4588,10 @@ function applyCastleResetV2(ud, d){
     battleWins: 0,
     bossCountdown: 0,
     ominousWarned: 0,
+    battleCharges: 0,
+    ominousCountdown: 0,
+    forcedAttackPending: false,
+    lastRaidTime: 0,
     lastLogin: Date.now()
   };
   ud.castleResetV2 = true;
@@ -4275,8 +4635,15 @@ function showMyPlace(){
   checkDailyLoginBonus();
   checkGoblinAttack();
   var d=getData(), ud=d[userKey];
+  // Ensure new mp fields exist
+  if(ud&&ud.mp){
+    if(ud.mp.battleCharges===undefined) ud.mp.battleCharges=0;
+    if(ud.mp.ominousCountdown===undefined) ud.mp.ominousCountdown=0;
+    saveData(d);
+  }
   var credits=(ud&&ud.mp&&ud.mp.credits)||0;
   document.getElementById('mpCredits').textContent=credits;
+  updateBattleChargeDisplay();
   // Show god test button for god account
   var godBtn=document.getElementById('godBattleTestBtn');
   if(godBtn) godBtn.style.display=(userKey==='god')?'block':'none';
@@ -5169,7 +5536,9 @@ function endQuiz(){
   var avgMs=okTimes.length?Math.round(okTimes.reduce(function(s,t){return s+t.ms;},0)/okTimes.length):0;
   var session={date:new Date().toISOString(),dur:totalTime,correct:qCorrect,total:qTotal,avgMs:avgMs,times:qTimes};
   try { saveSession(userKey,session); } catch(e){}
-  try { earnSessionCredits(session); } catch(e){}
+  var _earnedCredits=0;
+  try { _earnedCredits=earnSessionCredits(session)||0; } catch(e){}
+  try { checkBattleChargesAfterSession(totalTime); } catch(e){}
   try { sendToSheets(userKey, session); } catch(e){}
 
   var defeated=[];
@@ -5198,13 +5567,14 @@ function endQuiz(){
 
   // Check all badges
   try { checkAndSaveBadges(); } catch(e){}
+  try { applyGoldenTheme(); } catch(e){}
 
   var wasLegendary=isLegendaryBattle;
   isLegendaryBattle=false;
   activeAttackZone=null;
 
   try {
-    showResults(session, defeated, attackedZone, wasLegendary, legendaryDefeated);
+    showResults(session, defeated, attackedZone, wasLegendary, legendaryDefeated, _earnedCredits);
   } catch(e) {
     show('resultsScreen');
   }
@@ -5338,7 +5708,7 @@ function showLegendaryResults(s, legendaryDefeated, acc){
   overlay.style.display='flex';
 }
 
-function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated){
+function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated, earnedCredits){
   var acc=s.total>0?Math.round(s.correct/s.total*100):0;
 
   // Legendary gets its own full-screen results
@@ -5348,6 +5718,14 @@ function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated)
   }
 
   show('resultsScreen');
+
+  // Show gold earned box
+  var rcBox=document.getElementById('resCreditsEarned');
+  var rcAmt=document.getElementById('resCreditsAmt');
+  if(rcBox&&rcAmt){
+    if(earnedCredits>0){ rcBox.style.display='block'; rcAmt.textContent='💰 +'+earnedCredits; }
+    else { rcBox.style.display='none'; }
+  }
 
   // Set hero section
   var emoji,title;
