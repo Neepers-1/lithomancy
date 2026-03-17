@@ -2286,7 +2286,6 @@ function earnSessionCredits(session){
   if(session._legendaryCount) earned+=30*session._legendaryCount;
 
   // ── FARMING DETECTION ──────────────────────────────────────────────────────
-  // Build a fingerprint of the fact set used this session
   var factFingerprint = window._sessionFactFingerprint || null;
   if(factFingerprint && earned > 0){
     if(!ud.mp) ud.mp={};
@@ -2294,7 +2293,6 @@ function earnSessionCredits(session){
     var track=ud.mp.farmTrack;
     var now=Date.now();
     var entry=track[factFingerprint]||{count:0,penalty:1,lastTime:0};
-    // Only flag as farming if same set used 3+ times within 2 hours
     var twoHours=7200000;
     if(now-entry.lastTime<twoHours){
       entry.count++;
@@ -2306,48 +2304,59 @@ function earnSessionCredits(session){
     track[factFingerprint]=entry;
     d[userKey]=ud; saveData(d);
 
-    if(entry.count>=3){
-      // Apply halving penalty for each repeat over the threshold
-      var halvings=entry.count-2; // 3rd repeat = 1 halving, 4th = 2 halvings, etc.
+    if(entry.count===2){
+      // Second repeat — warning, half earnings
+      entry.penalty=0.5;
+      track[factFingerprint]=entry;
+      d[userKey]=ud; saveData(d);
+      earned=Math.max(1, Math.floor(earned*0.5));
+      showFarmingBustedPopup(2, 0.5);
+    } else if(entry.count>=3){
+      // Each further repeat halves again
+      var halvings=entry.count-1;
       entry.penalty=Math.pow(0.5, halvings);
       track[factFingerprint]=entry;
       d[userKey]=ud; saveData(d);
       earned=Math.max(1, Math.floor(earned*entry.penalty));
-      // Show the busted popup
       showFarmingBustedPopup(entry.count, entry.penalty);
     }
   }
-  window._sessionFactFingerprint=null; // clear after use
+  window._sessionFactFingerprint=null;
 
   if(earned>0) awardCredits(earned);
   return earned;
 }
 
 function showFarmingBustedPopup(repeatCount, penaltyMult){
-  var msgs=[
+  var isWarning = repeatCount===2;
+  var msgs= isWarning ? [
+    "Hey... didn't you just do these same problems?",
+  ] : [
     "Bro. I see you. Same facts AGAIN?",
     "You really thought I wouldn't notice?",
     "Once more with those facts, really?",
     "I have infinite patience. You do not.",
     "This is getting embarrassing for you.",
   ];
-  var msg=msgs[Math.min(repeatCount-3, msgs.length-1)];
+  var msg = isWarning ? msgs[0] : msgs[Math.min(repeatCount-3, msgs.length-1)];
   var pct=Math.round(penaltyMult*100);
   var el=document.createElement('div');
   el.style.cssText='position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.96);display:flex;align-items:center;justify-content:center;';
   el.innerHTML='<div style="max-width:320px;width:90%;text-align:center;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
-    +'<div style="font-size:3.5rem;margin-bottom:10px;">👁️</div>'
-    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:4px;color:#ef476f;text-transform:uppercase;margin-bottom:8px;">SYSTEM ALERT</div>'
-    +'<div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.3;">Bro, I know what<br>you\'re trying to do.</div>'
+    +'<div style="font-size:3.5rem;margin-bottom:10px;">'+(isWarning?'🤨':'👁️')+'</div>'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:4px;color:'+(isWarning?'#ffd700':'#ef476f')+';text-transform:uppercase;margin-bottom:8px;">'+(isWarning?'HEADS UP':'SYSTEM ALERT')+'</div>'
+    +'<div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.3;">'+(isWarning?'I\'m watching you...':'Bro, I know what<br>you\'re trying to do.')+'</div>'
     +'<div style="font-size:0.88rem;color:#b89fd4;margin-bottom:12px;line-height:1.6;">'+msg+'<br><br>'
-    +'<span style="color:#ffd700;font-weight:900;">You cannot fool god!</span><br>'
-    +'<span style="font-size:2rem;">MWAHAHAHA! 😈</span></div>'
+    +(isWarning
+      ? '<span style="color:#ffd700;font-weight:900;">Practice different problems for full gold!</span><br><span style="font-size:0.78rem;color:#7a8fb5;">You cannot fool god... MWAHAHAHA 😈</span>'
+      : '<span style="color:#ffd700;font-weight:900;">You cannot fool god!</span><br><span style="font-size:2rem;">MWAHAHAHA! 😈</span>'
+    )+'</div>'
     +'<div style="background:rgba(239,71,111,0.15);border:1.5px solid rgba(239,71,111,0.4);border-radius:10px;padding:10px 16px;margin-bottom:16px;">'
     +'<div style="font-size:0.6rem;color:#ef476f;font-weight:900;letter-spacing:2px;text-transform:uppercase;">Rewards Reduced</div>'
     +'<div style="font-size:1.4rem;font-weight:900;color:#ef476f;margin-top:4px;">'+pct+'% earnings</div>'
     +'<div style="font-size:0.58rem;color:#7a8fb5;margin-top:4px;">Practice different problems to restore full rewards</div>'
     +'</div>'
-    +'<button onclick="this.parentNode.parentNode.remove()" style="background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;padding:12px 32px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;">Fine... 😤</button>'
+    +'<button onclick="this.parentNode.parentNode.remove()" style="background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;padding:12px 32px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;">'+(isWarning?'Fine, fine... 😒':'Fine... 😤')+'</button>'
     +'</div>';
   document.body.appendChild(el);
 }
@@ -2390,10 +2399,11 @@ function showOminousOverlay(countdownSessions){
   }, 6000);
 }
 
-// Called after each multiplication session — award charges + maybe trigger ominous
+// Called after each multiplication session — award charges + tracking + maybe trigger ominous
 function checkBattleChargesAfterSession(dur){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
-  // Each 30s block = 30% chance for 1 charge. 60s = 2 rolls, etc.
+
+  // ── BATTLE CHARGES ──
   var rolls=Math.floor(dur/30);
   var newCharges=0;
   for(var i=0;i<rolls;i++){
@@ -2403,17 +2413,36 @@ function checkBattleChargesAfterSession(dur){
   var prev=ud.mp.battleCharges||0;
   ud.mp.battleCharges=Math.min(maxCharges, prev+newCharges);
 
-  // Ominous countdown: decrement; if hits 0 and they have no charges, force attack next castle visit
-  if(ud.mp.ominousCountdown>0){
-    ud.mp.ominousCountdown--;
-    if(ud.mp.ominousCountdown===0){
-      ud.mp.forcedAttackPending=true;
-    }
+  // ── MONSTER TRACKING ──
+  // Each 30s of practice adds trackingProgress. 100% = monster group found!
+  var trackGain=Math.floor(dur/30)*30; // each 30s block = 30 tracking points
+  if(!ud.mp.trackingProgress) ud.mp.trackingProgress=0;
+  if(!ud.mp.trackingMonster) ud.mp.trackingMonster=null;
+
+  // Pick a monster to track if not already tracking one
+  if(!ud.mp.trackingMonster){
+    var candidates=MONSTER_TYPES.filter(function(m){
+      return m.rarity==='common'||m.rarity==='uncommon';
+    });
+    ud.mp.trackingMonster=candidates[Math.floor(Math.random()*candidates.length)];
+    ud.mp.trackingProgress=0;
   }
 
-  // Random ominous trigger: ~15% chance per session if no countdown active
+  var prevTrack=ud.mp.trackingProgress;
+  ud.mp.trackingProgress=Math.min(100, prevTrack+trackGain);
+
+  var monster=ud.mp.trackingMonster;
+  var justFound=prevTrack<100 && ud.mp.trackingProgress>=100;
+
+  // ── OMINOUS COUNTDOWN ──
+  if(ud.mp.ominousCountdown>0){
+    ud.mp.ominousCountdown--;
+    if(ud.mp.ominousCountdown===0) ud.mp.forcedAttackPending=true;
+  }
+
+  // Random ominous trigger
   if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&Math.random()<0.15){
-    var countdown=Math.floor(Math.random()*2)+1; // 1 or 2 sessions
+    var countdown=Math.floor(Math.random()*2)+1;
     ud.mp.ominousCountdown=countdown;
     d[userKey]=ud; saveData(d);
     setTimeout(function(){ showOminousOverlay(countdown); }, 1200);
@@ -2423,14 +2452,72 @@ function checkBattleChargesAfterSession(dur){
 
   updateBattleChargeDisplay();
 
-  // Toast if charges earned
+  // ── SHOW TRACKING NOTIFICATION ──
+  if(justFound){
+    // Monster found! Queue a special bonus battle
+    setTimeout(function(){ showMonsterFoundPopup(monster, ud); }, 1000);
+  } else if(ud.mp.trackingProgress>0 && ud.mp.trackingProgress<100){
+    // Show tracking progress toast
+    setTimeout(function(){
+      var pct=Math.round(ud.mp.trackingProgress);
+      var bar='█'.repeat(Math.floor(pct/10))+'░'.repeat(10-Math.floor(pct/10));
+      showMPToastGlobal('🐾 Tracking '+monster.emoji+' '+monster.name+'... ['+bar+'] '+pct+'%');
+    }, 500);
+  }
+
+  // Charge toast
   if(newCharges>0){
     var chargeTotal=ud.mp.battleCharges;
     setTimeout(function(){
       showMPToastGlobal('⚔️ Battle charge earned! ('+chargeTotal+'/'+maxCharges+') — visit your castle!');
-    }, 800);
+    }, newCharges>0&&ud.mp.trackingProgress<100 ? 2200 : 800);
   }
 }
+
+function showMonsterFoundPopup(monster, ud){
+  var bonusGold=Math.round((monster.reward||10)*2.5);
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.97);display:flex;align-items:center;justify-content:center;';
+  el.innerHTML='<div style="max-width:320px;width:92%;text-align:center;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:4px;color:#06d6a0;text-transform:uppercase;margin-bottom:8px;">🐾 TRACKS FOUND</div>'
+    +'<div style="font-size:3.5rem;margin-bottom:8px;animation:mBounce 0.8s ease infinite;">'+monster.emoji+'</div>'
+    +'<div style="font-size:1.3rem;font-weight:900;color:#fff;margin-bottom:8px;">You\'ve found<br><span style="color:#06d6a0;">'+monster.name+'</span> tracks!</div>'
+    +'<div style="font-size:0.82rem;color:#7a8fb5;margin-bottom:14px;line-height:1.6;">Your multiplication practice led you<br>to a nearby monster group.<br>Head to your castle to hunt them!</div>'
+    +'<div style="background:rgba(6,214,160,0.1);border:1.5px solid rgba(6,214,160,0.4);border-radius:10px;padding:10px 16px;margin-bottom:16px;">'
+    +'<div style="font-size:0.58rem;color:#06d6a0;font-weight:900;letter-spacing:2px;text-transform:uppercase;">Bonus Hunt Reward</div>'
+    +'<div style="font-size:1.5rem;font-weight:900;color:#ffd700;margin-top:4px;">💰 +'+bonusGold+' bonus</div>'
+    +'<div style="font-size:0.56rem;color:#4a5f80;margin-top:2px;">Win the hunt battle to claim it</div>'
+    +'</div>'
+    +'<button onclick="claimMonsterHunt(this,\''+monster.id+'\','+bonusGold+')" style="background:linear-gradient(135deg,#06d6a0,#04a876);color:#0a1a10;border:none;border-radius:12px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;margin-right:8px;">🏹 Hunt Now!</button>'
+    +'<button onclick="this.parentNode.parentNode.remove()" style="background:rgba(255,255,255,0.08);color:#7a8fb5;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 20px;font-family:inherit;font-weight:700;font-size:0.82rem;cursor:pointer;">Later</button>'
+    +'</div>';
+  document.body.appendChild(el);
+}
+
+window.claimMonsterHunt=function(btn, monsterId, bonusGold){
+  btn.parentNode.parentNode.remove();
+  // Store the bonus and monster, then open castle and auto-start hunt
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  ud.mp.huntBonusGold=bonusGold;
+  ud.mp.huntMonsterId=monsterId;
+  ud.mp.trackingProgress=0;
+  // Pick a new monster to track for next time
+  var candidates=MONSTER_TYPES.filter(function(m){ return m.rarity==='common'||m.rarity==='uncommon'; });
+  ud.mp.trackingMonster=candidates[Math.floor(Math.random()*candidates.length)];
+  d[userKey]=ud; saveData(d);
+  // Build a wave with this monster as focus
+  var mt=MONSTER_TYPES.find(function(m){return m.id===monsterId;});
+  if(mt){
+    var wave=[makeWaveEntry(mt)];
+    // Add 2-3 weak common minions
+    var commons=MONSTER_TYPES.filter(function(m){return m.rarity==='common'&&m.hp<=12;});
+    for(var i=0;i<2;i++) wave.push(makeWaveEntry(commons[Math.floor(Math.random()*commons.length)]));
+    window._pendingWave=wave;
+    window._huntBonusGold=bonusGold;
+  }
+  showMyPlace();
+  setTimeout(function(){ showAttackWarning(0); }, 800);
+};
 
 function showMPToastGlobal(msg){
   // Show a floating toast anywhere (not just in castle)
@@ -3729,6 +3816,10 @@ function checkBattleEnd(){
   if(monsLeft.length===0){
     _battle.active=false;
     var totalReward=_battle.creditsEarned;
+    // Hunt bonus — if this was a tracked monster hunt, add bonus gold
+    var huntBonus=window._huntBonusGold||0;
+    window._huntBonusGold=null;
+    totalReward+=huntBonus;
     var d=getData(), ud=d[userKey];
     if(ud&&ud.mp){
       ud.mp.credits=(ud.mp.credits||0)+totalReward;
@@ -3739,7 +3830,10 @@ function checkBattleEnd(){
     checkOminousWarning();
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
-      showBattleResult(true,'🏆 Your defenders crushed the attackers!\n\nYou earned 🪙'+totalReward+' credits!',totalReward);
+      var msg=huntBonus>0
+        ?'🏹 Hunt successful! Bonus: 💰+'+huntBonus
+        :'🏆 Your defenders crushed the attackers!';
+      showBattleResult(true, msg, totalReward);
     },2800);
     return;
   }
