@@ -960,7 +960,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div id="fastSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x26A1; Fastest This Session</div><div class="tag-grid" id="fastGrid"></div></div>
     <div id="resCreditsEarned" style="display:none;background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.35);border-radius:12px;padding:10px 16px;text-align:center;margin-bottom:12px;">
       <div style="font-size:0.58rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;">Gold Earned</div>
-      <div style="font-size:1.6rem;font-weight:900;color:#ffd700;" id="resCreditsAmt">💰 0</div>
+      <div style="font-size:1.6rem;font-weight:900;color:#ffd700;" id="resCreditsAmt">🪙 0</div>
     </div>
     <div class="btn-row">
       <button class="btn" id="resMyPlaceBtn" style="background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
@@ -1050,7 +1050,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <div id="battleChargeDisplay" style="display:flex;align-items:center;gap:5px;background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.35);border-radius:20px;padding:5px 10px;font-size:0.75rem;font-weight:900;color:#ef476f;cursor:pointer;" onclick="trySpendCharge()" title="Battle charges — earned through multiplication practice!">
           <span id="battleChargeIcons">⚔️</span>
         </div>
-        <div class="myplace-credits"><span>💰</span><span id="mpCredits">0</span></div>
+        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
       </div>
     </div>
     <div class="myplace-tabs">
@@ -1333,7 +1333,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     </div>
     <div style="background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.3);border-radius:12px;padding:12px 18px;margin-bottom:20px;">
       <div style="font-size:0.6rem;color:#ffd700;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your New Balance</div>
-      <div style="font-size:2rem;font-weight:900;color:#ffd700;">💰 200</div>
+      <div style="font-size:2rem;font-weight:900;color:#ffd700;">🪙 200</div>
       <div style="font-size:0.58rem;color:#7a8fb5;margin-top:3px;">Earn more by completing multiplication sessions</div>
     </div>
     <button onclick="closeGodsRebalanced()" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 20px rgba(155,89,182,0.4);">I Accept the Decree ⚖️</button>
@@ -1581,7 +1581,7 @@ document.getElementById('loginBtn').addEventListener('click',handleLogin);
 // NANI'S COMPANION SYSTEM
 // ══════════════════════════════════════════════════════════════════════════════
 
-var COMPANION_USER = 'nani'; // only activates for this username
+var COMPANION_USER = 'nani'; // only activates for this username (case-insensitive)
 
 var COMPANION_PHRASES = [
   // Thai intro
@@ -1628,7 +1628,7 @@ var _companionSpeechTimer = null;
 var _companionVisible = false;
 
 function isNani(){
-  return userKey === COMPANION_USER;
+  return userKey && userKey.toLowerCase() === COMPANION_USER;
 }
 
 function getCompanionData(){
@@ -4231,7 +4231,7 @@ function checkBattleEnd(){
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
       var msg=huntBonus>0
-        ?'🏹 Hunt successful! Bonus: 💰+'+huntBonus
+        ?'🏹 Hunt successful! Bonus: 🪙+'+huntBonus
         :'🏆 Your defenders crushed the attackers!';
       showBattleResult(true, msg, totalReward);
     },2800);
@@ -4323,11 +4323,11 @@ function showBattleResult(victory, msg, credits){
   var rewardAmt=document.getElementById('battleResultRewardAmt');
   if(victory && credits>0){
     rewardBox.style.display='block';
-    rewardAmt.textContent='💰 +'+credits;
+    rewardAmt.textContent='🪙 +'+credits;
   } else {
     rewardBox.style.display='none';
   }
-  document.getElementById('battleResultBtn').textContent=victory?'Collect Rewards! 🪙':'Back to Castle 🏰';
+  document.getElementById('battleResultBtn').textContent=victory?'Collect Tokens! 🪙':'Back to Castle 🏰';
   overlay.style.display='flex';
   if(victory) doConfetti&&doConfetti();
 }
@@ -4584,7 +4584,7 @@ function renderShop(){
       var lockMsg='';
       if(specialLocked) lockMsg='Unlock: get ×6 & ×7 to 🟢 green!';
       else if(!hasLeg) lockMsg='Need '+item.leg+'⚔️ (have '+legDefeats+')';
-      else if(!canAfford) lockMsg='Need 💰'+item.cost;
+      else if(!canAfford) lockMsg='Need 🪙'+item.cost;
       var w=item.w||1, h=item.h||1;
       var sizeStr=(w>1||h>1)?'<div style="font-size:0.5rem;color:#3a4f6b;margin-bottom:1px;">'+w+'×'+h+'</div>':'';
       var defStats=item.defender?'<div class="shop-def-stats">⚔️'+item.atk+' ❤️'+item.hp+(item.range>1?' 🏹':'⚔️')+(item.healer?' ✨heal':'')+(item.aoe?' 💥aoe':'')+(item.dodge?' 🥷dodge':'')+(item.stun?' ⚡stun':'')+'</div>':'';
@@ -4610,7 +4610,7 @@ window.buyItem=function(itemId){
   var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
   if(!item) return;
   var legDefeats=ud.legendaryDefeats||0;
-  if(ud.mp.credits<item.cost){ showMPToast('Not enough credits! Need 💰'+item.cost); return; }
+  if(ud.mp.credits<item.cost){ showMPToast('Not enough tokens! Need 🪙'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
   ud.mp.credits=Math.max(0, ud.mp.credits-item.cost);
   var newQty=((ud.mp.inventory[item.id]||0)+(item.qty||1));
@@ -4919,7 +4919,7 @@ window.cellClick=function(key){
       showMPToast('Repaired! 🔨');
       renderBaseGrid();
     } else {
-      showMPToast('Need 💰'+cost+' to repair!');
+      showMPToast('Need 🪙'+cost+' to repair!');
     }
   } else {
     // Pick up to move
@@ -6213,7 +6213,7 @@ function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated,
   var rcBox=document.getElementById('resCreditsEarned');
   var rcAmt=document.getElementById('resCreditsAmt');
   if(rcBox&&rcAmt){
-    if(earnedCredits>0){ rcBox.style.display='block'; rcAmt.textContent='💰 +'+earnedCredits; }
+    if(earnedCredits>0){ rcBox.style.display='block'; rcAmt.textContent='🪙 +'+earnedCredits; }
     else { rcBox.style.display='none'; }
   }
 
