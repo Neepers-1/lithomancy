@@ -584,6 +584,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 @keyframes hitFlash   { 0%,100%{filter:brightness(1);} 30%{filter:brightness(3) saturate(0);} 60%{filter:brightness(1) sepia(1) hue-rotate(-20deg);} }
 @keyframes slashIn    { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-40deg) scale(0.2);} 50%{opacity:1;transform:translate(-50%,-50%) rotate(-40deg) scale(1.4);} 100%{opacity:0.7;transform:translate(-50%,-50%) rotate(-40deg) scale(1);} }
 @keyframes deadFade   { 0%{opacity:0;transform:translateY(8px);} 30%{opacity:1;transform:translateY(0);} 100%{opacity:1;transform:translateY(0);} }
+@keyframes tokenShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-6px);} 35%{transform:translateX(6px);} 55%{transform:translateX(-5px);} 75%{transform:translateX(4px);} 90%{transform:translateX(-2px);} }
+@keyframes tokenHitFlash { 0%{filter:brightness(1);} 20%{filter:brightness(2.5) saturate(0) sepia(1) hue-rotate(-20deg);} 100%{filter:brightness(1);} }
 @keyframes flyRight   { 0%{opacity:1;transform:translateX(0) scale(1.4);} 100%{opacity:0.2;transform:translateX(var(--fly-dist)) scale(0.8);} }
 @keyframes flyLeft    { 0%{opacity:1;transform:translateX(0) scale(1.4);} 100%{opacity:0.2;transform:translateX(calc(var(--fly-dist) * -1)) scale(0.8);} }
 @keyframes tokenBob   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
@@ -3496,49 +3498,52 @@ function makeTokenEl(c, isMonster){
   var iconSize=c.giant?'3.2rem':'2.4rem';
   var iconEl=document.createElement('div');
   iconEl.className='tok-icon';
-  iconEl.style.cssText='font-size:'+iconSize+';line-height:1;position:relative;';
-  iconEl.textContent=c.emoji; // always keep original emoji — death shown via overlay
+  // Fix size explicitly so re-renders never shrink the icon
+  iconEl.style.cssText='font-size:'+iconSize+';line-height:1;position:relative;'
+    +'width:'+iconSize+';height:'+iconSize+';display:flex;align-items:center;justify-content:center;'
+    +'flex-shrink:0;';
+  iconEl.textContent=c.emoji; // always keep original emoji
 
-  // Slash mark if dead
+  // Slash overlay if dead (sits on top, doesn't affect size)
   if(isDead){
     var slash=document.createElement('div');
     slash.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-40deg);'
       +'font-size:2rem;opacity:0.8;pointer-events:none;color:#ef476f;line-height:1;';
     slash.textContent='✂';
     iconEl.appendChild(slash);
-    var deadLbl=document.createElement('div');
-    deadLbl.style.cssText='font-size:0.52rem;font-weight:900;color:#ef476f;letter-spacing:1px;animation:deadFade 0.4s ease;';
-    deadLbl.textContent='DEAD';
-    wrap.appendChild(iconEl);
-    wrap.appendChild(deadLbl);
-  } else {
-    wrap.appendChild(iconEl);
-    var namEl=document.createElement('div');
-    namEl.style.cssText='font-size:0.52rem;font-weight:900;color:'+(isMonster?'#ffb3b3':'#c8f0e0')+';text-align:center;max-width:72px;';
-    namEl.textContent=c.name;
-    wrap.appendChild(namEl);
-
-    // HP bar
-    var pct=Math.round(c.hp/c.maxHp*100);
-    var barCol=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
-    var hpWrap=document.createElement('div');
-    hpWrap.style.cssText='width:52px;height:4px;background:#1e3a5f;border-radius:3px;overflow:hidden;';
-    var hpFill=document.createElement('div');
-    hpFill.style.cssText='width:'+pct+'%;height:100%;background:'+barCol+';border-radius:3px;transition:width 0.3s;';
-    hpWrap.appendChild(hpFill);
-    wrap.appendChild(hpWrap);
-
-    var hpNum=document.createElement('div');
-    hpNum.style.cssText='font-size:0.46rem;color:#7a8fb5;';
-    hpNum.textContent='❤️'+c.hp+'/'+c.maxHp;
-    wrap.appendChild(hpNum);
-
-    // Click-to-attack for any unattacked alive defender
-    if(isClickable){
-      wrap.title='Tap to attack!';
-      wrap.onclick=(function(cc){ return function(){ battleRollFor(cc); }; })(c);
-    }
   }
+
+  wrap.appendChild(iconEl);
+
+  // Name label — always present (keeps height consistent dead or alive)
+  var namEl=document.createElement('div');
+  namEl.style.cssText='font-size:0.52rem;font-weight:900;text-align:center;max-width:72px;'
+    +(isDead?'color:#ef476f;':'color:'+(isMonster?'#ffb3b3':'#c8f0e0')+';');
+  namEl.textContent=isDead?'💀 DEAD':c.name;
+  wrap.appendChild(namEl);
+
+  // HP bar — always present (keeps height consistent), hidden when dead
+  var pct=isDead?0:Math.round(c.hp/c.maxHp*100);
+  var barCol=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
+  var hpWrap=document.createElement('div');
+  hpWrap.style.cssText='width:52px;height:4px;background:#1e3a5f;border-radius:3px;overflow:hidden;'
+    +(isDead?'opacity:0;':'');
+  var hpFill=document.createElement('div');
+  hpFill.style.cssText='width:'+pct+'%;height:100%;background:'+barCol+';border-radius:3px;transition:width 0.3s;';
+  hpWrap.appendChild(hpFill);
+  wrap.appendChild(hpWrap);
+
+  var hpNum=document.createElement('div');
+  hpNum.style.cssText='font-size:0.46rem;color:#7a8fb5;'+(isDead?'opacity:0;':'');
+  hpNum.textContent='❤️'+(isDead?0:c.hp)+'/'+c.maxHp;
+  wrap.appendChild(hpNum);
+
+  // Click-to-attack for any unattacked alive defender
+  if(isClickable){
+    wrap.title='Tap to attack!';
+    wrap.onclick=(function(cc){ return function(){ battleRollFor(cc); }; })(c);
+  }
+
   return wrap;
 }
 
@@ -3665,7 +3670,24 @@ function updateTokenHP(c, isMonster){
   if(hpNum) hpNum.textContent='❤️'+Math.max(0,c.hp)+'/'+c.maxHp;
 }
 
-// Highlight active token (gold border) and show/hide ATTACK button
+// Flash red + shake a token when it takes a hit
+function flashHit(tokenEl){
+  if(!tokenEl) return;
+  // Remove any ongoing animation first
+  tokenEl.style.animation='none';
+  void tokenEl.offsetWidth; // force reflow
+  tokenEl.style.animation='tokenShake 0.45s ease, tokenHitFlash 0.45s ease';
+  tokenEl.style.borderColor='#ef476f';
+  setTimeout(function(){
+    tokenEl.style.animation='';
+    // Restore border color based on current state
+    var id=tokenEl.id||'';
+    if(id.indexOf('tok_def_')===0){
+      tokenEl.style.borderColor='#06d6a044';
+    }
+  }, 480);
+}
+
 function highlightActive(){
   // Only reset non-attacked, non-dead defender glows
   _battle.defenders.forEach(function(c){
@@ -3868,6 +3890,7 @@ function resolveHits(action){
       v.hp=Math.max(0,v.hp-action.dmg);
       var vSide=action.side==='defender'?'mon':'def';
       var vEl=document.getElementById('tok_'+vSide+'_'+v.name.replace(/\s/g,'_'));
+      flashHit(vEl);
       updateTokenHP(v, action.side==='defender');
       floatAboveToken(vEl, '-'+action.dmg, '#ef476f', true);
       if(v.hp<=0){
@@ -3884,6 +3907,7 @@ function resolveHits(action){
     t.hp=Math.max(0,t.hp-action.dmg);
     var tSide=action.side==='defender'?'mon':'def';
     var targetEl=document.getElementById('tok_'+tSide+'_'+t.name.replace(/\s/g,'_'));
+    flashHit(targetEl);
     updateTokenHP(t, action.side==='defender');
     floatAboveToken(targetEl, '-'+action.dmg, '#ef476f', true);
     if(t.hp<=0){
