@@ -16,6 +16,44 @@ body {
 .screen { display: none; }
 .screen.active { display: block; width: 100%; }
 
+/* ══ NANI'S COMPANION ════════════════════════════════════════════════════════ */
+@keyframes companionFloat { 0%,100%{transform:translateY(0) rotate(-3deg);} 50%{transform:translateY(-10px) rotate(3deg);} }
+@keyframes companionBounce { 0%,100%{transform:scale(1);} 40%{transform:scale(1.18);} 70%{transform:scale(0.93);} }
+@keyframes companionSpin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+@keyframes companionShake { 0%,100%{transform:rotate(-8deg);} 50%{transform:rotate(8deg);} }
+@keyframes sparkle { 0%{opacity:0;transform:scale(0) rotate(0deg);} 50%{opacity:1;transform:scale(1.2) rotate(180deg);} 100%{opacity:0;transform:scale(0) rotate(360deg);} }
+@keyframes companionPop { 0%{transform:scale(0) rotate(-20deg);opacity:0;} 60%{transform:scale(1.2) rotate(5deg);opacity:1;} 80%{transform:scale(0.95) rotate(-2deg);} 100%{transform:scale(1) rotate(0deg);opacity:1;} }
+@keyframes speechPop { 0%{transform:scale(0.7) translateY(10px);opacity:0;} 70%{transform:scale(1.05) translateY(-2px);opacity:1;} 100%{transform:scale(1) translateY(0);opacity:1;} }
+
+.companion-bubble {
+  position:fixed; z-index:8800; pointer-events:none;
+  transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+.companion-creature {
+  font-size:3.2rem; display:block; cursor:pointer; pointer-events:all;
+  filter:drop-shadow(0 0 12px rgba(255,200,255,0.8));
+  animation:companionFloat 3s ease-in-out infinite;
+  position:relative;
+}
+.companion-creature:active { animation:companionBounce 0.4s ease; }
+.companion-speech {
+  position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  background:linear-gradient(135deg,#2d0a4a,#1a0632); border:2px solid #cc88ff;
+  border-radius:16px; padding:10px 14px; min-width:180px; max-width:240px;
+  text-align:center; font-family:inherit; font-size:0.75rem; color:#f0d0ff;
+  font-weight:700; line-height:1.5; box-shadow:0 4px 20px rgba(200,100,255,0.4);
+  animation:speechPop 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none;
+  white-space:pre-wrap;
+}
+.companion-speech::after {
+  content:''; position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:#cc88ff; border-bottom:0;
+}
+.companion-sparkle {
+  position:absolute; font-size:1rem; animation:sparkle 1.2s ease-in-out infinite;
+  pointer-events:none;
+}
+
 /* ══ MASTERY THEMES — blue-master / green-master / golden-god ════════════════ */
 
 /* Shared shimmer bar */
@@ -1226,7 +1264,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div style="font-size:0.95rem;font-weight:900;color:#ef476f;letter-spacing:2px;" id="battleTitle">⚔️ DARK FORCES ATTACK!</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="autoFightBtn" onclick="toggleAutoFight()" style="background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.3);color:#ffd700;border-radius:8px;padding:4px 10px;font-size:0.62rem;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:all 0.2s;">⚡ AUTO</button>
-      <div style="font-size:0.65rem;color:#ffb3b3;font-weight:700;" id="battlePhaseLabel">Turn 1</div>
+      <div style="font-size:0.82rem;color:#ffd700;font-weight:900;letter-spacing:1px;text-shadow:0 0 10px rgba(255,215,0,0.5);" id="battlePhaseLabel">Round 1</div>
     </div>
   </div>
 
@@ -1437,13 +1475,20 @@ function recordFact(d, ukey, fk, ms, isWrong){
     f.best10.push(ms);
     f.best10.sort(function(a,b){return a-b;});
     if(f.best10.length>10) f.best10=f.best10.slice(0,10);
+    // Each correct answer heals 200ms of monster damage
+    if(f.monsterDamageMs){
+      f.monsterDamageMs=Math.max(0, f.monsterDamageMs-200);
+      if(f.monsterDamageMs===0) delete f.monsterDamageMs;
+    }
   }
 }
 
 // Recent-10 average (null if no correct answers)
 function factAvg(f){
   if(!f||!f.recent10||!f.recent10.length) return null;
-  return f.recent10.reduce(function(s,v){return s+v;},0)/f.recent10.length;
+  var base=f.recent10.reduce(function(s,v){return s+v;},0)/f.recent10.length;
+  // Add any accumulated monster damage on top
+  return base+(f.monsterDamageMs||0);
 }
 
 function saveSession(ukey, session){
@@ -1530,16 +1575,300 @@ nameInput.addEventListener('input',function(){
 nameInput.addEventListener('keydown',function(e){if(e.key==='Enter') handleLogin();});
 document.getElementById('loginBtn').addEventListener('click',handleLogin);
 
+// ══════════════════════════════════════════════════════════════════════════════
+// NANI'S COMPANION SYSTEM
+// ══════════════════════════════════════════════════════════════════════════════
+
+var COMPANION_USER = 'nani'; // only activates for this username
+
+var COMPANION_PHRASES = [
+  // Thai intro
+  'สวัสดี! ฉันชื่อ{NAME}! 🌸\nHi! I am {NAME}! 💕',
+  // Encouragement & improvement
+  'เก่งมาก! You got faster! ⚡✨',
+  'หนูเก่งมากเลย! That was amazing! 🌟',
+  'WOW! You\'re getting SO good! 🎉💫',
+  'I saw that! You answered FAST! 🏃‍♀️💨',
+  'โอ้โห! Look at you go! ✨✨✨',
+  'You make me so proud!! 🥺💕',
+  'เก่ง!! เก่ง!! เก่ง!! = Amazing!! 🌸',
+  'That was better than last time! I noticed! 👀💖',
+  'You\'re like a math superhero! 🦸‍♀️⚡',
+  'ดีใจด้วยนะ! I\'m so happy for you! 🎊',
+  'Every time you practice, I get stronger! 💪✨',
+  'You just defeated SO many numbers! 🗡️🔢',
+  'I believe in you ALWAYS! 🫶🌟',
+  'เพื่อนฉัน! My friend! You\'re the best! 💕',
+  'Ooh! Your castle gets stronger when YOU get stronger! 🏰✨',
+  'Look how far you\'ve come! 🌈',
+  'AMAZING!! I did a little happy dance!! 💃✨',
+  'You\'re my favorite human! (don\'t tell anyone 🤫)',
+  'Every wrong answer teaches you something! You\'re smart! 🧠💡',
+  'ฉันจะปกป้องปราสาทของเรา! I will protect our castle! 🛡️',
+  'WHOOOOO!! That was incredible! 🎺🎉',
+  'You make math look easy! 😍⚡',
+  'เยี่ยมมาก!! = EXCELLENT!! 🌟🌟🌟',
+  'I\'m doing my happy wiggle right now~ 🐛✨',
+  'You + me = UNSTOPPABLE! 💪💕',
+  'Even the monsters are scared of how good you\'re getting! 👹😨',
+  'Keep going! I\'ll keep cheering! 📣💫',
+  'หนูเก่งที่สุดในโลก! You\'re the best in the world! 🌍💖',
+  'I grew a little just now! Can you tell? 🌱✨',
+  'That accuracy was CHEF\'S KISS! 🤌💕',
+  'You\'re not just good at math—you\'re GREAT at it! 🌟',
+  'ขอบคุณที่ทำให้ฉันแข็งแกร่ง! Thanks for making me stronger! 💪🌸',
+];
+
+var COMPANION_EXPRS = ['🌸','✨','🦋','🍀','💫','🌟','🎀','💕'];
+
+var _companionEl = null;
+var _companionSpeechTimer = null;
+var _companionVisible = false;
+
+function isNani(){
+  return userKey === COMPANION_USER;
+}
+
+function getCompanionData(){
+  var d=getData(), ud=d[userKey]; if(!ud) return null;
+  if(!ud.companion) ud.companion={ accepted:false, name:'', declined:0, lastDecline:0, phraseIdx:0 };
+  return ud.companion;
+}
+function saveCompanionData(comp){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  ud.companion=comp; d[userKey]=ud; saveData(d);
+}
+
+function scheduleCompanionFirstAppear(){
+  if(!isNani()) return;
+  var comp=getCompanionData(); if(!comp) return;
+  if(comp.accepted) return; // already has companion
+  // Don't re-show if declined recently (within 10 min)
+  var tenMin=600000;
+  if(comp.lastDecline && (Date.now()-comp.lastDecline)<tenMin) return;
+  // Show after 5 minutes (300000ms)
+  setTimeout(function(){
+    if(isNani()) showCompanionIntro();
+  }, 300000);
+}
+
+function showCompanionIntro(){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9700;background:rgba(5,0,15,0.92);'
+    +'display:flex;align-items:center;justify-content:center;animation:popIn 0.4s ease;';
+
+  var sparkles=COMPANION_EXPRS.map(function(e,i){
+    return '<span style="position:absolute;font-size:'+(1.2+Math.random()*0.8)+'rem;'
+      +'top:'+(10+Math.random()*80)+'%;left:'+(5+Math.random()*90)+'%;'
+      +'animation:sparkle '+(1+Math.random()*1.5)+'s '+(Math.random()*1)+'s ease-in-out infinite;">'+e+'</span>';
+  }).join('');
+
+  overlay.innerHTML='<div style="position:relative;max-width:320px;width:92%;text-align:center;">'
+    +sparkles
+    +'<div style="animation:companionPop 0.7s cubic-bezier(0.34,1.56,0.64,1);margin-bottom:16px;">'
+    +'<div style="font-size:5rem;filter:drop-shadow(0 0 20px rgba(255,180,255,0.9));animation:companionFloat 2.5s ease-in-out infinite;">🐛</div>'
+    +'</div>'
+    +'<div style="background:linear-gradient(135deg,#2d0a4a,#1a0632);border:2px solid #cc88ff;border-radius:20px;'
+    +'padding:20px 22px;box-shadow:0 0 40px rgba(200,100,255,0.4);">'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#cc88ff;text-transform:uppercase;margin-bottom:10px;">✨ มีใครมาหาคุณ ✨</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#f0d0ff;margin-bottom:8px;line-height:1.5;">'
+    +'สวัสดีค่ะ นานี! 🌸<br><span style="font-size:0.85rem;color:#cc88ff;">Hi Nani! Can I be your friend?</span></div>'
+    +'<div style="font-size:0.78rem;color:#c0a0d8;line-height:1.7;margin-bottom:16px;">'
+    +'ฉันอยากอยู่กับนานี! 💕<br>'
+    +'<em style="color:#f0d0ff;">I will cheer for you and help you!</em><br><br>'
+    +'<span style="color:#ffd700;font-weight:800;">ถ้านานีเก่งขึ้น ฉันจะแข็งแกร่งขึ้นและปกป้องปราสาทของเรา!</span><br>'
+    +'<span style="font-size:0.7rem;color:#9a70c0;font-style:italic;">If you get better, I will grow stronger<br>and protect our castle! 🏰</span>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;justify-content:center;">'
+    +'<button id="companionYesBtn" style="background:linear-gradient(135deg,#cc88ff,#9933cc);color:#fff;border:none;'
+    +'border-radius:12px;padding:11px 24px;font-family:inherit;font-weight:900;font-size:0.88rem;cursor:pointer;'
+    +'box-shadow:0 0 16px rgba(200,100,255,0.5);">ใช่! Yes! 💕</button>'
+    +'<button id="companionNoBtn" style="background:rgba(255,255,255,0.06);color:#9a70c0;border:1px solid rgba(200,100,255,0.3);'
+    +'border-radius:12px;padding:11px 18px;font-family:inherit;font-weight:700;font-size:0.82rem;cursor:pointer;">ไม่ใช่ตอนนี้</button>'
+    +'</div></div></div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#companionYesBtn').onclick=function(){
+    overlay.remove();
+    showCompanionNamePrompt();
+  };
+  overlay.querySelector('#companionNoBtn').onclick=function(){
+    overlay.remove();
+    var comp=getCompanionData();
+    comp.declined=(comp.declined||0)+1;
+    comp.lastDecline=Date.now();
+    saveCompanionData(comp);
+    // Try again later
+    setTimeout(function(){ if(isNani()) showCompanionIntro(); }, 1200000); // 20min
+  };
+}
+
+function showCompanionNamePrompt(){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9700;background:rgba(5,0,15,0.95);'
+    +'display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML='<div style="max-width:300px;width:92%;text-align:center;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="font-size:4rem;margin-bottom:10px;animation:companionBounce 0.8s ease infinite;'
+    +'filter:drop-shadow(0 0 16px rgba(255,180,255,0.9));">🐛</div>'
+    +'<div style="background:linear-gradient(135deg,#2d0a4a,#1a0632);border:2px solid #cc88ff;border-radius:20px;padding:20px 22px;">'
+    +'<div style="font-size:0.85rem;font-weight:900;color:#f0d0ff;margin-bottom:8px;line-height:1.6;">'
+    +'นานีจะตั้งชื่อฉันว่าอะไร? 🌸<br><span style="font-size:0.75rem;color:#cc88ff;">What will you name me?</span></div>'
+    +'<input id="companionNameInput" type="text" placeholder="Type a name... ✨" maxlength="16" '
+    +'style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid #cc88ff;'
+    +'background:#1a0632;color:#f0d0ff;font-family:inherit;font-size:0.9rem;font-weight:700;'
+    +'text-align:center;margin-bottom:14px;outline:none;">'
+    +'<button id="companionNameBtn" style="background:linear-gradient(135deg,#cc88ff,#9933cc);color:#fff;border:none;'
+    +'border-radius:12px;padding:11px 28px;font-family:inherit;font-weight:900;font-size:0.88rem;cursor:pointer;'
+    +'box-shadow:0 0 16px rgba(200,100,255,0.5);width:100%;">เป็นเพื่อนกันเลย! Let\'s be friends! 💕</button>'
+    +'</div></div>';
+  document.body.appendChild(overlay);
+  var inp=overlay.querySelector('#companionNameInput');
+  inp.focus();
+  overlay.querySelector('#companionNameBtn').onclick=function(){
+    var name=inp.value.trim()||'Starlight';
+    overlay.remove();
+    var comp=getCompanionData();
+    comp.accepted=true; comp.name=name;
+    saveCompanionData(comp);
+    spawnCompanion(name, true);
+  };
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter') overlay.querySelector('#companionNameBtn').click(); });
+}
+
+function spawnCompanion(name, firstTime){
+  if(!isNani()) return;
+  if(_companionEl) return;
+  var comp=getCompanionData(); if(!comp||!comp.accepted) return;
+  var cname=name||comp.name||'Starlight';
+
+  var wrap=document.createElement('div');
+  wrap.id='companionWrap';
+  wrap.style.cssText='position:fixed;bottom:80px;right:18px;z-index:8800;'
+    +'display:flex;flex-direction:column;align-items:center;gap:0;';
+
+  // Speech bubble (hidden initially)
+  var speech=document.createElement('div');
+  speech.id='companionSpeech';
+  speech.className='companion-speech';
+  speech.style.display='none';
+  wrap.appendChild(speech);
+
+  // Sparkle decorations
+  COMPANION_EXPRS.slice(0,4).forEach(function(e,i){
+    var sp=document.createElement('span');
+    sp.className='companion-sparkle';
+    sp.textContent=e;
+    sp.style.cssText='top:'+(-5+i*8)+'px;'+(i%2===0?'left':'right')+':'+(2+i*4)+'px;'
+      +'animation-delay:'+(i*0.3)+'s;animation-duration:'+(1+i*0.2)+'s;';
+    wrap.appendChild(sp);
+  });
+
+  // Creature button
+  var creature=document.createElement('div');
+  creature.className='companion-creature';
+  creature.textContent='🐛';
+  creature.title=cname+' — tap me! 💕';
+  creature.onclick=function(){ companionSpeak(cname); };
+  wrap.appendChild(creature);
+
+  // Name label
+  var lbl=document.createElement('div');
+  lbl.style.cssText='font-size:0.55rem;font-weight:900;color:#cc88ff;margin-top:2px;'
+    +'text-shadow:0 0 8px rgba(200,100,255,0.6);letter-spacing:1px;';
+  lbl.textContent=cname;
+  wrap.appendChild(lbl);
+
+  document.body.appendChild(wrap);
+  _companionEl=wrap;
+  _companionVisible=true;
+
+  if(firstTime){
+    setTimeout(function(){
+      companionSay(cname, 'สวัสดี! ฉันชื่อ '+cname+'! 🌸\nHi! I am '+cname+'! So happy to meet you! 💕✨');
+    }, 800);
+    setTimeout(function(){
+      companionSay(cname, 'ถ้านานีเก่งขึ้น ฉันจะแข็งแกร่งขึ้น! 💪\nIf you get better, I grow stronger! 🌱✨');
+    }, 5000);
+  }
+}
+
+function companionSay(name, msg){
+  if(!_companionEl) return;
+  var speech=document.getElementById('companionSpeech');
+  if(!speech) return;
+  clearTimeout(_companionSpeechTimer);
+  // Swap expression randomly
+  var creature=_companionEl.querySelector('.companion-creature');
+  if(creature){
+    var exprs=['🐛','🌸','✨','🦋','💫'];
+    var wasExpr=creature.textContent;
+    creature.style.animation='companionBounce 0.5s ease';
+    setTimeout(function(){
+      creature.textContent=exprs[Math.floor(Math.random()*exprs.length)];
+      creature.style.animation='companionFloat 3s ease-in-out infinite';
+      setTimeout(function(){ creature.textContent='🐛'; },2500);
+    },250);
+  }
+  var display=msg.replace(/\{NAME\}/g, name);
+  speech.textContent=display;
+  speech.style.display='block';
+  speech.style.animation='none';
+  setTimeout(function(){ speech.style.animation='speechPop 0.4s ease'; },10);
+  _companionSpeechTimer=setTimeout(function(){
+    speech.style.opacity='0'; speech.style.transition='opacity 0.5s';
+    setTimeout(function(){ speech.style.display='none'; speech.style.opacity='1'; speech.style.transition=''; },520);
+  }, 5500);
+}
+
+function companionSpeak(name){
+  var comp=getCompanionData(); if(!comp) return;
+  var n=name||comp.name||'Starlight';
+  var idx=(comp.phraseIdx||0)%COMPANION_PHRASES.length;
+  var phrase=COMPANION_PHRASES[idx].replace(/\{NAME\}/g,n);
+  comp.phraseIdx=(idx+1)%COMPANION_PHRASES.length;
+  saveCompanionData(comp);
+  companionSay(n, phrase);
+}
+
+function checkCompanionImprovement(session, prevSessions){
+  if(!isNani()) return;
+  var comp=getCompanionData(); if(!comp||!comp.accepted) return;
+  // Check for improvement: accuracy or speed better than last session
+  if(!prevSessions||prevSessions.length<2) return;
+  var last=prevSessions[prevSessions.length-2];
+  var improved=(session.correct>last.correct)||(session.avgMs>0&&last.avgMs>0&&session.avgMs<last.avgMs*0.95);
+  if(improved){
+    setTimeout(function(){ companionSpeak(comp.name); }, 1200);
+  }
+}
+
+// ── INIT companion on login ──
+function initCompanion(){
+  if(!isNani()) return;
+  var comp=getCompanionData();
+  if(!comp) return;
+  if(comp.accepted){
+    setTimeout(function(){ spawnCompanion(comp.name, false); },1500);
+    // Greeting after short delay
+    setTimeout(function(){
+      if(_companionEl) companionSay(comp.name, 'สวัสดีนานี! 🌸\nWelcome back! I missed you! 💕');
+    }, 3000);
+  } else {
+    scheduleCompanionFirstAppear();
+  }
+}
+
+window.handleLogin = window.handleLogin; // keep reference
+
 function handleLogin(){
   var name=nameInput.value.trim();
   if(!name){ nameInput.focus(); nameInput.style.borderColor='#ef476f'; setTimeout(function(){nameInput.style.borderColor='';},1000); return; }
   try {
     userKey=name.toLowerCase();
     var ud=initUser(name);
-    // God account — seed with test data on first login
     if(userKey==='god') seedGodAccount();
-    // ONE-TIME castle reset (March 2026) — clears accumulated items, starts fresh at 200 gold
-    applyCastleReset(ud);
+    applyCastleResetV2(ud, getData());
     document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
     selMode=null; activeAttackZone=null;
     document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
@@ -1547,6 +1876,8 @@ function handleLogin(){
     renderModeScreen();
     show('modeScreen');
     try { applyGoldenTheme(); } catch(e){}
+    // Init companion for Nani
+    try { initCompanion(); } catch(e){}
   } catch(err) {
     console.error('Login error:', err);
     nameInput.style.borderColor='#ef476f';
@@ -3159,14 +3490,14 @@ function makeTokenEl(c, isMonster){
     +'background:'+bg+';border:2px solid '+border+';border-radius:12px;padding:7px 8px 5px;'
     +'min-width:62px;transition:border-color 0.3s,background 0.3s,opacity 0.3s,filter 0.3s;'
     +(isDead?'opacity:0.35;filter:grayscale(1);':'')
-    +(hasAttacked?'opacity:0.45;filter:brightness(0.5);':'')
+    +(hasAttacked?'opacity:0.65;filter:brightness(0.7) saturate(0.5);':'')
     +(isClickable?'box-shadow:0 0 14px #06d6a0, inset 0 0 8px rgba(6,214,160,0.15);cursor:pointer;':'');
 
   var iconSize=c.giant?'3.2rem':'2.4rem';
   var iconEl=document.createElement('div');
   iconEl.className='tok-icon';
   iconEl.style.cssText='font-size:'+iconSize+';line-height:1;position:relative;';
-  iconEl.textContent=isDead?'💀':c.emoji;
+  iconEl.textContent=c.emoji; // always keep original emoji — death shown via overlay
 
   // Slash mark if dead
   if(isDead){
@@ -3311,8 +3642,8 @@ function showDeathOnToken(tokenEl, c, isMonster){
   setTimeout(function(){
     if(ohNoes.parentNode) ohNoes.parentNode.removeChild(ohNoes);
     tokenEl.style.transition='opacity 0.6s, filter 0.6s';
-    tokenEl.style.opacity='0.38';
-    tokenEl.style.filter='grayscale(1)';
+    tokenEl.style.opacity='0.4';
+    tokenEl.style.filter='grayscale(1) brightness(0.6)';
     var deadLbl=document.createElement('div');
     deadLbl.style.cssText='font-size:0.7rem;font-weight:900;color:#ef476f;letter-spacing:2px;'
       +'margin-top:3px;animation:deadFade 0.5s ease;';
@@ -3584,8 +3915,8 @@ window.battleRollFor=function(def){
   var defKey='tok_def_'+def.name.replace(/\s/g,'_');
   var defEl=document.getElementById(defKey);
   if(defEl){
-    defEl.style.opacity='0.45';
-    defEl.style.filter='brightness(0.5)';
+    defEl.style.opacity='0.65';
+    defEl.style.filter='brightness(0.7) saturate(0.5)';
     defEl.style.cursor='default';
     defEl.style.boxShadow='none';
     defEl.style.borderColor='#06d6a022';
@@ -3655,13 +3986,29 @@ function endDefenderRound(){
     var el=document.getElementById(key);
     if(el&&!d.dead){
       el.style.opacity='1';
-      el.style.filter='';
+      el.style.filter='none';
       el.style.borderColor='#06d6a0';
+      el.style.boxShadow='';
     }
   });
   _battle.round++;
+  showRoundBanner(_battle.round);
   renderDuelArena('Round '+_battle.round+' — tap your fighters!');
   checkBattleEnd();
+}
+
+function showRoundBanner(n){
+  if(n<=1) return; // no banner for round 1 (it's the start)
+  var layer=document.getElementById('floatLayer');
+  if(!layer) return;
+  var el=document.createElement('div');
+  el.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);'
+    +'font-size:2rem;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,0.8);'
+    +'letter-spacing:3px;pointer-events:none;animation:popIn 0.35s ease;white-space:nowrap;z-index:200;';
+  el.textContent='⚔️ ROUND '+n+'!';
+  layer.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.6s'; }, 1200);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1900);
 }
 
 // Legacy battleRoll for any remaining references
@@ -3760,11 +4107,10 @@ function getBattleZone(ms){
   return SPEED_ZONES.length-1;
 }
 function maybeKnockFact(monster){
-  // Visual flavour ONLY — never modifies actual student fact data
   var d=getData(), ud=d[userKey]; if(!ud||!ud.facts) return;
   var keys=Object.keys(ud.facts);
   if(!keys.length) return;
-  // Pick a random practiced fact to "threaten"
+  // Only attack non-red facts that have been practiced
   var eligible=keys.filter(function(k){
     var f=ud.facts[k]; if(!f||!f.recent10||!f.recent10.length) return false;
     var avg=factAvg(f);
@@ -3774,24 +4120,54 @@ function maybeKnockFact(monster){
   var k=eligible[Math.floor(Math.random()*eligible.length)];
   var parts=k.split('x');
   var f=ud.facts[k];
-  var avg=factAvg(f);
-  var zone=getZone(avg);
-  var zi=ZONES[zone];
-  // Just show the flavour banner — NO data changes, NO saveData
-  var msg=monster.emoji+' '+monster.name+' threatens '+parts[0]+'×'+parts[1]+'! '+zi.monster;
-  showFactKnockBanner(msg, zi.hex, '#ef476f');
+  var avgBefore=factAvg(f);
+  var zoneBefore=getZone(avgBefore);
+
+  // Damage: 100ms–1000ms (0.1s–1.0s), weighted toward small hits
+  var dmgMs=Math.round((100+Math.random()*Math.random()*900));
+  f.monsterDamageMs=(f.monsterDamageMs||0)+dmgMs;
+
+  var avgAfter=factAvg(f);
+  var zoneAfter=getZone(avgAfter);
+  var zoneDropped=zoneBefore!==zoneAfter;
+
+  d[userKey]=ud; saveData(d);
+
+  // Show taunting popup
+  showFactAttackPopup(monster, parts, dmgMs, zoneBefore, zoneAfter, zoneDropped);
 }
-function showFactKnockBanner(msg, fromColor, toColor){
+
+function showFactAttackPopup(monster, parts, dmgMs, zoneBefore, zoneAfter, zoneDropped){
+  var taunts=[
+    'MWAHAHAHA! 😈',
+    'Your math grows WEAKER! 😈',
+    'Numbers tremble before me! 🧙',
+    'Feel the curse of slow arithmetic! 💀',
+    'Your calculations fail you! 😈',
+    'HAHAHA! Practice harder, weakling! 👹',
+  ];
+  var taunt=taunts[Math.floor(Math.random()*taunts.length)];
+  var ziBefore=ZONES[zoneBefore]||ZONES['red'];
+  var ziAfter=ZONES[zoneAfter]||ZONES['red'];
+  var dmgSec=(dmgMs/1000).toFixed(1);
   var el=document.createElement('div');
-  el.style.cssText='position:fixed;top:18%;left:50%;transform:translateX(-50%);z-index:9200;'+
-    'background:rgba(10,0,20,0.96);border:2px solid '+toColor+';'+
-    'border-radius:14px;padding:14px 22px;max-width:320px;text-align:center;'+
-    'font-family:inherit;animation:popIn 0.35s ease;pointer-events:none;';
-  el.innerHTML='<div style="font-size:0.75rem;font-weight:900;color:'+toColor+';line-height:1.5;">'+msg+'</div>'+
-    '<div style="font-size:0.6rem;color:#7a8fb5;margin-top:6px;">Practice it to get it back!</div>';
+  el.style.cssText='position:fixed;top:15%;left:50%;transform:translateX(-50%);z-index:9300;'
+    +'max-width:300px;width:88%;pointer-events:none;';
+  el.innerHTML='<div style="background:rgba(5,0,15,0.97);border:2px solid #ef476f;border-radius:14px;'
+    +'padding:16px 18px;text-align:center;font-family:inherit;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="font-size:2rem;margin-bottom:4px;">'+monster.emoji+'</div>'
+    +'<div style="font-size:0.62rem;font-weight:900;color:#ef476f;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;">⚔️ FACT ATTACKED</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:6px;">'+parts[0]+'×'+parts[1]+'</div>'
+    +'<div style="font-size:0.75rem;color:#ffb3b3;margin-bottom:8px;line-height:1.5;">'
+    +'Slowed by <span style="color:#ef476f;font-weight:900;">+'+dmgSec+'s</span>'
+    +(zoneDropped?' → <span style="color:'+ziAfter.hex+';font-weight:900;">dropped to '+ziAfter.label+'!</span>':'')
+    +'</div>'
+    +'<div style="font-size:0.85rem;font-weight:900;color:#ffd700;margin-bottom:6px;">'+taunt+'</div>'
+    +'<div style="font-size:0.55rem;color:#5a3a5a;">Practice '+parts[0]+'×'+parts[1]+' to repair the damage!</div>'
+    +'</div>';
   document.body.appendChild(el);
-  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.8s'; },3800);
-  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },4700);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.8s'; },3500);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },4400);
 }
 
 // Handle defender death — 30% permanent, save
@@ -3838,11 +4214,12 @@ function checkBattleEnd(){
     return;
   }
 
-  if(_battle.defenders.length>0&&defsLeft.length===0){
+  // Defeat: all defenders dead (or none placed) — end immediately regardless of round
+  if(defsLeft.length===0){
     _battle.active=false;
     var d=getData(), ud=d[userKey];
     var destroyMsgs=[];
-    if(ud&&ud.mp){
+    if(ud&&ud.mp&&_battle.defenders.length>0){
       ud.mp.scareIdx=0;
       var gridKeys=Object.keys(ud.mp.baseGrid||{}).filter(function(k){ return ud.mp.baseGrid[k]&&!ud.mp.baseGrid[k].damaged; });
       _battle.monsters.forEach(function(mon){
@@ -3866,28 +4243,21 @@ function checkBattleEnd(){
         }
       });
       saveData(d);
+    } else if(ud&&ud.mp){
+      saveData(d);
     }
     _battle.pendingDestroyNotifs=destroyMsgs;
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
       if(_battle.pendingDestroyNotifs.length){ showNextDestroyNotif(); }
-      else { showBattleResult(false,'💀 Your defenders were overwhelmed!\n\nThe dark forces damaged your castle!',0); }
+      else {
+        var msg=_battle.defenders.length===0
+          ?'💥 The monsters destroyed your base!\n\nYou had no defenders!'
+          :'💀 Your defenders were overwhelmed!\n\nThe dark forces damaged your castle!';
+        showBattleResult(false, msg, 0);
+      }
     },2800);
     return;
-  }
-
-  if(_battle.defenders.length===0&&_battle.round>3){
-    _battle.active=false;
-    var d2=getData(), ud2=d2[userKey];
-    if(ud2&&ud2.mp){
-      var keys2=Object.keys(ud2.mp.baseGrid||{});
-      keys2.forEach(function(k){ if(ud2.mp.baseGrid[k]){ ud2.mp.baseGrid[k].damaged=true; ud2.mp.baseGrid[k].repairCost=15; } });
-      saveData(d2);
-    }
-    setTimeout(function(){
-      document.getElementById('battleOverlay').style.display='none';
-      showBattleResult(false,'💥 The monsters destroyed your base!\n\nYou had no defenders!',0);
-    },2800);
   }
 }
 
@@ -5632,6 +6002,10 @@ function endQuiz(){
   try { _earnedCredits=earnSessionCredits(session)||0; } catch(e){}
   try { checkBattleChargesAfterSession(totalTime); } catch(e){}
   try { sendToSheets(userKey, session); } catch(e){}
+  try {
+    var _d=getData(),_ud=_d[userKey];
+    if(_ud&&_ud.sessions) checkCompanionImprovement(session,_ud.sessions);
+  } catch(e){}
 
   var defeated=[];
   var attackedZone=activeAttackZone;
@@ -6094,6 +6468,9 @@ function renderFactMap(){
   var html='<div class="fact-list">';
   seen.concat(unseen).forEach(function(r){
     var label=r.ab[0]+' \u00D7 '+r.ab[1]+' = '+r.ab[0]*r.ab[1];
+    var isDamaged=r.avg!==null && facts[r.k] && (facts[r.k].monsterDamageMs||0)>0;
+    var dmgMs=isDamaged?(facts[r.k].monsterDamageMs||0):0;
+    var dmgSec=dmgMs>0?(dmgMs/1000).toFixed(1):null;
     if(r.avg===null){
       html+='<div class="fact-row unseen" style="opacity:0.45;">'+
         '<span class="fact-row-label">'+label+'</span>'+
@@ -6104,10 +6481,13 @@ function renderFactMap(){
       var pct=Math.max(4,Math.round(r.avg/maxAvg*100));
       var z=getZone(r.avg), zi=ZONES[z];
       var isGold=(z==='gold');
-      html+='<div class="fact-row'+(isGold?' gold-row':'')+'">'+
+      var damagedStyle=isDamaged?'background:rgba(239,71,111,0.08);border-left:3px solid #ef476f;':'';
+      html+='<div class="fact-row'+(isGold?' gold-row':'')+'" style="'+damagedStyle+'">'+
         '<span class="fact-row-label">'+label+'</span>'+
         '<div class="fact-row-bar-wrap"><div class="fact-row-bar'+(isGold?' gold-fact-bar':'')+'" style="width:'+pct+'%;background:'+zi.hex+';"></div></div>'+
+        (isDamaged?'<span style="font-size:0.6rem;color:#ef476f;margin-right:2px;" title="Monster damage: +'+dmgSec+'s — practice to repair!">🗡️</span>':'')+
         '<span class="fact-row-time'+(isGold?' gold-fact-time':'')+'" style="color:'+zi.hex+';">'+zi.monster+' '+fmtMs(r.avg)+'</span>'+
+        (isDamaged?'<span style="font-size:0.58rem;color:#ef476f;font-weight:700;margin-left:2px;">+'+dmgSec+'s</span>':'')+
         '<span class="fact-row-count">'+r.totalCount+'x</span></div>';
     }
   });
