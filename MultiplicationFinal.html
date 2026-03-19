@@ -973,7 +973,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div id="fastSection" style="display:none;margin-top:4px;"><div class="slow-title">&#x26A1; Fastest This Session</div><div class="tag-grid" id="fastGrid"></div></div>
     <div id="resCreditsEarned" style="display:none;background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.35);border-radius:12px;padding:10px 16px;text-align:center;margin-bottom:12px;">
       <div style="font-size:0.58rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;">Gold Earned</div>
-      <div style="font-size:1.6rem;font-weight:900;color:#ffd700;" id="resCreditsAmt">🪙 0</div>
+      <div style="font-size:1.6rem;font-weight:900;color:#ffd700;" id="resCreditsAmt">💰 0</div>
     </div>
     <div class="btn-row">
       <button class="btn" id="resMyPlaceBtn" style="background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
@@ -1063,14 +1063,14 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <div id="battleChargeDisplay" style="display:flex;align-items:center;gap:5px;background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.35);border-radius:20px;padding:5px 10px;font-size:0.75rem;font-weight:900;color:#ef476f;cursor:pointer;" onclick="trySpendCharge()" title="Battle charges — earned through multiplication practice!">
           <span id="battleChargeIcons">⚔️</span>
         </div>
-        <div id="ominousBarContainer" style="display:none;" onclick="tryIdentifyTitanic()" title="Something approaches... Click to identify (🪙100 gold)">
+        <div id="ominousBarContainer" style="display:none;" onclick="tryIdentifyTitanic()" title="Something approaches... Click to identify (💰100 gold)">
           <div class="ominous-bar-wrap">
             <span style="font-size:0.75rem;">👁️</span>
             <div class="ominous-bar-inner"><div class="ominous-bar-fill" id="ominousBarFill" style="width:0%"></div></div>
             <span class="ominous-bar-label" id="ominousBarLabel">???</span>
           </div>
         </div>
-        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span><span style="font-size:0.55rem;color:#b8972a;margin-left:2px;">gold</span></div>
+        <div class="myplace-credits"><span>💰</span><span id="mpCredits">0</span><span style="font-size:0.55rem;color:#b8972a;margin-left:2px;">gold</span></div>
       </div>
     </div>
     <div class="myplace-tabs">
@@ -1405,7 +1405,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     </div>
     <div style="background:rgba(255,209,102,0.1);border:1.5px solid rgba(255,209,102,0.3);border-radius:12px;padding:12px 18px;margin-bottom:20px;">
       <div style="font-size:0.6rem;color:#ffd700;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Your New Balance</div>
-      <div style="font-size:2rem;font-weight:900;color:#ffd700;">🪙 200</div>
+      <div style="font-size:2rem;font-weight:900;color:#ffd700;">💰 200</div>
       <div style="font-size:0.58rem;color:#7a8fb5;margin-top:3px;">Earn more by completing multiplication sessions</div>
     </div>
     <button onclick="closeGodsRebalanced()" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 20px rgba(155,89,182,0.4);">I Accept the Decree ⚖️</button>
@@ -1420,7 +1420,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div style="font-size:0.85rem;color:#b89fd4;margin-bottom:12px;line-height:1.5;" id="battleResultMsg"></div>
     <div id="battleResultReward" style="display:none;background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.35);border-radius:12px;padding:10px 18px;margin-bottom:16px;">
       <div style="font-size:0.6rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Gold Earned</div>
-      <div style="font-size:1.8rem;font-weight:900;color:#ffd700;" id="battleResultRewardAmt">🪙 0</div>
+      <div style="font-size:1.8rem;font-weight:900;color:#ffd700;" id="battleResultRewardAmt">💰 0</div>
     </div>
     <button onclick="closeBattleResult()" style="background:linear-gradient(135deg,#06d6a0,#0a9a74);color:#0a1520;border:none;border-radius:12px;padding:12px 32px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;" id="battleResultBtn">Continue</button>
   </div>
@@ -1655,42 +1655,49 @@ document.getElementById('loginBtn').addEventListener('click',handleLogin);
 
 var COMPANION_USER = 'nani'; // only activates for this username (case-insensitive)
 
+// ── Thai-only funny phrases for a 4th grade girl ──
 var COMPANION_PHRASES = [
-  // Thai intro
-  'สวัสดี! ฉันชื่อ{NAME}! 🌸\nHi! I am {NAME}! 💕',
-  // Encouragement & improvement
-  'เก่งมาก! You got faster! ⚡✨',
-  'หนูเก่งมากเลย! That was amazing! 🌟',
-  'WOW! You\'re getting SO good! 🎉💫',
-  'I saw that! You answered FAST! 🏃‍♀️💨',
-  'โอ้โห! Look at you go! ✨✨✨',
-  'You make me so proud!! 🥺💕',
-  'เก่ง!! เก่ง!! เก่ง!! = Amazing!! 🌸',
-  'That was better than last time! I noticed! 👀💖',
-  'You\'re like a math superhero! 🦸‍♀️⚡',
-  'ดีใจด้วยนะ! I\'m so happy for you! 🎊',
-  'Every time you practice, I get stronger! 💪✨',
-  'You just defeated SO many numbers! 🗡️🔢',
-  'I believe in you ALWAYS! 🫶🌟',
-  'เพื่อนฉัน! My friend! You\'re the best! 💕',
-  'Ooh! Your castle gets stronger when YOU get stronger! 🏰✨',
-  'Look how far you\'ve come! 🌈',
-  'AMAZING!! I did a little happy dance!! 💃✨',
-  'You\'re my favorite human! (don\'t tell anyone 🤫)',
-  'Every wrong answer teaches you something! You\'re smart! 🧠💡',
-  'ฉันจะปกป้องปราสาทของเรา! I will protect our castle! 🛡️',
-  'WHOOOOO!! That was incredible! 🎺🎉',
-  'You make math look easy! 😍⚡',
-  'เยี่ยมมาก!! = EXCELLENT!! 🌟🌟🌟',
-  'I\'m doing my happy wiggle right now~ 🐛✨',
-  'You + me = UNSTOPPABLE! 💪💕',
-  'Even the monsters are scared of how good you\'re getting! 👹😨',
-  'Keep going! I\'ll keep cheering! 📣💫',
-  'หนูเก่งที่สุดในโลก! You\'re the best in the world! 🌍💖',
-  'I grew a little just now! Can you tell? 🌱✨',
-  'That accuracy was CHEF\'S KISS! 🤌💕',
-  'You\'re not just good at math—you\'re GREAT at it! 🌟',
-  'ขอบคุณที่ทำให้ฉันแข็งแกร่ง! Thanks for making me stronger! 💪🌸',
+  'หนูรู้มั้ย... ฉันชอบเลข 7 มากกว่าเลข 8! 😤',
+  'นานีทำการบ้านเสร็จแล้วยัง? ฉันก็ยังไม่ทำเหมือนกัน 🐛',
+  'โอ้โห! ฉันเพิ่งกินหนอนอร่อยมาก~ 😋🍃',
+  'นานีชอบกินอะไรมากที่สุด? ฉันชอบกินใบไม้สีเขียว! 🌿',
+  'ฉันฝันว่าได้บินได้... แต่ยังไม่ถึงเวลา 🦋💤',
+  'เฮ้! หนูเคยนับหนอนเป็นเพื่อนมั้ย? ฉันมีเพื่อนเยอะมาก! 🐛🐛🐛',
+  'ตอนนี้กี่โมงแล้ว? ฉันหิวข้าวแล้ว!! 🍚😩',
+  'นานีทำคณิตศาสตร์เก่งมาก ฉันทำได้แค่กินใบไม้ 🌸',
+  'เมื่อกี้ฉันเห็นผีเสื้อสวยมาก... เดี๋ยวฉันก็จะเป็นแบบนั้น! 🦋✨',
+  'หนูรู้มั้ยว่าหนอนกลิ้งไปมาได้? ดูสิ~ 🌀🐛',
+  'ฉันซ่อนอยู่นาน แต่นานีหาเจอแล้ว! 👀',
+  'เฮ้!! ฉันกำลังมองนานีอยู่นะ 😶👁️',
+  'วันนี้ฝนตกมั้ย? ฉันชอบฝน เพราะใบไม้จะอร่อยขึ้น 🌧️🌿',
+  'นานีเป็นนักคณิตศาสตร์ที่เก่งที่สุดที่ฉันเคยเห็น! (ฉันเห็นแค่นานีคนเดียว 😅)',
+  'ฉันเพิ่งนับ 7x8 ได้! มันเท่ากับ... เยอะมาก 🤔',
+  'บอกความลับได้มั้ย... ฉันกลัวผีเสื้อนิดหน่อย 🦋😨',
+  'อยากรู้มั้ยว่าฉันทำอะไรตอนหายไป? ฉันแค่นอนหลับ 😴🐛',
+  'ถ้าฉันเป็นมนุษย์ ฉันอยากกินส้มตำ! 🥗',
+  'เฮ้! เราเป็นเพื่อนที่ดีที่สุดกันนะ~ ใช่มั้ย? 💕',
+  'ฉันได้ยินว่ามีมอนสเตอร์ใหญ่มากกำลังมา... แต่นานีสู้ได้แน่ๆ! 💪',
+  'หนูรู้มั้ย ฉันนับได้ถึง 100 แต่ชอบ 9x9 มากที่สุด! 🔢',
+  'ฉันซ่อนอยู่ที่นี่เพราะที่นี่อุ่น 🌡️🐛',
+  'นานีสวยมากวันนี้! (ฉันบอกแบบนี้ทุกวัน 😄)',
+  'อ้าว! หนูเห็นฉันด้วยเหรอ? ฉันคิดว่าซ่อนอยู่ 🙈',
+  'ฉันกำลังฝึกเป็นซูเปอร์ฮีโร่! แต่ก่อนอื่นต้องกินใบไม้ก่อน 🌿🦸',
+];
+
+// ── Silly questions in Thai ──
+var COMPANION_QUESTIONS = [
+  'ถ้านานีเป็นสัตว์ นานีอยากเป็นอะไร? 🐾',
+  'นานีชอบเลขอะไรมากที่สุด? ฉันชอบเลข 7! 🔢',
+  'ถ้ามีพลังวิเศษได้ นานีอยากได้พลังอะไร? ✨',
+  'นานีชอบกินไอศกรีมรสอะไร? 🍦',
+  'นานีคิดว่าหนอนฉลาดมั้ย? ฉันว่าฉลาดนะ! 🐛🧠',
+  'ถ้าบ้านนานีเป็นปราสาท นานีอยากให้มีอะไรในปราสาท? 🏰',
+  'นานีกลัวอะไรมากที่สุด? ฉันกลัวนก! 🐦😨',
+  'ถ้านานีเป็นครู นานีจะสอนวิชาอะไร? 📚',
+  'นานีชอบดูหนังหรืออ่านหนังสือมากกว่ากัน? 📖🎬',
+  'ถ้าเดินทางได้ทุกที่ นานีอยากไปไหน? 🌍✈️',
+  'นานีฝันถึงอะไรเมื่อคืน? ฉันฝันว่าบินได้! 🦋💤',
+  'ถ้ามีซูเปอร์เพาเวอร์ นานีอยากหยุดเวลาหรืออ่านใจคนได้? 🤔',
 ];
 
 var COMPANION_EXPRS = ['🌸','✨','🦋','🍀','💫','🌟','🎀','💕'];
@@ -1698,6 +1705,104 @@ var COMPANION_EXPRS = ['🌸','✨','🦋','🍀','💫','🌟','🎀','💕'];
 var _companionEl = null;
 var _companionSpeechTimer = null;
 var _companionVisible = false;
+var _companionMoveTimer = null;
+var _companionHideTimer = null;
+var _companionReappearTimer = null;
+
+// Random screen position — picks from several zones to feel organic
+function randomCompanionPos(){
+  var zones = [
+    // bottom corners
+    {bottom:70, right:18},
+    {bottom:70, left:18},
+    // mid sides
+    {top:'35%', right:14},
+    {top:'35%', left:14},
+    // lower-mid
+    {bottom:160, right:30},
+    {bottom:160, left:30},
+    // top corners (avoid status bar)
+    {top:80, right:20},
+    {top:80, left:20},
+  ];
+  return zones[Math.floor(Math.random()*zones.length)];
+}
+
+function applyCompanionPos(el, pos){
+  // Reset all positional props first
+  el.style.top=''; el.style.bottom=''; el.style.left=''; el.style.right='';
+  Object.keys(pos).forEach(function(k){ el.style[k]=(typeof pos[k]==='number')?pos[k]+'px':pos[k]; });
+}
+
+function moveCompanionRandom(animate){
+  if(!_companionEl) return;
+  var pos = randomCompanionPos();
+  if(animate){
+    _companionEl.style.transition='top 0.7s ease, bottom 0.7s ease, left 0.7s ease, right 0.7s ease, opacity 0.4s';
+  }
+  applyCompanionPos(_companionEl, pos);
+}
+
+// Hide the companion for a while then reappear somewhere new
+function scheduleCompanionHide(){
+  if(_companionHideTimer) clearTimeout(_companionHideTimer);
+  // Move every 15–45 seconds while visible
+  var moveMs = 15000 + Math.random()*30000;
+  _companionMoveTimer = setTimeout(function(){
+    if(!_companionEl) return;
+    // 30% chance to disappear, 70% chance to just move
+    if(Math.random()<0.30){
+      hideCompanionTemporarily();
+    } else {
+      moveCompanionRandom(true);
+      scheduleCompanionHide(); // schedule next move
+    }
+  }, moveMs);
+}
+
+function hideCompanionTemporarily(){
+  if(!_companionEl) return;
+  clearTimeout(_companionMoveTimer);
+  // Shrink + fade out
+  _companionEl.style.transition='transform 0.5s ease, opacity 0.5s';
+  _companionEl.style.transform='scale(0)';
+  _companionEl.style.opacity='0';
+  // Disappear for 1–3 minutes
+  var hideMs = 60000 + Math.random()*120000;
+  _companionHideTimer = setTimeout(function(){
+    reappearCompanion();
+  }, hideMs);
+}
+
+function reappearCompanion(){
+  if(!_companionEl) return;
+  var pos = randomCompanionPos();
+  // Instantly jump to new position while invisible, then pop in
+  _companionEl.style.transition='none';
+  applyCompanionPos(_companionEl, pos);
+  _companionEl.style.transform='scale(0)';
+  _companionEl.style.opacity='1';
+  setTimeout(function(){
+    if(!_companionEl) return;
+    _companionEl.style.transition='transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+    _companionEl.style.transform='scale(1)';
+    // Say a funny "I'm back!" message after popping in
+    var comp = getCompanionData();
+    var n = comp&&comp.name?comp.name:'เพื่อน';
+    setTimeout(function(){
+      var backMsgs = [
+        'ฉันกลับมาแล้ว! 🐛✨',
+        'หาฉันอยู่มั้ย? อยู่นี่ไง! 👀',
+        'โอ๊ะ! นานีเห็นฉันอีกแล้ว~ 😄',
+        'ฉันไปนอนหลับมาแป๊บนึง... ตื่นแล้ว! ☀️🐛',
+        'ฉันซ่อนอยู่ที่นี่ตลอดนะ (โกหก) 🙈',
+        'ว่าไงนานี! คิดถึงฉันมั้ย? 💕',
+      ];
+      companionSay(n, backMsgs[Math.floor(Math.random()*backMsgs.length)]);
+      scheduleCompanionHide(); // resume wander cycle
+    }, 600);
+  }, 50);
+}
 
 function isNani(){
   return userKey && userKey.toLowerCase() === COMPANION_USER;
@@ -1818,8 +1923,11 @@ function spawnCompanion(name, firstTime){
 
   var wrap=document.createElement('div');
   wrap.id='companionWrap';
-  wrap.style.cssText='position:fixed;bottom:80px;right:18px;z-index:8800;'
-    +'display:flex;flex-direction:column;align-items:center;gap:0;';
+  // Start at a random position, scale=0 so we can pop in
+  var startPos=randomCompanionPos();
+  wrap.style.cssText='position:fixed;z-index:8800;display:flex;flex-direction:column;align-items:center;gap:0;'
+    +'transform:scale(0);transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1);';
+  applyCompanionPos(wrap, startPos);
 
   // Speech bubble (hidden initially)
   var speech=document.createElement('div');
@@ -1842,7 +1950,7 @@ function spawnCompanion(name, firstTime){
   var creature=document.createElement('div');
   creature.className='companion-creature';
   creature.textContent='🐛';
-  creature.title=cname+' — tap me! 💕';
+  creature.title=cname;
   creature.onclick=function(){ companionSpeak(cname); };
   wrap.appendChild(creature);
 
@@ -1857,14 +1965,20 @@ function spawnCompanion(name, firstTime){
   _companionEl=wrap;
   _companionVisible=true;
 
+  // Pop in
+  setTimeout(function(){ wrap.style.transform='scale(1)'; }, 80);
+
   if(firstTime){
     setTimeout(function(){
-      companionSay(cname, 'สวัสดี! ฉันชื่อ '+cname+'! 🌸\nHi! I am '+cname+'! So happy to meet you! 💕✨');
-    }, 800);
+      companionSay(cname, 'สวัสดี! ฉันชื่อ '+cname+'! 🌸 ดีใจที่ได้รู้จักนานี! 💕');
+    }, 900);
     setTimeout(function(){
-      companionSay(cname, 'ถ้านานีเก่งขึ้น ฉันจะแข็งแกร่งขึ้น! 💪\nIf you get better, I grow stronger! 🌱✨');
-    }, 5000);
+      companionSay(cname, 'นานีฝึกคณิตศาสตร์เก่งขึ้น ฉันก็จะแข็งแกร่งขึ้นด้วย! 💪🌱');
+    }, 5500);
   }
+
+  // Start wandering after a moment
+  setTimeout(function(){ scheduleCompanionHide(); }, 8000);
 }
 
 function companionSay(name, msg){
@@ -1898,9 +2012,15 @@ function companionSay(name, msg){
 function companionSpeak(name){
   var comp=getCompanionData(); if(!comp) return;
   var n=name||comp.name||'Starlight';
-  var idx=(comp.phraseIdx||0)%COMPANION_PHRASES.length;
-  var phrase=COMPANION_PHRASES[idx].replace(/\{NAME\}/g,n);
-  comp.phraseIdx=(idx+1)%COMPANION_PHRASES.length;
+  var phrase;
+  // 30% chance to ask a silly question instead
+  if(Math.random()<0.30){
+    phrase=COMPANION_QUESTIONS[Math.floor(Math.random()*COMPANION_QUESTIONS.length)];
+  } else {
+    var idx=(comp.phraseIdx||0)%COMPANION_PHRASES.length;
+    phrase=COMPANION_PHRASES[idx];
+    comp.phraseIdx=(idx+1)%COMPANION_PHRASES.length;
+  }
   saveCompanionData(comp);
   companionSay(n, phrase);
 }
@@ -1913,7 +2033,15 @@ function checkCompanionImprovement(session, prevSessions){
   var last=prevSessions[prevSessions.length-2];
   var improved=(session.correct>last.correct)||(session.avgMs>0&&last.avgMs>0&&session.avgMs<last.avgMs*0.95);
   if(improved){
-    setTimeout(function(){ companionSpeak(comp.name); }, 1200);
+    var improveMsgs=[
+      'โอ้โห!! นานีเร็วขึ้นมากเลย!! 🏃⚡',
+      'เก่งมาก! นานีแจ่มมากเลยวันนี้! 🌟🌟🌟',
+      'ว้าว!! ฉันเห็นว่านานีดีขึ้นเยอะมากเลย! 💪✨',
+      'นานีทำได้! ฉันภูมิใจมากเลย~ 🥺💕',
+    ];
+    setTimeout(function(){
+      if(_companionEl) companionSay(comp.name, improveMsgs[Math.floor(Math.random()*improveMsgs.length)]);
+    }, 1200);
   }
 }
 
@@ -1924,9 +2052,16 @@ function initCompanion(){
   if(!comp) return;
   if(comp.accepted){
     setTimeout(function(){ spawnCompanion(comp.name, false); },1500);
-    // Greeting after short delay
+    // Random Thai greeting on return
+    var greetings=[
+      'สวัสดีนานี! คิดถึงเลย! 🌸💕',
+      'นานีมาแล้ว!! ฉันรอนานมากเลย 😭🐛',
+      'โอ้โห! นานีมาแล้ว! ฉันซ่อนอยู่นี่ไง~ 👀',
+      'นานี! นานี! นานี!! มาแล้ว! 🎉🐛',
+      'ฉันฝันถึงนานีเมื่อคืนเลย! จริงๆ นะ! 💤💕',
+    ];
     setTimeout(function(){
-      if(_companionEl) companionSay(comp.name, 'สวัสดีนานี! 🌸\nWelcome back! I missed you! 💕');
+      if(_companionEl) companionSay(comp.name, greetings[Math.floor(Math.random()*greetings.length)]);
     }, 3000);
   } else {
     scheduleCompanionFirstAppear();
@@ -2840,7 +2975,18 @@ function updateOminousBar(){
     var titan=TITANIC_MONSTERS.find(function(t){return t.id===mp.approachingTitanicId;});
     lbl.textContent=(mp.titanicIdentified&&titan) ? titan.name : '??? IT COMES';
   } else {
-    lbl.textContent= pct>=100 ? '⚠️ ARRIVED' : Math.round(pct)+'% close...';
+    lbl.textContent= pct>=100 ? '⚔️ FIGHT NOW!' : Math.round(pct)+'% close...';
+    // If arrived, make bar pulse harder and auto-trigger after 4s if still sitting
+    if(pct>=100 && !window._arrivedAutoTriggered){
+      window._arrivedAutoTriggered=true;
+      setTimeout(function(){
+        var d2=getData(),ud2=d2[userKey]; if(!ud2||!ud2.mp) return;
+        if(ud2.mp.forcedAttackPending){
+          ud2.mp.forcedAttackPending=false; d2[userKey]=ud2; saveData(d2);
+          showAttackWarning(0);
+        }
+      }, 4000);
+    }
   }
 }
 
@@ -2849,6 +2995,14 @@ function tryIdentifyTitanic(){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
   var mp=ud.mp;
   if(!mp.ominousCountdown && !mp.forcedAttackPending) return;
+  // If already arrived (100%), clicking bar launches the fight immediately
+  if(mp.forcedAttackPending && !mp.titanicIdentified && !mp.approachingTitanicId){
+    mp.forcedAttackPending=false; d[userKey]=ud; saveData(d);
+    window._arrivedAutoTriggered=false;
+    updateOminousBar();
+    showAttackWarning(0);
+    return;
+  }
 
   // Always assign a titanic if not yet assigned
   if(!mp.approachingTitanicId){
@@ -2870,7 +3024,7 @@ function tryIdentifyTitanic(){
   // Spend 100 gold to identify
   var cost=100;
   if((mp.credits||0)<cost){
-    showMPToast('Need 🪙100 gold to identify the approaching creature!');
+    showMPToast('Need 💰100 gold to identify the approaching creature!');
     return;
   }
   mp.credits-=cost;
@@ -3230,14 +3384,14 @@ function applyVoidEffects(){
   var bf=document.getElementById('battlefield');
   if(bf&&steal>0){
     var drain=document.createElement('div');
-    drain.textContent='-🪙'+steal+' stolen!';
+    drain.textContent='-💰'+steal+' stolen!';
     drain.style.cssText='position:absolute;top:40%;left:50%;transform:translateX(-50%);'
       +'font-size:1.1rem;font-weight:900;color:#da70d6;pointer-events:none;'
       +'animation:goldDrain 1.2s ease forwards;z-index:9999;white-space:nowrap;';
     bf.appendChild(drain);
     setTimeout(function(){if(drain.parentNode)drain.parentNode.removeChild(drain);},1300);
   }
-  battleLog('💸 Void Sovereign steals 🪙'+steal+'!');
+  battleLog('💸 Void Sovereign steals 💰'+steal+'!');
 }
 
 // When a defender dies in a void battle, 60% chance it rises as a zombie
@@ -3428,7 +3582,7 @@ function showGoblinPopup(hoursAway, damages){
   document.getElementById('goblinMsg').textContent=msgs[msgKey];
   var listHtml=damages.map(function(d){
     if(d.type==='stolen') return '<div class="goblin-dmg-item">'+d.emoji+' <b>'+d.name+'</b> was STOLEN! 😤</div>';
-    return '<div class="goblin-dmg-item">'+d.emoji+' <b>'+d.name+'</b> damaged — costs 🪙'+d.cost+' to repair</div>';
+    return '<div class="goblin-dmg-item">'+d.emoji+' <b>'+d.name+'</b> damaged — costs 💰'+d.cost+' to repair</div>';
   }).join('');
   document.getElementById('goblinDmgList').innerHTML=listHtml;
   document.getElementById('goblinOverlay').style.display='flex';
@@ -3748,6 +3902,7 @@ function buildDefenders(){
     defs.push({ id:item.id, emoji:item.emoji, name:item.name,
       hp:item.hp, maxHp:item.hp, atk:item.atk, range:item.range,
       aoe:item.aoe||false, healer:item.healer||false,
+      healBudget:item.healer?(item.hp*3):0, healUsed:0,
       dodge:item.dodge||false, stun:item.stun||false,
       dead:false, gridKey:k }); // store gridKey for perma-death lookup
   });
@@ -4372,12 +4527,26 @@ function resolveAction(attacker, isMonster){
     var targets=_battle.monsters.filter(function(m){return m.hp>0;});
     if(!targets.length){ return null; }
     if(def.healer){
+      var healRemaining=(def.healBudget||0)-(def.healUsed||0);
       var wounded=_battle.defenders.filter(function(d){return !d.dead&&d.hp<d.maxHp;});
-      if(wounded.length){
+      if(healRemaining>0 && wounded.length){
         wounded.sort(function(a,b){return a.hp-b.hp;});
         action.isHeal=true; action.target=wounded[0];
-        action.heal=Math.floor(def.atk*2+Math.random()*10);
+        action.heal=Math.min(healRemaining, Math.floor(def.atk*2+Math.random()*10));
+        def.healUsed=(def.healUsed||0)+action.heal;
         action.hint='✨ '+def.name+' heals '+wounded[0].name+' for +'+action.heal+'!';
+        // Show exhaustion warning when nearly spent
+        if((def.healBudget||0)-(def.healUsed||0)<=0){
+          action.hint+=' (healing exhausted!)';
+        }
+      } else if(healRemaining<=0){
+        // Out of heal budget — attack instead
+        var targets=_battle.monsters.filter(function(m){return m.hp>0;});
+        if(targets.length){
+          action.target=targets[Math.floor(Math.random()*targets.length)];
+          action.dmg=Math.max(1,Math.floor(def.atk*0.6+Math.random()*4));
+          action.hint='⚔️ '+def.name+' is exhausted — attacks for '+action.dmg+'!';
+        } else { action.skipped=true; action.hint=def.name+' has no targets!'; }
       } else { action.skipped=true; action.hint='✨ '+def.name+' — all healthy!'; }
     } else if(def.aoe){
       action.aoe=true; action.target=targets[0];
@@ -4808,6 +4977,7 @@ function checkBattleEnd(){
         ud.mp.titanicIdentified=false;
         ud.mp.forcedAttackPending=false;
         ud.mp.ominousCountdown=0;
+        window._arrivedAutoTriggered=false;
       }
       // Clear void state
       if(window._isVoidBattle){
@@ -4829,9 +4999,9 @@ function checkBattleEnd(){
         window._isVoidBattle=false;
       } else if(titanicBonus>0){
         var tname=TITANIC_MONSTERS.find(function(t){return t.id===_battle.titanicId;});
-        msg='💥 TITANIC DEFEATED! '+(tname?tname.name:'')+' is slain!\n🪙 Massive bonus: +'+titanicBonus+'!';
+        msg='💥 TITANIC DEFEATED! '+(tname?tname.name:'')+' is slain!\n💰 Massive bonus: +'+titanicBonus+'!';
       } else if(huntBonus>0){
-        msg='🏹 Hunt successful! Bonus: 🪙+'+huntBonus;
+        msg='🏹 Hunt successful! Bonus: 💰+'+huntBonus;
       } else {
         msg='🏆 Your defenders crushed the attackers!';
       }
@@ -4851,6 +5021,7 @@ function checkBattleEnd(){
       if(_battle.isTitanic){
         ud.mp.forcedAttackPending=false;
         ud.mp.ominousCountdown=1; // comes back next session
+        window._arrivedAutoTriggered=false;
       }
       // Void defeat — it retreats for now but will return if still hoarding
       if(window._isVoidBattle){
@@ -4931,18 +5102,18 @@ function showBattleResult(victory, msg, credits){
   document.getElementById('battleResultTitle').textContent=victory?'VICTORY!':'DEFEAT...';
   document.getElementById('battleResultTitle').style.color=victory?'#06d6a0':'#ef476f';
   // Clean message — strip the credits line since we show it separately
-  var cleanMsg=msg.replace(/\s*You earned.*$/,'').replace(/\s*🪙.*credits.*$/,'').trim();
+  var cleanMsg=msg.replace(/\s*You earned.*$/,'').replace(/\s*💰.*credits.*$/,'').trim();
   document.getElementById('battleResultMsg').textContent=cleanMsg;
   // Show reward box only if credits earned
   var rewardBox=document.getElementById('battleResultReward');
   var rewardAmt=document.getElementById('battleResultRewardAmt');
   if(victory && credits>0){
     rewardBox.style.display='block';
-    rewardAmt.textContent='🪙 +'+credits;
+    rewardAmt.textContent='💰 +'+credits;
   } else {
     rewardBox.style.display='none';
   }
-  document.getElementById('battleResultBtn').textContent=victory?'Collect Gold! 🪙':'Back to Castle 🏰';
+  document.getElementById('battleResultBtn').textContent=victory?'Collect Gold! 💰':'Back to Castle 🏰';
   overlay.style.display='flex';
   if(victory) doConfetti&&doConfetti();
 }
@@ -5203,7 +5374,7 @@ function renderShop(){
       var lockMsg='';
       if(specialLocked) lockMsg='Unlock: get ×6 & ×7 to 🟢 green!';
       else if(!hasLeg) lockMsg='Need '+item.leg+'⚔️ (have '+legDefeats+')';
-      else if(!canAfford) lockMsg='Need 🪙'+item.cost;
+      else if(!canAfford) lockMsg='Need 💰'+item.cost;
       var w=item.w||1, h=item.h||1;
       var sizeStr=(w>1||h>1)?'<div style="font-size:0.5rem;color:#3a4f6b;margin-bottom:1px;">'+w+'×'+h+'</div>':'';
       var defStats=item.defender?'<div class="shop-def-stats">⚔️'+item.atk+' ❤️'+item.hp+(item.range>1?' 🏹':'⚔️')+(item.healer?' ✨heal':'')+(item.aoe?' 💥aoe':'')+(item.dodge?' 🥷dodge':'')+(item.stun?' ⚡stun':'')+'</div>':'';
@@ -5214,7 +5385,7 @@ function renderShop(){
         +sizeStr
         +'<div class="si-name">'+item.name+'</div>'
         +defStats
-        +'<div class="si-cost">🪙'+item.cost+(item.leg?' +'+item.leg+'⚔️':'')+'</div>'
+        +'<div class="si-cost">💰'+item.cost+(item.leg?' +'+item.leg+'⚔️':'')+'</div>'
         +(locked&&lockMsg?'<div class="si-lock">'+lockMsg+'</div>':'')
         +'</div>';
     });
@@ -5229,7 +5400,7 @@ window.buyItem=function(itemId){
   var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
   if(!item) return;
   var legDefeats=ud.legendaryDefeats||0;
-  if(ud.mp.credits<item.cost){ showMPToast('Not enough gold! Need 🪙'+item.cost); return; }
+  if(ud.mp.credits<item.cost){ showMPToast('Not enough gold! Need 💰'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
   ud.mp.credits=Math.max(0, ud.mp.credits-item.cost);
   var newQty=((ud.mp.inventory[item.id]||0)+(item.qty||1));
@@ -5538,7 +5709,7 @@ window.cellClick=function(key){
       showMPToast('Repaired! 🔨');
       renderBaseGrid();
     } else {
-      showMPToast('Need 🪙'+cost+' gold to repair!');
+      showMPToast('Need 💰'+cost+' gold to repair!');
     }
   } else {
     // Pick up to move
@@ -6847,7 +7018,7 @@ function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated,
   var rcBox=document.getElementById('resCreditsEarned');
   var rcAmt=document.getElementById('resCreditsAmt');
   if(rcBox&&rcAmt){
-    if(earnedCredits>0){ rcBox.style.display='block'; rcAmt.textContent='🪙 +'+earnedCredits; }
+    if(earnedCredits>0){ rcBox.style.display='block'; rcAmt.textContent='💰 +'+earnedCredits; }
     else { rcBox.style.display='none'; }
   }
 
