@@ -2740,6 +2740,19 @@ var SHOP_ITEMS=[
   { id:'smithy',      emoji:'🔨', name:'Blacksmith',    cost:65,  qty:1, leg:0, w:2,h:2, section:'Buildings',    desc:'Craft your gear' },
   { id:'stable',      emoji:'🐴', name:'Stables',       cost:55,  qty:1, leg:0, w:3,h:2, section:'Buildings',    desc:'Your horses live here' },
   { id:'market',      emoji:'🏪', name:'Market Square', cost:70,  qty:1, leg:0, w:3,h:2, section:'Buildings',    desc:'Trade & bustle' },
+  // Facilities — required to keep defenders happy
+  { id:'toilet',      emoji:'🚽', name:'Toilet',         cost:18,  qty:1, leg:0, w:1,h:1, section:'Facilities', desc:'Basic necessity. Your troops DEMAND it.', facility:true, provides:'toilet' },
+  { id:'kitchen',     emoji:'🍳', name:'Kitchen',        cost:30,  qty:1, leg:0, w:2,h:1, section:'Facilities', desc:'Hot meals keep morale high.', facility:true, provides:'food' },
+  { id:'barracks',    emoji:'🛏️', name:'Barracks',       cost:40,  qty:1, leg:0, w:2,h:2, section:'Facilities', desc:'A place to sleep. Revolutionary concept.', facility:true, provides:'bed' },
+  { id:'medic_tent',  emoji:'⛺', name:'Medic Tent',     cost:35,  qty:1, leg:0, w:2,h:1, section:'Facilities', desc:'Patch up wounds between battles.', facility:true, provides:'medical' },
+  { id:'tavern_f',    emoji:'🍺', name:'Break Room',     cost:25,  qty:1, leg:0, w:1,h:1, section:'Facilities', desc:'A place to relax. Mandatory fun.', facility:true, provides:'break' },
+  { id:'library_f',   emoji:'📖', name:'Training Hall',  cost:45,  qty:1, leg:0, w:2,h:1, section:'Facilities', desc:'Wizards and mages need their books.', facility:true, provides:'study' },
+  { id:'stable_f',    emoji:'🐎', name:'Horse Stable',   cost:35,  qty:1, leg:0, w:2,h:1, section:'Facilities', desc:'For cavalry and dragon riders.', facility:true, provides:'stable' },
+  { id:'chapel',      emoji:'⛪', name:'Chapel',         cost:30,  qty:1, leg:0, w:1,h:2, section:'Facilities', desc:'Spiritual needs matter too.', facility:true, provides:'prayer' },
+  { id:'sauna',       emoji:'🧖', name:'Sauna',          cost:50,  qty:1, leg:0, w:2,h:1, section:'Facilities', desc:'Luxury. But the knight insists.', facility:true, provides:'luxury' },
+  { id:'canteen',     emoji:'🥗', name:'Salad Bar',      cost:22,  qty:1, leg:0, w:1,h:1, section:'Facilities', desc:'The archer has dietary requirements.', facility:true, provides:'food' },
+  { id:'armory',      emoji:'🗡️', name:'Armory',         cost:55,  qty:1, leg:0, w:2,h:1, section:'Facilities', desc:'Weapons need maintenance too.', facility:true, provides:'armory' },
+  { id:'shower',      emoji:'🚿', name:'Showers',        cost:28,  qty:1, leg:0, w:1,h:1, section:'Facilities', desc:'After battle, everyone smells terrible.', facility:true, provides:'shower' },
   // Special unlock
   { id:'six_seven',   emoji:'😏', name:'6×7=42 Club',   cost:42,  qty:1, leg:0, w:2,h:2, section:'Special',      desc:'For those who know', unlock:'6x7' },
   // Defenders (placed on grid, fight in battles)
@@ -3419,6 +3432,201 @@ function maybeZombifyDefender(def){
   setTimeout(function(){ try{ renderBattlefield&&renderBattlefield(); }catch(e){} },400);
 }
 
+
+// ── DEFENDER MORALE SYSTEM ────────────────────────────────────────────────────
+// Each defender type has specific facility needs. If not met when castle is
+// overpopulated (defenders > facilities ratio), they desert with a complaint.
+
+var DEFENDER_WANTS = {
+  'guard':       ['toilet', 'food', 'bed'],
+  'archer':      ['food', 'shower', 'study'],
+  'wizard_def':  ['study', 'prayer', 'break'],
+  'priest':      ['prayer', 'medical', 'break'],
+  'knight':      ['bed', 'armory', 'sauna'],
+  'eng_cat':     ['armory', 'food', 'toilet'],
+  'ninja':       ['shower', 'break', 'study'],
+  'paladin':     ['prayer', 'armory', 'medical'],
+  'dwarf_cannon':['food', 'armory', 'bed'],
+  'ice_witch':   ['study', 'break', 'shower'],
+  'berserker':   ['food', 'food', 'toilet'],   // really just wants food x2
+  'dragon_rider':['stable', 'food', 'armory'],
+  'golem_def':   ['armory', 'toilet', 'bed'],
+  'catapult':    ['armory', 'food', 'toilet'],
+  'vampire_def': ['luxury', 'prayer', 'shower'],
+  'archmage':    ['study', 'luxury', 'prayer'],
+  'titan_def':   ['food', 'food', 'toilet', 'bed'],  // eats a lot
+  'phoenix_def': ['break', 'medical', 'prayer'],
+  'sea_serpent': ['shower', 'food', 'stable'],
+};
+
+// Complaints per missing facility type — hilariously specific
+var FACILITY_COMPLAINTS = {
+  toilet: [
+    "WE NEED A TOILET. This is NOT negotiable. I quit. 🚽",
+    "There is ONE toilet for 12 warriors. I have standards. Goodbye. 🚽",
+    "I've been holding it since Tuesday. I QUIT. 🚽💀",
+    "No. Absolutely not. Build a bathroom or I'm gone. 🚽",
+  ],
+  food: [
+    "I've eaten nothing but sadness for 3 days. I deserve better. 🍳",
+    "The cafeteria is a myth. I'm leaving to find a sandwich. 🥪",
+    "One (1) cracker. That's what they gave me. I QUIT. 🍪😤",
+    "I'm a knight. I need MEALS. Not vibes. Real food. 🍖",
+    "There is no kitchen. The wizard tried to conjure soup. It was not soup. 🧙😰",
+  ],
+  bed: [
+    "I have been sleeping on the FLOOR. The stone floor. For weeks. 🛏️",
+    "No barracks. No cot. No pillow. I'm a professional. This is beneath me. 😤",
+    "I found a pile of hay in the corner. That is not a bed. I QUIT. 🛏️",
+  ],
+  medical: [
+    "I got hit by an arrow LAST WEEK and there's no medic. Bye. 🏥",
+    "The treatment here is 'walk it off.' I am not walking it off. ⛺",
+    "A wizard tried to heal me with multiplication. It didn't work. I quit. 🩹",
+  ],
+  break: [
+    "I have not had a single day off since I was hired. NOT. ONE. 😩",
+    "There is no break room. There is no break. There is only war. I quit. ☕",
+    "I need to sit down for FIVE MINUTES. Is that too much to ask?? 🪑",
+  ],
+  study: [
+    "A wizard without a library is just a man in a hat. Good day. 📚",
+    "My spell books are stacked in the hallway. THE HALLWAY. I quit. 📖",
+    "How am I supposed to learn new spells? FROM MEMORY?? I'm out. 🧙‍♂️",
+  ],
+  stable: [
+    "My dragon has nowhere to sleep. My dragon is VERY upset. So am I. 🐉",
+    "The horse is living in the kitchen. The KITCHEN. I'm leaving. 🐎",
+    "There are no stables. My mount has been parked outside for 3 months. Bye. 🐴",
+  ],
+  prayer: [
+    "No chapel. No shrine. Not even a candle. I cannot bless anything here. ⛪",
+    "The spirits require a place of worship. This place has a catapult. I quit. 🙏",
+    "My faith is strong. My workplace is not. Farewell. 🕊️",
+  ],
+  luxury: [
+    "I am a vampire knight. I require CERTAIN STANDARDS. This is not them. 🧛",
+    "No sauna. No silk. Nothing. I am moving to a better castle. 💅",
+    "The Archmage said we'd have a spa. The Archmage LIED. 🧖",
+  ],
+  armory: [
+    "My sword has not been sharpened in months. It is basically a stick now. ⚔️",
+    "The armory is LITERALLY JUST A CORNER. With some nails. I QUIT. 🗡️",
+    "Where do I put my equipment? Oh, on the floor? Right. Goodbye. 🔨",
+  ],
+  shower: [
+    "We smell terrible. All of us. No exceptions. Including the wizard. 🚿",
+    "I have been in full armor for 6 weeks without a shower. I QUIT. 💀",
+    "The ninja smells like a ninja who has never showered. I cannot work like this. 🥷😷",
+  ],
+};
+
+// Threshold: if defenders > (facilities * 2) + 2, morale suffers
+// More defenders than facilities → desertion
+function countFacilitiesAndDefenders(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return {defs:0, facs:0, provided:[]};
+  var grid=ud.mp.baseGrid||{};
+  var defs=0, facs=0;
+  var provided=[];
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(!item) return;
+    if(item.defender) defs++;
+    if(item.facility){ facs++; provided.push(item.provides); }
+  });
+  return {defs:defs, facs:facs, provided:provided};
+}
+
+function checkDefenderMorale(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var mp=ud.mp;
+  // Only check once per castle visit (not every open)
+  var now=Date.now();
+  var lastMorale=mp.lastMoraleCheck||0;
+  if(now-lastMorale < 300000) return; // max once per 5 min
+
+  var counts=countFacilitiesAndDefenders();
+  if(counts.defs===0) return;
+  
+  // Need at least 1 facility per 3 defenders; otherwise morale drops
+  var facilityShortfall = counts.defs - ((counts.facs*3)+2);
+  if(facilityShortfall<=0) return;
+
+  // Find defenders who are missing something they want
+  var grid=mp.baseGrid||{};
+  var candidates=[];
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(!item||!item.defender) return;
+    var wants=DEFENDER_WANTS[item.id]||['toilet','food'];
+    // Check if any of their wants are unmet
+    var unmet=wants.filter(function(w){ return counts.provided.indexOf(w)===-1; });
+    if(unmet.length>0) candidates.push({k:k, cell:cell, item:item, unmet:unmet});
+  });
+
+  if(!candidates.length) return;
+
+  // Pick 1 deserter (proportional to shortfall, max 2 at once)
+  var numDesert=Math.min(2, Math.ceil(facilityShortfall/3));
+  var deserters=[];
+  for(var i=0;i<numDesert&&candidates.length;i++){
+    var idx=Math.floor(Math.random()*candidates.length);
+    deserters.push(candidates.splice(idx,1)[0]);
+  }
+
+  mp.lastMoraleCheck=now;
+  d[userKey]=ud; saveData(d);
+
+  // Show popup then remove them
+  showDeserterPopup(deserters, function(){
+    var d2=getData(), ud2=d2[userKey]; if(!ud2||!ud2.mp) return;
+    deserters.forEach(function(des){
+      delete ud2.mp.baseGrid[des.k];
+    });
+    d2[userKey]=ud2; saveData(d2);
+    // Refresh castle view
+    try{ renderBaseGrid&&renderBaseGrid(); }catch(e){}
+    showMPToast('💔 '+deserters.length+' defender'+(deserters.length>1?'s':'')+' deserted! Build facilities!');
+  });
+}
+
+function showDeserterPopup(deserters, onDone){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.92);'
+    +'display:flex;align-items:center;justify-content:center;animation:popIn 0.3s ease;';
+
+  var cards=deserters.map(function(des){
+    var want=des.unmet[Math.floor(Math.random()*des.unmet.length)];
+    var complaints=FACILITY_COMPLAINTS[want]||FACILITY_COMPLAINTS['toilet'];
+    var complaint=complaints[Math.floor(Math.random()*complaints.length)];
+    return '<div style="background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.4);border-radius:14px;padding:14px 16px;margin-bottom:10px;text-align:left;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<span style="font-size:2.2rem;">'+des.item.emoji+'</span>'
+      +'<div><div style="font-size:0.9rem;font-weight:900;color:#fff;">'+des.item.name+'</div>'
+      +'<div style="font-size:0.6rem;color:#ef476f;font-weight:700;letter-spacing:1px;text-transform:uppercase;">DESERTING</div></div></div>'
+      +'<div style="font-size:0.78rem;color:#ffb3b3;line-height:1.5;font-style:italic;">"'+complaint+'"</div>'
+      +'</div>';
+  }).join('');
+
+  ov.innerHTML='<div style="max-width:340px;width:92%;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="text-align:center;margin-bottom:14px;">'
+    +'<div style="font-size:3rem;animation:castleShake 0.8s ease-in-out infinite;">😤</div>'
+    +'<div style="font-size:0.58rem;font-weight:900;letter-spacing:4px;color:#ef476f;text-transform:uppercase;margin:6px 0 4px;">Defender Desertion!</div>'
+    +'<div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:4px;">Your troops are leaving!</div>'
+    +'<div style="font-size:0.75rem;color:#b89fd4;">Build facilities from the 🛒 Shop to keep them happy.</div>'
+    +'</div>'
+    +cards
+    +'<button onclick="this.parentNode.parentNode.remove();(window._deserterCb&&window._deserterCb());" '
+    +'style="width:100%;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;'
+    +'border-radius:12px;padding:12px;font-family:inherit;font-weight:900;font-size:0.88rem;'
+    +'cursor:pointer;margin-top:12px;">Build Facilities! 🚽</button>'
+    +'</div>';
+  window._deserterCb=onDone;
+  document.body.appendChild(ov);
+}
+
 // ── CASTLE RECOVERY SYSTEM ───────────────────────────────────────────────────
 // Students must do math between battles. After 2 battles without a session,
 // the castle is "recovering" and battle is locked until they practice.
@@ -3681,21 +3889,43 @@ var MONSTER_TYPES=[
 // ── SECRET RARE CREATURES — appear only by dropChance (1-in-N per battle) ───
 // Not in MONSTER_TYPES so they never appear in normal waves; spawned separately
 var SECRET_MONSTERS=[
-  { id:'golden_chicken',  emoji:'🐓', name:'Golden Chicken',     hp:999, atk:1,  range:1, speed:'melee',  reward:500, rarity:'secret', dropChance:100,  giant:false, desc:'1 in 100 — Its eggs are pure gold. Its attitude is not.' },
-  { id:'bunny_king',      emoji:'🐰', name:'Bunny King',         hp:50,  atk:8,  range:1, speed:'melee',  reward:80,  rarity:'secret', dropChance:150,  giant:false, desc:'1 in 150 — Rules all rabbits with an iron paw.' },
-  { id:'disco_skeleton',  emoji:'🕺', name:'Disco Skeleton',     hp:40,  atk:12, range:1, speed:'melee',  reward:100, rarity:'secret', dropChance:200,  giant:false, desc:'1 in 200 — Has been dead since 1978. Still grooving.' },
-  { id:'mr_muffin',       emoji:'🧁', name:'Mr. Muffin',         hp:25,  atk:20, range:2, speed:'ranged', reward:120, rarity:'secret', dropChance:250,  giant:false, desc:'1 in 250 — Looks delicious. Bites back.' },
-  { id:'galaxy_cow',      emoji:'🐄', name:'Galaxy Cow',         hp:200, atk:25, range:2, speed:'ranged', reward:200, rarity:'secret', dropChance:300,  giant:true,  desc:'1 in 300 — Moos in the language of the cosmos.' },
-  { id:'professor_snail', emoji:'🐌', name:'Professor Snail',    hp:60,  atk:5,  range:3, speed:'ranged', reward:150, rarity:'secret', dropChance:400,  giant:false, desc:'1 in 400 — Has a PhD in slow destruction.' },
-  { id:'laser_penguin',   emoji:'🐧', name:'Laser Penguin',      hp:80,  atk:30, range:3, speed:'ranged', reward:180, rarity:'secret', dropChance:500,  giant:false, desc:'1 in 500 — Eyes shoot actual lasers. Antarctic in origin.' },
-  { id:'time_turtle',     emoji:'🐢', name:'Time Turtle',        hp:999, atk:8,  range:1, speed:'melee',  reward:220, rarity:'secret', dropChance:500,  giant:false, desc:'1 in 500 — Older than the castle. Maybe older than math.' },
-  { id:'ninja_duck',      emoji:'🦆', name:'Ninja Duck',         hp:55,  atk:35, range:2, speed:'ranged', reward:250, rarity:'secret', dropChance:750,  giant:false, desc:'1 in 750 — You never heard it coming. Quack.' },
-  { id:'giant_hamster',   emoji:'🐹', name:'Hamzilla',           hp:500, atk:20, range:1, speed:'melee',  reward:300, rarity:'secret', dropChance:750,  giant:true,  desc:'1 in 750 — The hamster wheel was too small.' },
-  { id:'elder_potato',    emoji:'🥔', name:'Elder Potato God',   hp:300, atk:40, range:2, speed:'ranged', reward:350, rarity:'secret', dropChance:1000, giant:true,  desc:'1 in 1000 — Ancient. Starchy. Unstoppable.' },
-  { id:'moon_crab',       emoji:'🦀', name:'Moon Crab',          hp:400, atk:45, range:2, speed:'ranged', reward:400, rarity:'secret', dropChance:1000, giant:true,  desc:'1 in 1000 — Fell from the moon. Is not happy about it.' },
-  { id:'math_demon',      emoji:'🔢', name:'Math Demon',         hp:150, atk:50, range:3, speed:'ranged', reward:450, rarity:'secret', dropChance:1500, giant:false, desc:'1 in 1500 — Born from every wrong answer ever given.', aoe:true },
-  { id:'rubber_duck_god', emoji:'🦆', name:'Rubber Duck God',    hp:1,   atk:1,  range:1, speed:'melee',  reward:1000,rarity:'secret', dropChance:2000, giant:true,  desc:'1 in 2000 — You stared into the bath toy. It stared back.' },
-  { id:'the_answer',      emoji:'✨', name:'42',                  hp:42,  atk:42, range:4, speed:'ranged', reward:999, rarity:'secret', dropChance:5000, giant:false, desc:'1 in 5000 — The answer to life, the universe, and everything.', aoe:true, stun:true },
+  // ── ORIGINAL 15 ──
+  { id:'golden_chicken',   emoji:'🐓', name:'Golden Chicken',      hp:999, atk:1,  range:1, speed:'melee',  reward:500, rarity:'secret', dropChance:100,  giant:false, desc:'1 in 100 — Its eggs are pure gold. Its attitude is not.' },
+  { id:'bunny_king',       emoji:'🐰', name:'Bunny King',          hp:50,  atk:8,  range:1, speed:'melee',  reward:80,  rarity:'secret', dropChance:150,  giant:false, desc:'1 in 150 — Rules all rabbits with an iron paw.' },
+  { id:'disco_skeleton',   emoji:'🕺', name:'Disco Skeleton',      hp:40,  atk:12, range:1, speed:'melee',  reward:100, rarity:'secret', dropChance:200,  giant:false, desc:'1 in 200 — Has been dead since 1978. Still grooving.' },
+  { id:'mr_muffin',        emoji:'🧁', name:'Mr. Muffin',          hp:25,  atk:20, range:2, speed:'ranged', reward:120, rarity:'secret', dropChance:250,  giant:false, desc:'1 in 250 — Looks delicious. Bites back.' },
+  { id:'galaxy_cow',       emoji:'🐄', name:'Galaxy Cow',          hp:200, atk:25, range:2, speed:'ranged', reward:200, rarity:'secret', dropChance:300,  giant:true,  desc:'1 in 300 — Moos in the language of the cosmos.' },
+  { id:'professor_snail',  emoji:'🐌', name:'Professor Snail',     hp:60,  atk:5,  range:3, speed:'ranged', reward:150, rarity:'secret', dropChance:400,  giant:false, desc:'1 in 400 — Has a PhD in slow destruction.' },
+  { id:'laser_penguin',    emoji:'🐧', name:'Laser Penguin',       hp:80,  atk:30, range:3, speed:'ranged', reward:180, rarity:'secret', dropChance:500,  giant:false, desc:'1 in 500 — Eyes shoot actual lasers. Antarctic in origin.' },
+  { id:'time_turtle',      emoji:'🐢', name:'Time Turtle',         hp:999, atk:8,  range:1, speed:'melee',  reward:220, rarity:'secret', dropChance:500,  giant:false, desc:'1 in 500 — Older than the castle. Maybe older than math.' },
+  { id:'ninja_duck',       emoji:'🦆', name:'Ninja Duck',          hp:55,  atk:35, range:2, speed:'ranged', reward:250, rarity:'secret', dropChance:750,  giant:false, desc:'1 in 750 — You never heard it coming. Quack.' },
+  { id:'giant_hamster',    emoji:'🐹', name:'Hamzilla',            hp:500, atk:20, range:1, speed:'melee',  reward:300, rarity:'secret', dropChance:750,  giant:true,  desc:'1 in 750 — The hamster wheel was too small.' },
+  { id:'elder_potato',     emoji:'🥔', name:'Elder Potato God',    hp:300, atk:40, range:2, speed:'ranged', reward:350, rarity:'secret', dropChance:1000, giant:true,  desc:'1 in 1000 — Ancient. Starchy. Unstoppable.' },
+  { id:'moon_crab',        emoji:'🦀', name:'Moon Crab',           hp:400, atk:45, range:2, speed:'ranged', reward:400, rarity:'secret', dropChance:1000, giant:true,  desc:'1 in 1000 — Fell from the moon. Is not happy about it.' },
+  { id:'math_demon',       emoji:'🔢', name:'Math Demon',          hp:150, atk:50, range:3, speed:'ranged', reward:450, rarity:'secret', dropChance:1500, giant:false, desc:'1 in 1500 — Born from every wrong answer ever given.', aoe:true },
+  { id:'rubber_duck_god',  emoji:'🦆', name:'Rubber Duck God',     hp:1,   atk:1,  range:1, speed:'melee',  reward:1000,rarity:'secret', dropChance:2000, giant:true,  desc:'1 in 2000 — You stared into the bath toy. It stared back.' },
+  { id:'the_answer',       emoji:'✨', name:'42',                   hp:42,  atk:42, range:4, speed:'ranged', reward:999, rarity:'secret', dropChance:5000, giant:false, desc:'1 in 5000 — The answer to life, the universe, and everything.', aoe:true, stun:true },
+  // ── 20 NEW HILARIOUS ADDITIONS ──
+  { id:'angry_roomba',     emoji:'🤖', name:'Angry Roomba',        hp:30,  atk:6,  range:1, speed:'melee',  reward:90,  rarity:'secret', dropChance:120,  giant:false, desc:'1 in 120 — Has been trapped in a corner for 3 days. Very upset.' },
+  { id:'dramatic_goose',   emoji:'🪿', name:'Dramatic Goose',      hp:45,  atk:18, range:1, speed:'melee',  reward:110, rarity:'secret', dropChance:160,  giant:false, desc:'1 in 160 — Honking at maximum drama. Took your keys.' },
+  { id:'grandma_ghost',    emoji:'👻', name:'Grandma Ghost',    hp:35,  atk:9,  range:2, speed:'ranged', reward:130, rarity:'secret', dropChance:220,  giant:false, desc:'1 in 220 — She just wants to feed everyone. Refuses to leave.' },
+  { id:'sentient_sock',    emoji:'🧦', name:'The Lost Sock',       hp:15,  atk:4,  range:1, speed:'melee',  reward:70,  rarity:'secret', dropChance:180,  giant:false, desc:'1 in 180 — Missing since 2019. Bitter about it.' },
+  { id:'wifi_monster',     emoji:'📶', name:'No Signal Beast',     hp:88,  atk:22, range:3, speed:'ranged', reward:160, rarity:'secret', dropChance:350,  giant:false, desc:'1 in 350 — Appears whenever you need internet most.', stun:true },
+  { id:'birthday_cake',    emoji:'🎂', name:'Forgotten Birthday Cake', hp:60, atk:14, range:2, speed:'ranged', reward:175, rarity:'secret', dropChance:280, giant:false, desc:'1 in 280 — Left out for 3 weeks. Now it has opinions.' },
+  { id:'evil_autocorrect', emoji:'📱', name:'Evil Autocorrect',    hp:20,  atk:28, range:4, speed:'ranged', reward:210, rarity:'secret', dropChance:450,  giant:false, desc:'1 in 450 — Changed I will be there to I will be a bear.', aoe:true },
+  { id:'floor_lava',       emoji:'🌋', name:'The Floor is Lava',   hp:120, atk:32, range:2, speed:'melee',  reward:240, rarity:'secret', dropChance:600,  giant:true,  desc:'1 in 600 — You stepped on it. You KNEW the rules.' },
+  { id:'monday_boss',      emoji:'😩', name:'Monday Morning',      hp:250, atk:35, range:1, speed:'melee',  reward:290, rarity:'secret', dropChance:700,  giant:true,  desc:'1 in 700 — The most powerful creature known to humanity.' },
+  { id:'wet_cat',          emoji:'🐱', name:'Extremely Wet Cat',   hp:40,  atk:45, range:2, speed:'ranged', reward:320, rarity:'secret', dropChance:800,  giant:false, desc:'1 in 800 — You gave it a bath. It will never forgive you.' },
+  { id:'glitter_demon',    emoji:'✨', name:'Glitter Demon',        hp:70,  atk:16, range:3, speed:'ranged', reward:260, rarity:'secret', dropChance:550,  giant:false, desc:'1 in 550 — Cannot be defeated. Only spread. It is already on you.', aoe:true },
+  { id:'tax_collector',    emoji:'📋', name:'Tax Collector Ghost',  hp:90,  atk:38, range:2, speed:'ranged', reward:500, rarity:'secret', dropChance:900,  giant:false, desc:'1 in 900 — Wants 30% of your gold. Every round.' },
+  { id:'infinite_loading', emoji:'⏳', name:'Infinite Loading Screen', hp:9999, atk:0, range:1, speed:'melee', reward:600, rarity:'secret', dropChance:1200, giant:true, desc:'1 in 1200 — Cannot be damaged. Just has to be waited out.' },
+  { id:'sleep_paralysis',  emoji:'😐', name:'Sleep Paralysis Demon', hp:180, atk:55, range:3, speed:'ranged', reward:480, rarity:'secret', dropChance:1300, giant:true, desc:'1 in 1300 — Standing in the corner. Has been there all night.', stun:true },
+  { id:'diet_starts_monday', emoji:'🍕', name:'Diet Starts Monday',  hp:95,  atk:20, range:2, speed:'ranged', reward:270, rarity:'secret', dropChance:650,  giant:false, desc:'1 in 650 — Has postponed its defeat 47 times. Always on a cheat day.' },
+  { id:'sock_puppet_king', emoji:'🤚', name:'Sock Puppet Overlord', hp:65,  atk:28, range:2, speed:'ranged', reward:310, rarity:'secret', dropChance:850,  giant:false, desc:'1 in 850 — Do not look directly at it. It feeds on eye contact.' },
+  { id:'dramatic_hamster', emoji:'🐹', name:'Dramatic Hamster',     hp:18,  atk:60, range:1, speed:'melee',  reward:380, rarity:'secret', dropChance:1100, giant:false, desc:'1 in 1100 — dun dun DUUUN. Terrifying. Inexplicable.' },
+  { id:'procrastination',  emoji:'🛋️', name:'The Procrastination', hp:500, atk:5,  range:1, speed:'melee',  reward:420, rarity:'secret', dropChance:1400, giant:true,  desc:'1 in 1400 — Very easy to defeat. You just never get around to it.' },
+  { id:'unsent_email',     emoji:'📧', name:'The Unsent Email',     hp:55,  atk:42, range:3, speed:'ranged', reward:550, rarity:'secret', dropChance:1600, giant:false, desc:'1 in 1600 — Sitting in drafts since 2021. FULL of feelings.', aoe:true },
+  { id:'last_slice',       emoji:'🍕', name:'Last Slice Defender',  hp:1,   atk:99, range:1, speed:'melee',  reward:777, rarity:'secret', dropChance:2500, giant:false, desc:'1 in 2500 — Everyone wants it. No one dares take it.' },
 ];
 
 
@@ -3784,8 +4014,14 @@ function buildWave(isTough){
   });
 
   // ── Check for secret monster spawn ──
-  for(var si=0;si<SECRET_MONSTERS.length;si++){
-    var sm=SECRET_MONSTERS[si];
+  // Filter out secrets the player already has in their trophy room
+  var d2=getData(),ud2=d2[userKey];
+  var ownedTrophies=(ud2&&ud2.trophies)||{};
+  var unownedSecrets=SECRET_MONSTERS.filter(function(s){ return !ownedTrophies[s.id]; });
+  // If they've collected ALL secrets, allow repeats (they're completionists!)
+  var secretPool=unownedSecrets.length>0?unownedSecrets:SECRET_MONSTERS;
+  for(var si=0;si<secretPool.length;si++){
+    var sm=secretPool[si];
     if(Math.floor(Math.random()*sm.dropChance)===0){
       // Secret encounter! Boss alone (maybe 1-2 tiny minions)
       showSecretEncounterBanner(sm);
@@ -3904,7 +4140,8 @@ function buildDefenders(){
       aoe:item.aoe||false, healer:item.healer||false,
       healBudget:item.healer?(item.hp*3):0, healUsed:0,
       dodge:item.dodge||false, stun:item.stun||false,
-      dead:false, gridKey:k }); // store gridKey for perma-death lookup
+      dead:false, gridKey:k,
+      wants:DEFENDER_WANTS[item.id]||['toilet','food'] }); // each defender has facility needs
   });
   return defs;
 }
@@ -5921,6 +6158,8 @@ function showMyPlace(){
       if(checkVoidSovereign()) setTimeout(showVoidSovereign, 1200);
     }catch(e){}
   }, 600);
+  // Check defender morale — desertion if no facilities
+  setTimeout(function(){ try{ checkDefenderMorale(); }catch(e){} }, 1800);
   var d=getData(), ud=d[userKey];
   // Ensure new mp fields exist
   if(ud&&ud.mp){
