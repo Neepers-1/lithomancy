@@ -584,6 +584,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 @keyframes hitFlash   { 0%,100%{filter:brightness(1);} 30%{filter:brightness(3) saturate(0);} 60%{filter:brightness(1) sepia(1) hue-rotate(-20deg);} }
 @keyframes slashIn    { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-40deg) scale(0.2);} 50%{opacity:1;transform:translate(-50%,-50%) rotate(-40deg) scale(1.4);} 100%{opacity:0.7;transform:translate(-50%,-50%) rotate(-40deg) scale(1);} }
 @keyframes deadFade   { 0%{opacity:0;transform:translateY(8px);} 30%{opacity:1;transform:translateY(0);} 100%{opacity:1;transform:translateY(0);} }
+@keyframes voidPulse { 0%,100%{box-shadow:0 0 20px #8b008b,0 0 60px #4b0082;opacity:1;} 50%{box-shadow:0 0 50px #da70d6,0 0 100px #8b008b;opacity:0.85;} }
+@keyframes voidFloat { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-12px) scale(1.04);} }
+@keyframes goldDrain { 0%{transform:translateY(0);opacity:1;} 100%{transform:translateY(-60px);opacity:0;} }
+@keyframes zombify { 0%{filter:none;} 100%{filter:grayscale(1) brightness(0.5) sepia(0.8) hue-rotate(80deg);} }
 @keyframes castleShake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);} 40%{transform:translateX(4px);} 60%{transform:translateX(-3px);} 80%{transform:translateX(3px);} }
 @keyframes recoveryPulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
 @keyframes ominousPulse { 0%,100%{opacity:1;box-shadow:0 0 8px #ef476f88;} 50%{opacity:0.7;box-shadow:0 0 18px #ef476fcc, 0 0 30px #ef476f44;} }
@@ -853,6 +857,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div id="nameKeyPreview" style="font-size:0.62rem;color:#3a4f6b;margin-top:3px;text-align:center;font-family:monospace;min-height:14px;"></div>
       <button class="btn" id="loginBtn" style="background:linear-gradient(135deg,#ffd700,#ff9500);color:#1a1a2e;font-size:1.05rem;font-weight:900;letter-spacing:1px;margin-top:14px;box-shadow:0 0 24px rgba(255,215,0,0.35);">⚔️ ENTER BATTLE ⚔️</button>
       <div id="loginErrorMsg" style="display:none;color:#ef476f;font-size:0.72rem;margin-top:8px;text-align:center;font-weight:700;"></div>
+      <div style="text-align:center;margin-top:14px;"><span style="font-size:0.55rem;font-weight:700;letter-spacing:2px;color:#2a1f4a;background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.15);border-radius:10px;padding:3px 10px;">v2.7 · Void Sovereign</span></div>
     </div>
   </div>
 </div>
@@ -1058,14 +1063,14 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <div id="battleChargeDisplay" style="display:flex;align-items:center;gap:5px;background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.35);border-radius:20px;padding:5px 10px;font-size:0.75rem;font-weight:900;color:#ef476f;cursor:pointer;" onclick="trySpendCharge()" title="Battle charges — earned through multiplication practice!">
           <span id="battleChargeIcons">⚔️</span>
         </div>
-        <div id="ominousBarContainer" style="display:none;" onclick="tryIdentifyTitanic()" title="Something approaches... Click to identify (🪙100)">
+        <div id="ominousBarContainer" style="display:none;" onclick="tryIdentifyTitanic()" title="Something approaches... Click to identify (🪙100 gold)">
           <div class="ominous-bar-wrap">
             <span style="font-size:0.75rem;">👁️</span>
             <div class="ominous-bar-inner"><div class="ominous-bar-fill" id="ominousBarFill" style="width:0%"></div></div>
             <span class="ominous-bar-label" id="ominousBarLabel">???</span>
           </div>
         </div>
-        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
+        <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span><span style="font-size:0.55rem;color:#b8972a;margin-left:2px;">gold</span></div>
       </div>
     </div>
     <div class="myplace-tabs">
@@ -1325,6 +1330,27 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   </div>
 </div>
 
+<!-- The Void Sovereign Overlay -->
+<div id="voidSovereignOverlay" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,0.0);align-items:center;justify-content:center;flex-direction:column;transition:background 1.5s;">
+  <div id="voidSovereignCard" style="background:linear-gradient(160deg,#0a000f,#1a0028);border:2px solid #8b008b;border-radius:24px;padding:36px 28px;max-width:340px;width:92%;text-align:center;animation:voidPulse 2s ease-in-out infinite;transform:scale(0);transition:transform 0.6s cubic-bezier(0.34,1.56,0.64,1);">
+    <div style="font-size:5rem;animation:voidFloat 2.5s ease-in-out infinite;filter:drop-shadow(0 0 24px #da70d6);">🌌</div>
+    <div style="font-size:0.55rem;font-weight:900;letter-spacing:5px;color:#8b008b;text-transform:uppercase;margin:8px 0 4px;">A Great Reckoning</div>
+    <div style="font-size:1.6rem;font-weight:900;color:#da70d6;margin-bottom:10px;line-height:1.2;" id="voidSovTitle">THE VOID SOVEREIGN</div>
+    <div style="font-size:0.82rem;color:#c39bd3;line-height:1.7;margin-bottom:16px;" id="voidSovMsg">Your castle has grown too powerful. Too wealthy. The Void Sovereign has taken notice.</div>
+    <div style="background:rgba(139,0,139,0.15);border:1.5px solid rgba(139,0,139,0.4);border-radius:12px;padding:14px 16px;margin-bottom:18px;">
+      <div style="font-size:0.58rem;font-weight:900;color:#8b008b;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">What Will Happen</div>
+      <div style="font-size:0.78rem;color:#c39bd3;line-height:1.8;text-align:left;" id="voidSovEffects">
+        💸 Steals gold with every attack<br>
+        🧟 Turns slain defenders into zombies<br>
+        ☠️ Zombies fight against you<br>
+        👁️ Cannot be scared away
+      </div>
+    </div>
+    <div style="font-size:0.72rem;color:#7d3c98;margin-bottom:18px;" id="voidSovTrigger"></div>
+    <button onclick="acceptVoidSovereign()" style="background:linear-gradient(135deg,#8b008b,#4b0082);color:#fff;border:none;border-radius:12px;padding:13px 32px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 20px #8b008b88;">Face Your Reckoning 🌌</button>
+  </div>
+</div>
+
 <!-- Castle Recovery Overlay -->
 <div id="castleRecoveryOverlay" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.96);align-items:center;justify-content:center;">
   <div style="background:linear-gradient(160deg,#0d0820,#1a0030);border:2px solid #9b59b6;border-radius:20px;padding:30px 28px;max-width:320px;width:90%;text-align:center;animation:popIn 0.4s ease;">
@@ -1393,7 +1419,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div style="font-size:1.5rem;font-weight:900;margin-bottom:8px;" id="battleResultTitle">VICTORY!</div>
     <div style="font-size:0.85rem;color:#b89fd4;margin-bottom:12px;line-height:1.5;" id="battleResultMsg"></div>
     <div id="battleResultReward" style="display:none;background:rgba(255,209,102,0.12);border:1.5px solid rgba(255,209,102,0.35);border-radius:12px;padding:10px 18px;margin-bottom:16px;">
-      <div style="font-size:0.6rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Reward Earned</div>
+      <div style="font-size:0.6rem;font-weight:900;color:#ffd700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Gold Earned</div>
       <div style="font-size:1.8rem;font-weight:900;color:#ffd700;" id="battleResultRewardAmt">🪙 0</div>
     </div>
     <button onclick="closeBattleResult()" style="background:linear-gradient(135deg,#06d6a0,#0a9a74);color:#0a1520;border:none;border-radius:12px;padding:12px 32px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;" id="battleResultBtn">Continue</button>
@@ -2643,6 +2669,8 @@ function awardCredits(amount, reason){
   // Flash credit display if visible
   var el=document.getElementById('mpCredits');
   if(el){ el.textContent=ud.mp.credits; }
+  // Check if this pushed them into void sovereign territory
+  setTimeout(function(){ try{ if(checkVoidSovereign()) setTimeout(showVoidSovereign,800); }catch(e){} },200);
 }
 
 // Earn credits based on session performance
@@ -2816,7 +2844,7 @@ function updateOminousBar(){
   }
 }
 
-// Called when player clicks the ominous bar — spend 100 tokens to identify
+// Called when player clicks the ominous bar — spend 100 gold to identify
 function tryIdentifyTitanic(){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
   var mp=ud.mp;
@@ -2839,10 +2867,10 @@ function tryIdentifyTitanic(){
     return;
   }
 
-  // Spend 100 tokens to identify
+  // Spend 100 gold to identify
   var cost=100;
   if((mp.credits||0)<cost){
-    showMPToast('Need 🪙100 to identify the approaching creature!');
+    showMPToast('Need 🪙100 gold to identify the approaching creature!');
     return;
   }
   mp.credits-=cost;
@@ -3079,6 +3107,163 @@ function updateBattleChargeDisplay(){
   }
 }
 
+
+
+// ── THE VOID SOVEREIGN — punishes hoarding ────────────────────────────────────
+// Triggers when: credits >= 5000 OR castle grid is >= 90% full
+// Effect: steals gold each attack round, turns killed defenders into zombies
+// Zombies join the monster side and fight back
+
+var VOID_SOVEREIGN_GOLD_THRESHOLD = 5000;
+var VOID_SOVEREIGN_GRID_THRESHOLD = 0.9; // 90% full
+
+var VOID_TRIGGER_MSGS = [
+  { trigger:"Your wealth has drawn the darkness.", msg:"The Void Sovereign has sensed your overflowing coffers. It wants what you have — and it will take it by force." },
+  { trigger:"Your castle is so full, the walls groan.", msg:"When a castle is filled beyond its purpose, something ancient wakes. The Void Sovereign arrives to... thin things out." },
+  { trigger:"You have too much. The universe objects.", msg:"A great cosmic injustice has been detected. The Void Sovereign is here to restore balance. Painfully." },
+  { trigger:"The gold stench reached the void.", msg:"5000 gold coins is a lot. Too much. An ancient being that feeds on greed has crossed into your realm." },
+  { trigger:"Your defenders have nowhere left to stand.", msg:"A castle packed this tight is an insult to the architects of the void. They've sent a representative." },
+];
+
+// Check if castle is >= 90% full
+function isCastleFull(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
+  var grid=ud.mp.baseGrid||{};
+  var total=MP_GRID_COLS*MP_GRID_ROWS; // 80 cells
+  // Count occupied cells (respecting multi-cell items)
+  var occupied=new Set();
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    // key is "r_c"
+    var parts=k.split('_'); var kr=parseInt(parts[0]),kc=parseInt(parts[1]);
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    var w=item?item.w:1, h=item?item.h:1;
+    for(var rr=0;rr<h;rr++) for(var cc=0;cc<w;cc++) occupied.add((kr+rr)+'_'+(kc+cc));
+  });
+  return occupied.size >= Math.floor(total*VOID_SOVEREIGN_GRID_THRESHOLD);
+}
+
+function checkVoidSovereign(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
+  var mp=ud.mp;
+  // Don't re-trigger if one is already pending or active
+  if(mp.voidPending||mp.forcedAttackPending) return false;
+  // Don't trigger more than once per hour
+  var lastVoid=mp.lastVoidTime||0;
+  if(Date.now()-lastVoid < 3600000) return false;
+  var rich=(mp.credits||0)>=VOID_SOVEREIGN_GOLD_THRESHOLD;
+  var full=isCastleFull();
+  if(!rich&&!full) return false;
+  // Trigger!
+  mp.voidPending=true;
+  mp.lastVoidTime=Date.now();
+  var m=VOID_TRIGGER_MSGS[Math.floor(Math.random()*VOID_TRIGGER_MSGS.length)];
+  mp.voidTriggerMsg=m.trigger;
+  mp.voidMsg=m.msg;
+  mp.voidReason=rich?'gold':full?'full':'both';
+  d[userKey]=ud; saveData(d);
+  return true;
+}
+
+function showVoidSovereign(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var mp=ud.mp;
+  var msg=mp.voidMsg||'The Void Sovereign has arrived.';
+  var trigger=mp.voidTriggerMsg||'Your castle has grown too powerful.';
+  document.getElementById('voidSovTitle').textContent='THE VOID SOVEREIGN';
+  document.getElementById('voidSovMsg').textContent=msg;
+  document.getElementById('voidSovTrigger').textContent='"'+trigger+'"';
+  var ov=document.getElementById('voidSovereignOverlay');
+  ov.style.display='flex';
+  // Fade in background
+  setTimeout(function(){ ov.style.background='rgba(10,0,20,0.97)'; },50);
+  // Scale in card
+  setTimeout(function(){ document.getElementById('voidSovereignCard').style.transform='scale(1)'; },100);
+}
+
+function acceptVoidSovereign(){
+  var ov=document.getElementById('voidSovereignOverlay');
+  ov.style.display='none';
+  ov.style.background='rgba(0,0,0,0)';
+  document.getElementById('voidSovereignCard').style.transform='scale(0)';
+  // Launch the void battle
+  launchVoidBattle();
+}
+
+// Build the Void Sovereign as a multi-part titanic-style monster
+function buildVoidWave(){
+  return [
+    { id:'void_tendril_1', name:'Void Tendril',   emoji:'🌀', hp:80,  maxHp:80,  atk:20, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:false, reward:0, isVoid:true },
+    { id:'void_tendril_2', name:'Void Tendril',   emoji:'🌀', hp:80,  maxHp:80,  atk:20, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:false, reward:0, isVoid:true },
+    { id:'void_eye_l',     name:'Watching Eye',   emoji:'👁️', hp:60,  maxHp:60,  atk:30, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:true,  reward:0, isVoid:true },
+    { id:'void_eye_r',     name:'Watching Eye',   emoji:'👁️', hp:60,  maxHp:60,  atk:30, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:true,  reward:0, isVoid:true },
+    { id:'void_maw',       name:'The Void Maw',   emoji:'🕳️', hp:150, maxHp:150, atk:40, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true,  stun:false, reward:0, isVoid:true },
+    { id:'void_core',      name:'Void Core',       emoji:'🌌', hp:250, maxHp:250, atk:50, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true,  stun:true,  reward:200, isVoid:true, giant:true },
+  ];
+}
+
+function launchVoidBattle(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  ud.mp.voidPending=false;
+  ud.mp.voidBattleActive=true;
+  d[userKey]=ud; saveData(d);
+  window._pendingWave=buildVoidWave();
+  window._pendingIsTitanic=true;
+  window._pendingTitanicId='void_sovereign';
+  window._isVoidBattle=true;
+  startBattle(false, window._pendingWave);
+}
+
+// Called each round during a void battle — steal gold and zombify dead defenders
+function applyVoidEffects(){
+  if(!window._isVoidBattle) return;
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  // Steal 5–15% of current gold per round
+  var steal=Math.round((ud.mp.credits||0)*( 0.05+Math.random()*0.10 ));
+  steal=Math.max(steal,10); // at least 10
+  steal=Math.min(steal,500); // at most 500 per round
+  ud.mp.credits=Math.max(0,(ud.mp.credits||0)-steal);
+  d[userKey]=ud; saveData(d);
+  // Update display
+  var el=document.getElementById('mpCredits'); if(el) el.textContent=ud.mp.credits;
+  // Float the drain amount visually in battle area
+  var bf=document.getElementById('battlefield');
+  if(bf&&steal>0){
+    var drain=document.createElement('div');
+    drain.textContent='-🪙'+steal+' stolen!';
+    drain.style.cssText='position:absolute;top:40%;left:50%;transform:translateX(-50%);'
+      +'font-size:1.1rem;font-weight:900;color:#da70d6;pointer-events:none;'
+      +'animation:goldDrain 1.2s ease forwards;z-index:9999;white-space:nowrap;';
+    bf.appendChild(drain);
+    setTimeout(function(){if(drain.parentNode)drain.parentNode.removeChild(drain);},1300);
+  }
+  battleLog('💸 Void Sovereign steals 🪙'+steal+'!');
+}
+
+// When a defender dies in a void battle, 60% chance it rises as a zombie
+function maybeZombifyDefender(def){
+  if(!window._isVoidBattle) return;
+  if(Math.random()>0.60) return;
+  // Turn them into a zombie monster
+  var zombie={
+    id:'zombie_'+def.name+'_'+Date.now(),
+    name:'Zombie '+def.name,
+    emoji:'🧟',
+    hp: Math.round((def.maxHp||def.hp||20)*0.6),
+    maxHp: Math.round((def.maxHp||def.hp||20)*0.6),
+    atk: Math.round((def.atk||8)*0.7),
+    range:1, speed:'melee',
+    alive:true, isMonster:true,
+    rarity:'uncommon',
+    reward:0,
+    isZombie:true,
+    aoe:false, stun:false, giant:false,
+  };
+  _battle.monsters.push(zombie);
+  battleLog('🧟 '+def.name+' rises as a ZOMBIE against you!');
+  // Re-render battlefield to show the new zombie
+  setTimeout(function(){ try{ renderBattlefield&&renderBattlefield(); }catch(e){} },400);
+}
 
 // ── CASTLE RECOVERY SYSTEM ───────────────────────────────────────────────────
 // Students must do math between battles. After 2 battles without a session,
@@ -3704,6 +3889,7 @@ window.startBattle=function(forced, prebuiltWave){
   _battle.log=[];
   _battle.active=true;
   _battle.creditsEarned=0;
+  _battle.legitimateVictory=false;
   _battle.pendingDestroyNotifs=[];
   _battle.turnQueue=buildQueue();
   _battle.qIdx=0;
@@ -4000,6 +4186,8 @@ function animateAttack(attackerEl, targetEl, projectileEmoji, isAttackerMonster,
 // Show slash → oh noes floats up slowly → DEAD label after 2.5s
 function showDeathOnToken(tokenEl, c, isMonster){
   if(!tokenEl) return;
+  // Void battle: maybe zombify this defender
+  if(!isMonster){ try{ maybeZombifyDefender(c); }catch(e){} }
   tokenEl.onclick=null; tokenEl.style.cursor='default';
 
   // Slash mark appears on icon
@@ -4401,6 +4589,8 @@ function endDefenderRound(){
 }
 
 function showRoundBanner(n){
+  // Apply void gold drain each new round
+  try{ if(window._isVoidBattle && n>1) applyVoidEffects(); }catch(e){}
   if(n<=1) return; // no banner for round 1 (it's the start)
   var layer=document.getElementById('floatLayer');
   if(!layer) return;
@@ -4594,6 +4784,7 @@ function checkBattleEnd(){
 
   if(monsLeft.length===0){
     _battle.active=false;
+    _battle.legitimateVictory=true; // only set here — prevents farming exploits
     var totalReward=_battle.creditsEarned;
     // Hunt bonus — if this was a tracked monster hunt, add bonus gold
     var huntBonus=window._huntBonusGold||0;
@@ -4618,14 +4809,25 @@ function checkBattleEnd(){
         ud.mp.forcedAttackPending=false;
         ud.mp.ominousCountdown=0;
       }
+      // Clear void state
+      if(window._isVoidBattle){
+        ud.mp.voidBattleActive=false;
+        window._isVoidBattle=false;
+        window._pendingIsTitanic=false;
+      }
       saveData(d);
     }
     updateOminousBar();
     checkOminousWarning();
+    // Re-check void sovereign — player just got richer from battle reward
+    setTimeout(function(){ try{ if(checkVoidSovereign()) setTimeout(showVoidSovereign,2000); }catch(e){} },3500);
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
       var msg;
-      if(titanicBonus>0){
+      if(window._isVoidBattle||_battle.titanicId==='void_sovereign'){
+        msg='🌌 VOID SOVEREIGN BANISHED!\nYour castle is safe — for now. Spend your gold wisely.';
+        window._isVoidBattle=false;
+      } else if(titanicBonus>0){
         var tname=TITANIC_MONSTERS.find(function(t){return t.id===_battle.titanicId;});
         msg='💥 TITANIC DEFEATED! '+(tname?tname.name:'')+' is slain!\n🪙 Massive bonus: +'+titanicBonus+'!';
       } else if(huntBonus>0){
@@ -4649,6 +4851,12 @@ function checkBattleEnd(){
       if(_battle.isTitanic){
         ud.mp.forcedAttackPending=false;
         ud.mp.ominousCountdown=1; // comes back next session
+      }
+      // Void defeat — it retreats for now but will return if still hoarding
+      if(window._isVoidBattle){
+        ud.mp.voidBattleActive=false;
+        window._isVoidBattle=false;
+        window._pendingIsTitanic=false;
       }
       var gridKeys=Object.keys(ud.mp.baseGrid||{}).filter(function(k){ return ud.mp.baseGrid[k]&&!ud.mp.baseGrid[k].damaged; });
       _battle.monsters.forEach(function(mon){
@@ -4713,6 +4921,8 @@ window.closeDestroyNotif=function(){
 
 // ── RESULT SCREEN ─────────────────────────────────────────────────────────────
 function showBattleResult(victory, msg, credits){
+  // Anti-farm: only pay out if battle ended legitimately (all monsters defeated)
+  if(victory && !_battle.legitimateVictory){ credits=0; }
   _autoFight=false;
   var btn=document.getElementById('autoFightBtn');
   if(btn){ btn.textContent='⚡ AUTO'; btn.style.background='rgba(255,209,102,0.12)'; btn.style.borderColor='rgba(255,209,102,0.3)'; btn.style.boxShadow='none'; }
@@ -4732,12 +4942,16 @@ function showBattleResult(victory, msg, credits){
   } else {
     rewardBox.style.display='none';
   }
-  document.getElementById('battleResultBtn').textContent=victory?'Collect Tokens! 🪙':'Back to Castle 🏰';
+  document.getElementById('battleResultBtn').textContent=victory?'Collect Gold! 🪙':'Back to Castle 🏰';
   overlay.style.display='flex';
   if(victory) doConfetti&&doConfetti();
 }
 
 window.closeBattleResult=function(){
+  // Safety: clear any lingering battle state
+  window._isVoidBattle=false;
+  window._pendingIsTitanic=false;
+  window._pendingWave=null;
   document.getElementById('battleResultOverlay').style.display='none';
   var d=getData(), ud=d[userKey];
   if(ud&&ud.mp) document.getElementById('mpCredits').textContent=ud.mp.credits||0;
@@ -5015,7 +5229,7 @@ window.buyItem=function(itemId){
   var item=SHOP_ITEMS.find(function(x){return x.id===itemId;});
   if(!item) return;
   var legDefeats=ud.legendaryDefeats||0;
-  if(ud.mp.credits<item.cost){ showMPToast('Not enough tokens! Need 🪙'+item.cost); return; }
+  if(ud.mp.credits<item.cost){ showMPToast('Not enough gold! Need 🪙'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
   ud.mp.credits=Math.max(0, ud.mp.credits-item.cost);
   var newQty=((ud.mp.inventory[item.id]||0)+(item.qty||1));
@@ -5324,7 +5538,7 @@ window.cellClick=function(key){
       showMPToast('Repaired! 🔨');
       renderBaseGrid();
     } else {
-      showMPToast('Need 🪙'+cost+' to repair!');
+      showMPToast('Need 🪙'+cost+' gold to repair!');
     }
   } else {
     // Pick up to move
@@ -5482,6 +5696,9 @@ function applyCastleResetV2(ud, d){
     battleCharges: 0,
     battlesSinceSession: 0,
     recoverySessions: 0,
+    voidPending: false,
+    voidBattleActive: false,
+    lastVoidTime: 0,
     ominousCountdown: 0,
     forcedAttackPending: false,
     lastRaidTime: 0,
@@ -5527,6 +5744,12 @@ function showMyPlace(){
   }
   checkDailyLoginBonus();
   checkGoblinAttack();
+  // Check if Void Sovereign should arrive (hoarding check)
+  setTimeout(function(){
+    try{
+      if(checkVoidSovereign()) setTimeout(showVoidSovereign, 1200);
+    }catch(e){}
+  }, 600);
   var d=getData(), ud=d[userKey];
   // Ensure new mp fields exist
   if(ud&&ud.mp){
