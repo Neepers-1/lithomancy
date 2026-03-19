@@ -584,6 +584,14 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 @keyframes hitFlash   { 0%,100%{filter:brightness(1);} 30%{filter:brightness(3) saturate(0);} 60%{filter:brightness(1) sepia(1) hue-rotate(-20deg);} }
 @keyframes slashIn    { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-40deg) scale(0.2);} 50%{opacity:1;transform:translate(-50%,-50%) rotate(-40deg) scale(1.4);} 100%{opacity:0.7;transform:translate(-50%,-50%) rotate(-40deg) scale(1);} }
 @keyframes deadFade   { 0%{opacity:0;transform:translateY(8px);} 30%{opacity:1;transform:translateY(0);} 100%{opacity:1;transform:translateY(0);} }
+@keyframes castleShake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);} 40%{transform:translateX(4px);} 60%{transform:translateX(-3px);} 80%{transform:translateX(3px);} }
+@keyframes recoveryPulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+@keyframes ominousPulse { 0%,100%{opacity:1;box-shadow:0 0 8px #ef476f88;} 50%{opacity:0.7;box-shadow:0 0 18px #ef476fcc, 0 0 30px #ef476f44;} }
+@keyframes ominousBarFill { from{width:0%} }
+.ominous-bar-wrap { position:relative;background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.5);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;animation:ominousPulse 1.5s ease-in-out infinite; }
+.ominous-bar-inner { position:relative;flex:1;height:7px;background:rgba(239,71,111,0.15);border-radius:4px;overflow:hidden;min-width:60px; }
+.ominous-bar-fill  { height:100%;background:linear-gradient(90deg,#ef476f,#ff6b6b,#ef476f);border-radius:4px;transition:width 0.6s ease; }
+.ominous-bar-label { font-size:0.6rem;font-weight:900;color:#ef476f;white-space:nowrap; }
 @keyframes tokenShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-6px);} 35%{transform:translateX(6px);} 55%{transform:translateX(-5px);} 75%{transform:translateX(4px);} 90%{transform:translateX(-2px);} }
 @keyframes tokenHitFlash { 0%{filter:brightness(1);} 20%{filter:brightness(2.5) saturate(0) sepia(1) hue-rotate(-20deg);} 100%{filter:brightness(1);} }
 @keyframes flyRight   { 0%{opacity:1;transform:translateX(0) scale(1.4);} 100%{opacity:0.2;transform:translateX(var(--fly-dist)) scale(0.8);} }
@@ -1050,6 +1058,13 @@ tr:hover td { background: rgba(255,255,255,0.03); }
         <div id="battleChargeDisplay" style="display:flex;align-items:center;gap:5px;background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.35);border-radius:20px;padding:5px 10px;font-size:0.75rem;font-weight:900;color:#ef476f;cursor:pointer;" onclick="trySpendCharge()" title="Battle charges — earned through multiplication practice!">
           <span id="battleChargeIcons">⚔️</span>
         </div>
+        <div id="ominousBarContainer" style="display:none;" onclick="tryIdentifyTitanic()" title="Something approaches... Click to identify (🪙100)">
+          <div class="ominous-bar-wrap">
+            <span style="font-size:0.75rem;">👁️</span>
+            <div class="ominous-bar-inner"><div class="ominous-bar-fill" id="ominousBarFill" style="width:0%"></div></div>
+            <span class="ominous-bar-label" id="ominousBarLabel">???</span>
+          </div>
+        </div>
         <div class="myplace-credits"><span>🪙</span><span id="mpCredits">0</span></div>
       </div>
     </div>
@@ -1307,6 +1322,37 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div style="font-size:1rem;font-weight:900;color:#ef476f;margin-bottom:8px;" id="destroyNotifTitle">DESTROYED!</div>
     <div style="font-size:0.85rem;color:#ffb3b3;line-height:1.5;" id="destroyNotifMsg"></div>
     <button onclick="closeDestroyNotif()" style="margin-top:16px;padding:10px 28px;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;">OK...</button>
+  </div>
+</div>
+
+<!-- Castle Recovery Overlay -->
+<div id="castleRecoveryOverlay" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.96);align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#0d0820,#1a0030);border:2px solid #9b59b6;border-radius:20px;padding:30px 28px;max-width:320px;width:90%;text-align:center;animation:popIn 0.4s ease;">
+    <div style="font-size:4rem;margin-bottom:8px;animation:castleShake 1.2s ease-in-out infinite;">🏰</div>
+    <div style="font-size:0.6rem;font-weight:900;letter-spacing:4px;color:#9b59b6;text-transform:uppercase;margin-bottom:6px;">Castle Recovering</div>
+    <div style="font-size:1.3rem;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.3;" id="recoveryTitle">Your warriors need rest!</div>
+    <div style="font-size:0.82rem;color:#b89fd4;line-height:1.7;margin-bottom:16px;" id="recoveryMsg">Your defenders are exhausted from constant battle. They need you to train your mind before they can fight again.</div>
+    <div style="background:rgba(155,89,182,0.15);border:1.5px solid rgba(155,89,182,0.4);border-radius:12px;padding:12px 16px;margin-bottom:18px;">
+      <div style="font-size:0.6rem;font-weight:900;color:#9b59b6;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Recovery Required</div>
+      <div style="font-size:0.78rem;color:#b89fd4;margin-bottom:10px;" id="recoveryRequirement">Complete <b style="color:#ffd700;" id="recoverySessionsNeeded">1 multiplication session</b> to restore your castle.</div>
+      <div style="width:100%;height:10px;background:rgba(155,89,182,0.15);border-radius:6px;overflow:hidden;">
+        <div id="recoveryProgressBar" style="height:100%;background:linear-gradient(90deg,#9b59b6,#e056ef);border-radius:6px;transition:width 0.5s ease;width:0%;"></div>
+      </div>
+      <div style="font-size:0.6rem;color:#5a3f80;margin-top:5px;" id="recoveryProgressLabel">0 / 1 sessions</div>
+    </div>
+    <button onclick="closeCastleRecovery()" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;letter-spacing:1px;">Go Practice! 🧠</button>
+  </div>
+</div>
+
+<!-- Titanic Identify Overlay -->
+<div id="titanicIdentifyOverlay" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.94);align-items:center;justify-content:center;" onclick="if(event.target===this)closeTitanicIdentify()">
+  <div style="background:linear-gradient(160deg,#1a0010,#0d0008);border:2px solid #ef476f;border-radius:20px;padding:30px 28px;max-width:320px;width:90%;text-align:center;animation:popIn 0.4s ease;">
+    <div style="font-size:4rem;margin-bottom:6px;animation:mBounce 1s ease infinite;" id="titanicRevealEmoji">🌑</div>
+    <div style="font-size:0.6rem;font-weight:900;letter-spacing:4px;color:#ef476f;text-transform:uppercase;margin-bottom:6px;">APPROACHING THREAT</div>
+    <div style="font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:8px;" id="titanicRevealName">???</div>
+    <div style="font-size:0.82rem;color:#b89fd4;line-height:1.6;margin-bottom:14px;" id="titanicRevealDesc">???</div>
+    <div style="margin-bottom:16px;" id="titanicRevealParts"></div>
+    <button onclick="closeTitanicIdentify()" style="background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-family:inherit;font-weight:900;font-size:0.9rem;cursor:pointer;">Prepare for Battle 🗡️</button>
   </div>
 </div>
 
@@ -2716,6 +2762,14 @@ var OMINOUS_MSGS_NEW=[
   {emoji:'👁️', msg:'You are being watched.', sub:'Eyes in the dark. Battle comes soon.'},
   {emoji:'🔥', msg:'Smoke on the horizon...', sub:'They will reach your walls before long.'},
   {emoji:'💀', msg:'A cold wind blows from the north.', sub:'The dead walk. Your castle will be tested.'},
+  {emoji:'🌊', msg:'A great monster approaches your base...', sub:'The earth shudders beneath its weight. Prepare your defenses.'},
+  {emoji:'😰', msg:'....prepare yourself!', sub:'Something massive has been spotted. Your scouts fled in terror.'},
+  {emoji:'⏳', msg:'It will arrive soon....', sub:'Whatever it is — it is enormous. And it is hungry.'},
+  {emoji:'🌀', msg:'Something vast stirs in the deep...', sub:'The birds have gone silent. The air smells wrong.'},
+  {emoji:'👁️', msg:'It has already seen your castle.', sub:'It knows where you are. It is coming.'},
+  {emoji:'💀', msg:'Your scouts did not return.', sub:'Something ate them. Something BIG.'},
+  {emoji:'🩸', msg:'The trees are being pushed aside...', sub:'Not broken. Pushed. By something enormous.'},
+  {emoji:'🌑', msg:'It breathes in the dark between worlds.', sub:'Its name is unknown. Its hunger is not.'},
 ];
 
 function showOminousOverlay(countdownSessions){
@@ -2730,6 +2784,125 @@ function showOminousOverlay(countdownSessions){
   setTimeout(function(){
     if(el.style.display!=='none') el.style.display='none';
   }, 6000);
+}
+
+
+// ── TITANIC MONSTER SYSTEM ───────────────────────────────────────────────────
+
+function pickTitanicMonster(){
+  return TITANIC_MONSTERS[Math.floor(Math.random()*TITANIC_MONSTERS.length)];
+}
+
+// Update the ominous progress bar in the castle topbar
+function updateOminousBar(){
+  var bar=document.getElementById('ominousBarContainer');
+  var fill=document.getElementById('ominousBarFill');
+  var lbl=document.getElementById('ominousBarLabel');
+  if(!bar||!fill||!lbl) return;
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) { bar.style.display='none'; return; }
+  var mp=ud.mp;
+  if(!mp.ominousCountdown && !mp.forcedAttackPending){ bar.style.display='none'; return; }
+  bar.style.display='block';
+  // Progress: count down from original countdown. Store originalCountdown when triggered.
+  var orig=mp.ominousOriginalCountdown||2;
+  var remaining=mp.ominousCountdown||0;
+  var pct = mp.forcedAttackPending ? 100 : Math.round(((orig-remaining)/orig)*100);
+  fill.style.width=pct+'%';
+  if(mp.approachingTitanicId){
+    var titan=TITANIC_MONSTERS.find(function(t){return t.id===mp.approachingTitanicId;});
+    lbl.textContent=(mp.titanicIdentified&&titan) ? titan.name : '??? IT COMES';
+  } else {
+    lbl.textContent= pct>=100 ? '⚠️ ARRIVED' : Math.round(pct)+'% close...';
+  }
+}
+
+// Called when player clicks the ominous bar — spend 100 tokens to identify
+function tryIdentifyTitanic(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var mp=ud.mp;
+  if(!mp.ominousCountdown && !mp.forcedAttackPending) return;
+
+  // Always assign a titanic if not yet assigned
+  if(!mp.approachingTitanicId){
+    var t=pickTitanicMonster();
+    mp.approachingTitanicId=t.id;
+    mp.titanicIdentified=false;
+    d[userKey]=ud; saveData(d);
+  }
+
+  var titan=TITANIC_MONSTERS.find(function(t){return t.id===mp.approachingTitanicId;});
+  if(!titan) return;
+
+  if(mp.titanicIdentified){
+    // Already identified — just show the overlay
+    showTitanicIdentifyOverlay(titan);
+    return;
+  }
+
+  // Spend 100 tokens to identify
+  var cost=100;
+  if((mp.credits||0)<cost){
+    showMPToast('Need 🪙100 to identify the approaching creature!');
+    return;
+  }
+  mp.credits-=cost;
+  mp.titanicIdentified=true;
+  d[userKey]=ud; saveData(d);
+  var el=document.getElementById('mpCredits');
+  if(el) el.textContent=mp.credits;
+  showTitanicIdentifyOverlay(titan);
+  // Update bar label immediately
+  var lbl=document.getElementById('ominousBarLabel');
+  if(lbl) lbl.textContent=titan.name;
+}
+
+function showTitanicIdentifyOverlay(titan){
+  var ov=document.getElementById('titanicIdentifyOverlay');
+  if(!ov) return;
+  document.getElementById('titanicRevealEmoji').textContent=titan.emoji;
+  document.getElementById('titanicRevealName').textContent=titan.name;
+  document.getElementById('titanicRevealDesc').textContent=titan.desc;
+  var partsEl=document.getElementById('titanicRevealParts');
+  partsEl.innerHTML='<div style="font-size:0.6rem;font-weight:900;color:#ef476f;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Breakable Parts</div>'
+    +titan.parts.map(function(p){
+      return '<div style="display:flex;align-items:center;gap:8px;background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.25);border-radius:8px;padding:6px 10px;margin-bottom:5px;text-align:left;">'
+        +'<span style="font-size:1.2rem;">'+p.emoji+'</span>'
+        +'<div><div style="font-size:0.78rem;font-weight:900;color:#fff;">'+p.name+'</div>'
+        +'<div style="font-size:0.65rem;color:#9b59b6;">❤️ '+p.hp+' HP · ⚔️ '+p.atk+' ATK</div>'
+        +'<div style="font-size:0.62rem;color:#7f8c8d;font-style:italic;">'+p.desc+'</div></div>'
+        +'</div>';
+    }).join('');
+  ov.style.display='flex';
+}
+
+function closeTitanicIdentify(){
+  var ov=document.getElementById('titanicIdentifyOverlay');
+  if(ov) ov.style.display='none';
+}
+
+// Build a wave of titanic monster parts for use in the battle system
+function buildTitanicWave(titanicId){
+  var titan=TITANIC_MONSTERS.find(function(t){return t.id===titanicId;});
+  if(!titan) return buildWave(); // fallback
+  // Each part becomes a separate combatant
+  return titan.parts.map(function(p,i){
+    return {
+      id: titanicId+'_'+p.id+'_'+i,
+      name: p.name,
+      emoji: p.emoji,
+      hp: p.hp, maxHp: p.hp,
+      atk: p.atk,
+      range: titan.range,
+      speed: titan.speed,
+      alive: true,
+      isMonster: true,
+      isTitanicPart: true,
+      parentName: titan.name,
+      aoe: !!p.aoe,
+      stun: !!p.stun,
+      reward: Math.round(titan.reward/titan.parts.length),
+    };
+  });
 }
 
 // Called after each multiplication session — award charges + tracking + maybe trigger ominous
@@ -2777,11 +2950,18 @@ function checkBattleChargesAfterSession(dur){
   if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&Math.random()<0.15){
     var countdown=Math.floor(Math.random()*2)+1;
     ud.mp.ominousCountdown=countdown;
+    ud.mp.ominousOriginalCountdown=countdown;
+    // Pre-select a titanic monster secretly
+    var secretTitan=pickTitanicMonster();
+    ud.mp.approachingTitanicId=secretTitan.id;
+    ud.mp.titanicIdentified=false;
     d[userKey]=ud; saveData(d);
     setTimeout(function(){ showOminousOverlay(countdown); }, 1200);
   } else {
     d[userKey]=ud; saveData(d);
   }
+  // Refresh the ominous bar if castle is visible
+  setTimeout(function(){ try{ updateOminousBar(); }catch(e){} }, 500);
 
   updateBattleChargeDisplay();
 
@@ -2899,8 +3079,91 @@ function updateBattleChargeDisplay(){
   }
 }
 
+
+// ── CASTLE RECOVERY SYSTEM ───────────────────────────────────────────────────
+// Students must do math between battles. After 2 battles without a session,
+// the castle is "recovering" and battle is locked until they practice.
+
+var RECOVERY_MESSAGES = [
+  { title:"Your warriors need rest!", msg:"They've been fighting non-stop. A true commander knows when to let their army recover — and that means hitting the multiplication tables!" },
+  { title:"The castle walls are crumbling!", msg:"Too much battle without training weakens the foundations. Your defenders are begging for a break. Go practice some math to rebuild their strength!" },
+  { title:"Your army is exhausted!", msg:"Even the bravest knight can't fight forever. They need YOU to hit the books first. Complete a multiplication session and they'll be ready!" },
+  { title:"The blacksmith needs time!", msg:"Your weapons are dulled and your armor is dented. The blacksmith says: 'Come back after you've done your multiplication homework!'" },
+  { title:"Your scouts report fatigue!", msg:"Your entire force is worn out from back-to-back battles. The castle recovers when you recover — go sharpen your math skills!" },
+  { title:"Even dragons need sleep!", msg:"Your defenders have fought bravely, but everyone needs rest. The castle won't be ready until you prove yourself with some multiplication practice." },
+];
+
+// How many battles in a row before recovery kicks in
+var BATTLE_RECOVERY_THRESHOLD = 2;
+// Sessions needed to recover (scales with how many extra battles they did)
+function recoverySessionsNeeded(battlesSince){
+  if(battlesSince<=BATTLE_RECOVERY_THRESHOLD) return 0;
+  return Math.min(3, battlesSince - BATTLE_RECOVERY_THRESHOLD);
+}
+
+function isCastleRecovering(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
+  var battlesSince = ud.mp.battlesSinceSession||0;
+  var sessionsCompleted = ud.mp.recoverySessions||0;
+  var needed = recoverySessionsNeeded(battlesSince);
+  return needed > 0 && sessionsCompleted < needed;
+}
+
+function showCastleRecovery(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var battlesSince = ud.mp.battlesSinceSession||0;
+  var sessionsCompleted = ud.mp.recoverySessions||0;
+  var needed = recoverySessionsNeeded(battlesSince);
+  var done = Math.min(sessionsCompleted, needed);
+
+  var m = RECOVERY_MESSAGES[Math.floor(Math.random()*RECOVERY_MESSAGES.length)];
+  document.getElementById('recoveryTitle').textContent = m.title;
+  document.getElementById('recoveryMsg').textContent = m.msg;
+  document.getElementById('recoverySessionsNeeded').textContent =
+    (needed-done) + ' multiplication session' + ((needed-done)===1?'':'s');
+  document.getElementById('recoveryProgressBar').style.width = Math.round((done/needed)*100)+'%';
+  document.getElementById('recoveryProgressLabel').textContent = done+' / '+needed+' sessions';
+
+  var ov = document.getElementById('castleRecoveryOverlay');
+  if(ov) ov.style.display='flex';
+}
+
+function closeCastleRecovery(){
+  var ov = document.getElementById('castleRecoveryOverlay');
+  if(ov) ov.style.display='none';
+  // Navigate back to mode screen so they can practice
+  show('modeScreen');
+  renderModeScreen();
+}
+
+// Called after each practice session — reduces recovery debt
+function updateRecoveryAfterSession(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var battlesSince = ud.mp.battlesSinceSession||0;
+  var needed = recoverySessionsNeeded(battlesSince);
+  if(needed > 0){
+    // Increment recovery sessions toward the needed amount
+    ud.mp.recoverySessions = Math.min(needed, (ud.mp.recoverySessions||0)+1);
+    if(ud.mp.recoverySessions >= needed){
+      // Fully recovered — reset battle counter
+      ud.mp.battlesSinceSession = 0;
+      ud.mp.recoverySessions = 0;
+    }
+  } else {
+    // Not in recovery — just reset the counter
+    ud.mp.battlesSinceSession = 0;
+    ud.mp.recoverySessions = 0;
+  }
+  d[userKey]=ud; saveData(d);
+}
+
 window.trySpendCharge=function(){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  // Check castle recovery first
+  if(isCastleRecovering()){
+    showCastleRecovery();
+    return;
+  }
   var charges=ud.mp.battleCharges||0;
   if(charges<=0){
     showMPToast('No battle charges! Earn them by completing multiplication sessions. ⚔️');
@@ -3097,6 +3360,70 @@ var SECRET_MONSTERS=[
 ];
 
 
+
+// ── TITANIC BOSSES — enormous multi-part creatures that arrive via ominous countdown ──
+// Each has 'parts' array: breakable body parts that serve as extra HP pools
+// When ominousCountdown hits 0, one of these is chosen as the arriving creature
+var TITANIC_MONSTERS=[
+  {
+    id:'the_kraken', name:'THE KRAKEN', emoji:'🦑', rarity:'titanic',
+    hp:0, atk:35, range:2, speed:'ranged', reward:400, giant:true,
+    desc:'Ancient terror of the deep. Its many arms reach far.',
+    parts:[
+      {id:'tentacle_1', emoji:'🦑', name:'Left Tentacle',   hp:60,  atk:20, desc:'Thrashes wildly'},
+      {id:'tentacle_2', emoji:'🦑', name:'Right Tentacle',  hp:60,  atk:20, desc:'Smashes your walls'},
+      {id:'tentacle_3', emoji:'🦑', name:'Grabbing Arm',    hp:80,  atk:25, desc:'Tries to drag defenders down'},
+      {id:'tentacle_4', emoji:'🦑', name:'Poison Arm',      hp:50,  atk:30, desc:'Drips foul venom', aoe:true},
+      {id:'kraken_eye', emoji:'👁️',  name:'The Eye',        hp:120, atk:40, desc:'Stares into your soul. Kill this to blind it.', stun:true},
+      {id:'kraken_body',emoji:'🦑', name:'Kraken Body',     hp:200, atk:50, desc:'The core of the beast. Destroy this to win!', aoe:true},
+    ]
+  },
+  {
+    id:'stone_colossus', name:'STONE COLOSSUS', emoji:'🗿', rarity:'titanic',
+    hp:0, atk:40, range:1, speed:'melee', reward:450, giant:true,
+    desc:'A mountain given terrible purpose. Each piece must be shattered.',
+    parts:[
+      {id:'col_fist_l', emoji:'✊', name:'Left Fist',       hp:80,  atk:30, desc:'CRUSH'},
+      {id:'col_fist_r', emoji:'✊', name:'Right Fist',      hp:80,  atk:30, desc:'SMASH'},
+      {id:'col_leg_l',  emoji:'🦵', name:'Left Leg',        hp:100, atk:15, desc:'Stomps the ground, shaking all defenders', aoe:true},
+      {id:'col_leg_r',  emoji:'🦵', name:'Right Leg',       hp:100, atk:15, desc:'Kicks through your walls'},
+      {id:'col_chest',  emoji:'🗿', name:'Stone Chest',     hp:150, atk:35, desc:'Harder than any wall'},
+      {id:'col_head',   emoji:'🗿', name:'The Head',        hp:180, atk:55, desc:'Crush the skull to topple the colossus!', stun:true},
+    ]
+  },
+  {
+    id:'shadow_titan', name:'THE SHADOW TITAN', emoji:'👤', rarity:'titanic',
+    hp:0, atk:45, range:3, speed:'ranged', reward:500, giant:true,
+    desc:'A darkness that took form. It is made of every nightmare.',
+    parts:[
+      {id:'shad_claw_l',emoji:'🌑', name:'Shadow Claw L',   hp:70,  atk:25, desc:'Reaches through walls'},
+      {id:'shad_claw_r',emoji:'🌑', name:'Shadow Claw R',   hp:70,  atk:25, desc:'Drains the light'},
+      {id:'shad_wings', emoji:'🦇', name:'Dark Wings',      hp:90,  atk:20, desc:'Blocks your archers', aoe:true},
+      {id:'shad_heart', emoji:'🖤', name:'Dark Heart',      hp:60,  atk:40, desc:'Pulses with hateful energy. Hit it!'},
+      {id:'shad_eye_l', emoji:'🔴', name:'Left Eye',        hp:50,  atk:35, desc:'Fires beams of darkness', aoe:true},
+      {id:'shad_eye_r', emoji:'🔴', name:'Right Eye',       hp:50,  atk:35, desc:'Never blinks. Never forgets.'},
+      {id:'shad_core',  emoji:'👤', name:'Shadow Core',     hp:250, atk:60, desc:'The void itself. Destroy this!', aoe:true, stun:true},
+    ]
+  },
+  {
+    id:'the_devourer', name:'THE DEVOURER', emoji:'🐛', rarity:'titanic',
+    hp:0, atk:38, range:2, speed:'melee', reward:480, giant:true,
+    desc:'A worm the size of a mountain. It has been hungry for 1000 years.',
+    parts:[
+      {id:'dev_fang_1', emoji:'🦷', name:'Front Fang L',    hp:55,  atk:30, desc:'Drips acid'},
+      {id:'dev_fang_2', emoji:'🦷', name:'Front Fang R',    hp:55,  atk:30, desc:'Drips more acid'},
+      {id:'dev_seg_1',  emoji:'🐛', name:'Body Segment 1',  hp:90,  atk:20, desc:'Crushes by rolling over things'},
+      {id:'dev_seg_2',  emoji:'🐛', name:'Body Segment 2',  hp:90,  atk:20, desc:'Spews acid in a wide arc', aoe:true},
+      {id:'dev_seg_3',  emoji:'🐛', name:'Body Segment 3',  hp:90,  atk:20, desc:'Electrified somehow'},
+      {id:'dev_tail',   emoji:'🌀', name:'Whipping Tail',   hp:70,  atk:35, desc:'Knocks defenders flying', stun:true},
+      {id:'dev_maw',    emoji:'👄', name:'The Great Maw',   hp:300, atk:65, desc:'The mouth of ruin itself. Feed it your swords!', aoe:true},
+    ]
+  },
+];
+
+// Which titanic monster is currently approaching (set when ominousCountdown triggers)
+// Stored in ud.mp.approachingTitanicId
+
 // Build a wave using heavy power-curve weighting — common monsters dominate
 function makeWaveEntry(mt){
   return { id:mt.id, emoji:mt.emoji, name:mt.name,
@@ -3257,14 +3584,37 @@ var _battle={
 var SCARE_CHANCES=[0.50,0.40,0.30,0.20,0.10,0.00];
 
 function showAttackWarning(hoursAway){
-  var wave=buildWave(false);
+  // Check if a titanic is arriving
+  var d2=getData(), ud2=d2[userKey];
+  var mp2=ud2&&ud2.mp;
+  var isTitanic=mp2&&mp2.approachingTitanicId&&(mp2.forcedAttackPending||mp2.ominousCountdown===0);
+  var wave;
+  if(isTitanic){
+    wave=buildTitanicWave(mp2.approachingTitanicId);
+    window._pendingIsTitanic=true;
+    window._pendingTitanicId=mp2.approachingTitanicId;
+  } else {
+    wave=buildWave(false);
+    window._pendingIsTitanic=false;
+    window._pendingTitanicId=null;
+  }
   window._pendingWave=wave;
   // Show monster preview
   var prev=document.getElementById('attackMonsterPreview');
-  if(prev) prev.innerHTML=wave.map(function(m){
-    var rarityColor={common:'#aaa',uncommon:'#06d6a0',rare:'#118ab2',epic:'#9b59b6',legendary:'#ffd700'};
-    return '<span title="'+m.name+' ('+m.rarity+')" style="font-size:'+(m.giant?'2.6rem':'1.8rem')+';filter:drop-shadow(0 0 6px '+(rarityColor[m.rarity]||'#fff')+');">'+m.emoji+'</span>';
-  }).join('');
+  if(prev){
+    if(isTitanic){
+      var titan=TITANIC_MONSTERS.find(function(t){return t.id===mp2.approachingTitanicId;});
+      var identified=mp2&&mp2.titanicIdentified;
+      prev.innerHTML='<div style="font-size:3.5rem;filter:drop-shadow(0 0 20px #ef476f);animation:mBounce 0.6s ease infinite;">'+(identified?titan.emoji:'❓')+'</div>'
+        +'<div style="font-size:0.75rem;font-weight:900;color:#ef476f;margin-top:4px;">'+(identified?titan.name:'??? TITANIC THREAT')+'</div>'
+        +'<div style="font-size:0.65rem;color:#9b59b6;margin-top:2px;">'+titan.parts.length+' breakable parts</div>';
+    } else {
+      prev.innerHTML=wave.map(function(m){
+        var rarityColor={common:'#aaa',uncommon:'#06d6a0',rare:'#118ab2',epic:'#9b59b6',legendary:'#ffd700'};
+        return '<span title="'+m.name+' ('+m.rarity+')" style="font-size:'+(m.giant?'2.6rem':'1.8rem')+';filter:drop-shadow(0 0 6px '+(rarityColor[m.rarity]||'#fff')+');">'+m.emoji+'</span>';
+      }).join('');
+    }
+  }
   var hasDefenders=buildDefenders().length>0;
   var msg=document.getElementById('attackWarningMsg');
   if(msg){
@@ -3339,7 +3689,15 @@ window.dismissAttackWarning=function(){
 window.startBattle=function(forced, prebuiltWave){
   // Stamp lastBattleTime so cooldown is measured from actual fight start
   var _d=getData(), _ud=_d[userKey];
-  if(_ud&&_ud.mp){ _ud.mp.lastBattleTime=Date.now(); _d[userKey]=_ud; saveData(_d); }
+  if(_ud&&_ud.mp){
+    _ud.mp.lastBattleTime=Date.now();
+    // Track battles-without-math counter
+    _ud.mp.battlesSinceSession=(_ud.mp.battlesSinceSession||0)+1;
+    _d[userKey]=_ud; saveData(_d);
+  }
+  // Store titanic flag on battle object so result screen knows
+  _battle.isTitanic=!!(window._pendingIsTitanic);
+  _battle.titanicId=window._pendingTitanicId||null;
   _battle.defenders=buildDefenders();
   _battle.monsters=prebuiltWave||buildWave(forced===true);
   _battle.round=1;
@@ -3354,7 +3712,19 @@ window.startBattle=function(forced, prebuiltWave){
   _deathPopupQueue=[];
   _deathPopupOpen=false;
   var hasD=_battle.defenders.length>0;
-  battleLog('⚔️ Dark forces approach!');
+  // Titanic battle special intro
+  if(_battle.isTitanic && _battle.titanicId){
+    var tn=TITANIC_MONSTERS.find(function(t){return t.id===_battle.titanicId;});
+    var titleEl=document.getElementById('battleTitle');
+    if(titleEl && tn){ titleEl.textContent='💥 '+tn.name+' ATTACKS!'; titleEl.style.color='#ff6b6b'; titleEl.style.animation='ominousPulse 1s ease infinite'; }
+    battleLog('💥 A TITANIC MONSTER ATTACKS!');
+    if(tn) battleLog('👁️ '+tn.name+' — '+tn.desc);
+    battleLog('🎯 Attack each BODY PART separately!');
+  } else {
+    var titleEl=document.getElementById('battleTitle');
+    if(titleEl){ titleEl.textContent='⚔️ DARK FORCES ATTACK!'; titleEl.style.color='#ef476f'; titleEl.style.animation=''; }
+    battleLog('⚔️ Dark forces approach!');
+  }
   if(!hasD) battleLog('😱 No defenders — your base is unprotected!');
   else battleLog('🛡️ '+_battle.defenders.length+' defender'+(_battle.defenders.length>1?'s':'')+' stand ready!');
   renderDuelArena(hasD?'Tap ⚔️ ATTACK on your fighter!':'Monsters are attacking your base!');
@@ -3479,10 +3849,12 @@ function makeTokenEl(c, isMonster){
   var hasAttacked=!isMonster&&c._attacked; // defender already used their turn
   var isClickable=!isMonster&&!isDead&&!hasAttacked;
 
-  var rc={common:'#ef476f44',uncommon:'#06d6a044',rare:'#118ab244',epic:'#9b59b644',legendary:'#ffd70044'};
-  var rb={common:'#ef476f88',uncommon:'#06d6a088',rare:'#118ab2aa',epic:'#9b59b6aa',legendary:'#ffd700cc'};
+  var rc={common:'#ef476f44',uncommon:'#06d6a044',rare:'#118ab244',epic:'#9b59b644',legendary:'#ffd70044',titanic:'#ff000044'};
+  var rb={common:'#ef476f88',uncommon:'#06d6a088',rare:'#118ab2aa',epic:'#9b59b6aa',legendary:'#ffd700cc',titanic:'#ff0000cc'};
   var bg=isMonster?(rc[c.rarity]||rc.common):'#06d6a018';
   var border=isMonster?(rb[c.rarity]||rb.common):'#06d6a044';
+  // Titanic parts get special red pulsing treatment
+  if(isMonster && c.isTitanicPart){ bg='rgba(139,0,0,0.35)'; border='#ff2200'; }
   if(isClickable){ bg='#06d6a030'; border='#06d6a0'; }
   if(hasAttacked){ bg='#06d6a008'; border='#06d6a022'; }
 
@@ -3495,7 +3867,7 @@ function makeTokenEl(c, isMonster){
     +(hasAttacked?'opacity:0.65;filter:brightness(0.7) saturate(0.5);':'')
     +(isClickable?'box-shadow:0 0 14px #06d6a0, inset 0 0 8px rgba(6,214,160,0.15);cursor:pointer;':'');
 
-  var iconSize=c.giant?'3.2rem':'2.4rem';
+  var iconSize=c.isTitanicPart?'4.5rem':(c.giant?'3.2rem':'2.4rem');
   var iconEl=document.createElement('div');
   iconEl.className='tok-icon';
   // Fix size explicitly so re-renders never shrink the icon
@@ -3521,6 +3893,13 @@ function makeTokenEl(c, isMonster){
     +(isDead?'color:#ef476f;':'color:'+(isMonster?'#ffb3b3':'#c8f0e0')+';');
   namEl.textContent=isDead?'💀 DEAD':c.name;
   wrap.appendChild(namEl);
+  // Titanic part: show parent monster name as subtitle
+  if(isMonster && c.isTitanicPart && !isDead){
+    var parentLbl=document.createElement('div');
+    parentLbl.style.cssText='font-size:0.42rem;font-weight:900;color:#ff6b6b;letter-spacing:1px;text-transform:uppercase;text-align:center;';
+    parentLbl.textContent=c.parentName||'';
+    wrap.appendChild(parentLbl);
+  }
 
   // HP bar — always present (keeps height consistent), hidden when dead
   var pct=isDead?0:Math.round(c.hp/c.maxHp*100);
@@ -4220,19 +4599,40 @@ function checkBattleEnd(){
     var huntBonus=window._huntBonusGold||0;
     window._huntBonusGold=null;
     totalReward+=huntBonus;
+    // Titanic bonus — huge reward for slaying a titanic
+    var titanicBonus=0;
+    if(_battle.isTitanic && _battle.titanicId){
+      var titan=TITANIC_MONSTERS.find(function(t){return t.id===_battle.titanicId;});
+      if(titan) titanicBonus=titan.reward;
+      totalReward+=titanicBonus;
+    }
     var d=getData(), ud=d[userKey];
     if(ud&&ud.mp){
       ud.mp.credits=(ud.mp.credits||0)+totalReward;
       ud.mp.scareIdx=0;
       ud.mp.battleWins=(ud.mp.battleWins||0)+1;
+      // Clear titanic approach state
+      if(_battle.isTitanic){
+        ud.mp.approachingTitanicId=null;
+        ud.mp.titanicIdentified=false;
+        ud.mp.forcedAttackPending=false;
+        ud.mp.ominousCountdown=0;
+      }
       saveData(d);
     }
+    updateOminousBar();
     checkOminousWarning();
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
-      var msg=huntBonus>0
-        ?'🏹 Hunt successful! Bonus: 🪙+'+huntBonus
-        :'🏆 Your defenders crushed the attackers!';
+      var msg;
+      if(titanicBonus>0){
+        var tname=TITANIC_MONSTERS.find(function(t){return t.id===_battle.titanicId;});
+        msg='💥 TITANIC DEFEATED! '+(tname?tname.name:'')+' is slain!\n🪙 Massive bonus: +'+titanicBonus+'!';
+      } else if(huntBonus>0){
+        msg='🏹 Hunt successful! Bonus: 🪙+'+huntBonus;
+      } else {
+        msg='🏆 Your defenders crushed the attackers!';
+      }
       showBattleResult(true, msg, totalReward);
     },2800);
     return;
@@ -4245,6 +4645,11 @@ function checkBattleEnd(){
     var destroyMsgs=[];
     if(ud&&ud.mp&&_battle.defenders.length>0){
       ud.mp.scareIdx=0;
+      // On defeat, titanic retreats but will return (keep approachingTitanicId, reset forcedAttackPending)
+      if(_battle.isTitanic){
+        ud.mp.forcedAttackPending=false;
+        ud.mp.ominousCountdown=1; // comes back next session
+      }
       var gridKeys=Object.keys(ud.mp.baseGrid||{}).filter(function(k){ return ud.mp.baseGrid[k]&&!ud.mp.baseGrid[k].damaged; });
       _battle.monsters.forEach(function(mon){
         var chance=DESTROY_CHANCE[mon.rarity]||0.10;
@@ -5075,6 +5480,8 @@ function applyCastleResetV2(ud, d){
     bossCountdown: 0,
     ominousWarned: 0,
     battleCharges: 0,
+    battlesSinceSession: 0,
+    recoverySessions: 0,
     ominousCountdown: 0,
     forcedAttackPending: false,
     lastRaidTime: 0,
@@ -5125,11 +5532,14 @@ function showMyPlace(){
   if(ud&&ud.mp){
     if(ud.mp.battleCharges===undefined) ud.mp.battleCharges=0;
     if(ud.mp.ominousCountdown===undefined) ud.mp.ominousCountdown=0;
+    if(ud.mp.battlesSinceSession===undefined) ud.mp.battlesSinceSession=0;
+    if(ud.mp.recoverySessions===undefined) ud.mp.recoverySessions=0;
     saveData(d);
   }
   var credits=(ud&&ud.mp&&ud.mp.credits)||0;
   document.getElementById('mpCredits').textContent=credits;
   updateBattleChargeDisplay();
+  updateOminousBar();
   // Show god test button for god account
   var godBtn=document.getElementById('godBattleTestBtn');
   if(godBtn) godBtn.style.display=(userKey==='god')?'block':'none';
@@ -6025,6 +6435,7 @@ function endQuiz(){
   var _earnedCredits=0;
   try { _earnedCredits=earnSessionCredits(session)||0; } catch(e){}
   try { checkBattleChargesAfterSession(totalTime); } catch(e){}
+  try { updateRecoveryAfterSession(); } catch(e){}
   try { sendToSheets(userKey, session); } catch(e){}
   try {
     var _d=getData(),_ud=_d[userKey];
