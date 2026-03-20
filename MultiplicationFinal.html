@@ -863,8 +863,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.2 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Student Monsters · Ultra Rare Titans</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.5 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Giant Student Icons · Monster Damage Boost</div>
         </div>
       </div>
     </div>
@@ -3537,7 +3537,7 @@ function launchVoidBattle(){
   window._pendingIsTitanic=true;
   window._pendingTitanicId='void_sovereign';
   window._isVoidBattle=true;
-  startBattle(false, window._pendingWave);
+  window.startBattle(false, window._pendingWave);
 }
 
 // Called each round during a void battle — steal gold and zombify dead defenders
@@ -4247,7 +4247,7 @@ var SECRET_MONSTERS=[
 var STUDENT_MONSTERS = [
   {
     id:'student_nya', name:'NYA THE UNSTOPPABLE', emoji:'🧟‍♀️', rarity:'student',
-    hp:2000, atk:180, range:3, speed:'ranged', reward:1500, giant:true,
+    hp:5000, atk:180, range:3, speed:'ranged', reward:1500, giant:true,
     dropChance:300, aoe:true, stun:true,
     attack:'does a perfect backflip directly onto your castle 🤸‍♀️',
     taunts:[
@@ -4257,11 +4257,14 @@ var STUDENT_MONSTERS = [
       "One backflip. That's all it took. One. Backflip. Maybe build better walls next time?? 😂",
       'Oh sorry did my GYMNASTICS destroy your defenses?? SORRY NOT SORRY 🤸‍♀️✨',
       'I am literally flipping over your castle right now. This is embarrassing. For YOU. 💀',
+    ,
+      "HAHAHAHA your knight just fell over!! Did you SEE that?? HAHAHAHA 🤣🤸‍♀️",
+      "BWAHAHAHA I did a backflip and THREE of your defenders ran away!! 😂"
     ]
   },
   {
     id:'student_nani', name:'NANI THE MAGNIFICENT', emoji:'🧟‍♀️', rarity:'student',
-    hp:1800, atk:160, range:2, speed:'ranged', reward:1400, giant:true,
+    hp:5000, atk:160, range:2, speed:'ranged', reward:1400, giant:true,
     dropChance:300, aoe:false, stun:true,
     attack:'throws an enormous hat that crushes three defenders at once 🎩',
     taunts:[
@@ -4271,11 +4274,14 @@ var STUDENT_MONSTERS = [
       "How many hats can one person throw?? APPARENTLY INFINITE. You're welcome. 🎩💀",
       "That was my FAVORITE hat and now it's stuck in your knight. How embarrassing. For your knight. 😤🎩",
       'Hat. Hat. Hat. Another hat. Did I mention I have more hats? Because I have more hats. 🎩🎩',
+    ,
+      "HAHAHAHAHA here comes ANOTHER HAT!! 🎩😂 HAHAHAHA catch it!! you can not catch it!! 🤣",
+      "AHAHAHA your wizard is wearing my hat now!! He looks ridiculous!! HAHAHA 😂🎩"
     ]
   },
   {
     id:'student_isac', name:'ISAC THE DESTROYER', emoji:'🧟‍♂️', rarity:'student',
-    hp:2200, atk:200, range:2, speed:'melee', reward:1600, giant:true,
+    hp:5000, atk:200, range:2, speed:'melee', reward:1600, giant:true,
     dropChance:300, aoe:true, stun:false,
     attack:'hurls a massive pile of poop at ALL your defenders simultaneously 💩',
     taunts:[
@@ -4285,11 +4291,14 @@ var STUDENT_MONSTERS = [
       "My attack stat is literally poop-based and I'm STILL winning. What does that say about YOUR army?? 😂💩",
       "MAXIMUM POOP ACHIEVED 💩💩💩💩💩 Your wizard smells now. That's permanent. 💀",
       'I looked at your castle. I threw poop. These things are related. 💩🏰',
+    ,
+      "BWAHAHAHAHAHA 💩😂 POOP EVERYWHERE!! HAHAHAHAHA did it get in your archers mouth?? 🤣💩",
+      "HAHAHAHAHA I cannot stop laughing!! Your castle SMELLS SO BAD NOW!! 😂💩"
     ]
   },
   {
     id:'student_ichi', name:'ICHI THE ANCIENT', emoji:'🧟‍♂️', rarity:'student',
-    hp:1900, atk:175, range:4, speed:'ranged', reward:1450, giant:true,
+    hp:5000, atk:175, range:4, speed:'ranged', reward:1450, giant:true,
     dropChance:300, aoe:true, stun:true,
     attack:'releases a terrifying battle cry that stuns everyone within 4 squares 😤',
     taunts:[
@@ -4299,11 +4308,14 @@ var STUDENT_MONSTERS = [
       "BATTLE CRY!! *inaudible ancient screaming* Your archers have fled. You're welcome. 📣",
       "I defeated your grandfather's castle. Your castle is easier. This is embarrassing. 🧓",
       "Okay I actually feel a little bad. No wait I don't. BATTLE CRY!! 😤💀",
+    ,
+      "HAHAHAHA your defenders look so CONFUSED!! HAHAHAHA they do not understand my power!! 😂",
+      "BWAHAHAHAHA I am LITERALLY laughing so hard right now!! Your castle!! HAHAHA!! 🤣"
     ]
   },
   {
     id:'student_teveah', name:'TEVEAH THE RELENTLESS', emoji:'🧟‍♀️', rarity:'student',
-    hp:2100, atk:190, range:3, speed:'ranged', reward:1550, giant:true,
+    hp:5000, atk:190, range:3, speed:'ranged', reward:1550, giant:true,
     dropChance:300, aoe:true, stun:false,
     attack:'launches a devastating combo attack that never ever stops 👊',
     taunts:[
@@ -4313,11 +4325,14 @@ var STUDENT_MONSTERS = [
       'Did you think I was done?? I was NOT done. I am NEVER done. 💀',
       'One more hit. And another one. And another one. And another— you get the idea. 👊👊👊',
       'The concept of stopping is completely foreign to me. What even IS stopping?? 🤷‍♀️💪',
+    ,
+      "HAHAHAHAHAHA I HIT IT AGAIN!! AND AGAIN!! HAHAHA I CANNOT STOP!! 🤣👊",
+      "AHAHAHA your knight tried to block me and FELL OVER!! HAHAHAHAHA!! 😂👊"
     ]
   },
   {
     id:'student_august', name:'AUGUST THE SCHOLAR', emoji:'🧟‍♂️', rarity:'student',
-    hp:1700, atk:155, range:3, speed:'ranged', reward:1350, giant:true,
+    hp:5000, atk:155, range:3, speed:'ranged', reward:1350, giant:true,
     dropChance:300, aoe:false, stun:true,
     attack:"throws an enormous encyclopedia directly at your wizard's head 📚",
     taunts:[
@@ -4327,11 +4342,14 @@ var STUDENT_MONSTERS = [
       "That was a first edition. It is now inside your knight. I'm not even sorry. 📚😤",
       'Knowledge is power. And right now I am using that power to destroy your castle. 📚💪',
       'Fun fact: a textbook traveling at this speed does 155 damage. I learned that from a BOOK. 📚😂',
+    ,
+      "HAHAHAHA BOOK TO THE FACE!! 📚😂 Did that hurt?? IT PROBABLY HURT!! HAHAHAHA!! 🤣",
+      "BWAHAHAHA the wizard is unconscious from a DICTIONARY!! HAHAHAHAHA!! 😂📚"
     ]
   },
   {
     id:'student_maaya', name:'MAAYA THE CHAOTIC', emoji:'🧟‍♀️', rarity:'student',
-    hp:2000, atk:185, range:2, speed:'melee', reward:1500, giant:true,
+    hp:5000, atk:185, range:2, speed:'melee', reward:1500, giant:true,
     dropChance:300, aoe:true, stun:true,
     attack:'creates absolute chaos in all directions simultaneously 🌀',
     taunts:[
@@ -4341,11 +4359,14 @@ var STUDENT_MONSTERS = [
       'Oops I hit the wrong thing. And that thing. And that thing too. Oh well! 🌀',
       'My attack pattern is completely random and somehow MORE effective than a strategy. Funny how that works. 😂🌀',
       'I tripped and accidentally destroyed your outer wall. Then I did it again on purpose. 🌀💅',
+    ,
+      "HAHAHAHAHA I don't even know what I hit!! HAHAHAHA everything is on FIRE!! 🌀😂🤣",
+      "AHAHAHAHAHA CHAOS!! PURE CHAOS!! HAHAHAHAHA I love this so much!! 🌀😂"
     ]
   },
   {
     id:'student_mira', name:'MIRA THE DANCER', emoji:'🧟‍♀️', rarity:'student',
-    hp:1850, atk:170, range:2, speed:'melee', reward:1400, giant:true,
+    hp:5000, atk:170, range:2, speed:'melee', reward:1400, giant:true,
     dropChance:300, aoe:true, stun:true,
     attack:'busts into an incredible dance routine that somehow destroys everything 💃',
     taunts:[
@@ -4355,6 +4376,9 @@ var STUDENT_MONSTERS = [
       'The beat dropped. So did your castle wall. COINCIDENCE?? NO!! 💃💀',
       'I learned this dance move specifically to defeat fortifications. It took three days to perfect. 💃',
       "Okay but can your KNIGHT do this?? *spins dramatically* *everything explodes* Didn't think so. 💃😂",
+    ,
+      "HAHAHAHAHAHA I'm DANCING and your CASTLE IS FALLING!! 💃😂 HAHAHAHA the BEAT!! 🤣",
+      "BWAHAHAHA your knight tried to dance with me and got LAUNCHED INTO THE WALL!! 😂💃"
     ]
   },
 ];
@@ -4733,7 +4757,7 @@ window.tryScare=function(){
 window.dismissAttackWarning=function(){
   document.getElementById('attackWarningOverlay').style.display='none';
   // Start battle with the pre-built wave
-  startBattle(false, window._pendingWave);
+  window.startBattle(false, window._pendingWave);
   window._pendingWave=null;
 };
 
@@ -4912,14 +4936,15 @@ function makeTokenEl(c, isMonster){
 
   var wrap=document.createElement('div');
   wrap.id='tok_'+(isMonster?'mon':'def')+'_'+c.name.replace(/\s/g,'_');
+  var isStudent=isMonster&&c.rarity==='student';
   wrap.style.cssText='position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;'
-    +'background:'+bg+';border:2px solid '+border+';border-radius:12px;padding:7px 8px 5px;'
-    +'min-width:62px;transition:border-color 0.3s,background 0.3s,opacity 0.3s,filter 0.3s;'
+    +'background:'+bg+';border:'+(isStudent?'3px':'2px')+' solid '+border+';border-radius:'+(isStudent?'18px':'12px')+';padding:'+(isStudent?'12px 16px 10px':'7px 8px 5px')+';'
+    +'min-width:'+(isStudent?'130px':'62px')+';transition:border-color 0.3s,background 0.3s,opacity 0.3s,filter 0.3s;'
     +(isDead?'opacity:0.35;filter:grayscale(1);':'')
     +(hasAttacked?'opacity:0.65;filter:brightness(0.7) saturate(0.5);':'')
     +(isClickable?'box-shadow:0 0 14px #06d6a0, inset 0 0 8px rgba(6,214,160,0.15);cursor:pointer;':'');
 
-  var iconSize=c.isTitanicPart?'4.5rem':(c.giant?'3.2rem':'2.4rem');
+  var iconSize=c.rarity==='student'?'9.6rem':(c.isTitanicPart?'4.5rem':(c.giant?'3.2rem':'2.4rem'));
   var iconEl=document.createElement('div');
   iconEl.className='tok-icon';
   // Fix size explicitly so re-renders never shrink the icon
@@ -5279,15 +5304,19 @@ function resolveAction(attacker, isMonster){
         action.skipped=true; action.hint=mon.name+' smashes the castle! 💥';
       } else if(mon.aoe){
         action.aoe=true; action.target=defTargets[0];
-        action.dmg=Math.max(1,Math.round((mon.atk+Math.floor(Math.random()*4))*0.7));
-        action.hint=mon.name+' BLASTS all defenders for '+action.dmg+'!';
+        var aoeMult=mon.rarity==='student'?3.5:2.0;
+        action.dmg=Math.max(1,Math.round((mon.atk*aoeMult)+Math.floor(Math.random()*mon.atk*0.4)));
+        var blastWord=mon.rarity==='student'?'HAHAHA WIPES OUT':'BLASTS';
+        action.hint=mon.name+' '+blastWord+' all defenders for '+action.dmg+'!';
       } else {
         action.target=defTargets[Math.floor(Math.random()*defTargets.length)];
         if(action.target.dodge&&Math.random()<0.35){
           action.dodged=true; action.hint=action.target.name+' DODGES! 🥷';
         } else {
-          action.dmg=Math.max(1,mon.atk+Math.floor(Math.random()*5)-1);
-          action.hint=mon.name+' hits '+action.target.name+' for '+action.dmg+'!';
+          var dmgMult=mon.rarity==='student'?4.0:2.5;
+          action.dmg=Math.max(1,Math.round(mon.atk*dmgMult+Math.floor(Math.random()*mon.atk*0.5)));
+          var hitWord=mon.rarity==='student'?['OBLITERATES','DESTROYS','CRUSHES','SMASHES','WRECKS'][Math.floor(Math.random()*5)]:'hits';
+          action.hint=mon.name+' '+hitWord+' '+action.target.name+' for '+action.dmg+'!';
         }
       }
     }
