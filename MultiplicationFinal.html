@@ -863,8 +863,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.5 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Giant Student Icons · Monster Damage Boost</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.6 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Expedition System · 10-Battle Gauntlet</div>
         </div>
       </div>
     </div>
@@ -880,6 +880,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="display:flex;gap:8px;justify-content:center;">
         <button class="btn btn-blue" id="myInfoBtnMode" style="width:auto;margin-top:0;padding:10px 16px;font-size:0.9rem;white-space:nowrap;flex:1;max-width:160px;">&#x1F4CA; My Info</button>
         <button class="btn" id="myPlaceBtnMode" style="width:auto;margin-top:0;padding:10px 16px;font-size:0.9rem;white-space:nowrap;flex:1;max-width:160px;background:linear-gradient(135deg,#2d5a27,#1a3d16);border:1.5px solid #4a9a3f;color:#7dd67a;">&#x1F3E0; My Castle</button>
+        <button class="btn" id="expeditionBtnMode" onclick="openExpedition()" style="width:auto;margin-top:0;padding:10px 16px;font-size:0.9rem;white-space:nowrap;flex:1;max-width:160px;background:linear-gradient(135deg,#4b0082,#7b2fbe);border:1.5px solid #9b59b6;color:#e0c0ff;">&#x2694;&#xFE0F; Expedition</button>
       </div>
     </div>
     <!-- Badge rows left + right, with fire sitting above the level bar below -->
@@ -1419,6 +1420,99 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     </div>
     <button onclick="closeGodsRebalanced()" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px 36px;font-family:inherit;font-weight:900;font-size:0.95rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 20px rgba(155,89,182,0.4);">I Accept the Decree ⚖️</button>
   </div>
+</div>
+
+<!-- ══ EXPEDITION SCREEN ══ -->
+<div id="expeditionScreen" style="display:none;position:fixed;inset:0;z-index:8000;background:#080010;overflow-y:auto;font-family:inherit;">
+
+  <!-- Party Select Phase -->
+  <div id="expPhaseParty" style="display:none;padding:20px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:2.5rem;margin-bottom:4px;">⚔️</div>
+      <div style="font-size:0.55rem;font-weight:900;letter-spacing:4px;color:#9b59b6;text-transform:uppercase;">Expedition</div>
+      <div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:6px;">Choose Your Party</div>
+      <div style="font-size:0.78rem;color:#b89fd4;line-height:1.5;">Select exactly <b style="color:#ffd700;">6 defenders</b> for the entire journey.<br>Dead defenders stay dead. Choose wisely.</div>
+      <div style="margin-top:8px;background:rgba(239,71,111,0.12);border:1px solid rgba(239,71,111,0.3);border-radius:10px;padding:6px 14px;display:inline-block;font-size:0.7rem;color:#ef476f;font-weight:900;">Costs ⚔️2 battle charges</div>
+    </div>
+    <div id="expPartyPool" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
+    <div style="background:rgba(155,89,182,0.1);border:1.5px solid rgba(155,89,182,0.3);border-radius:12px;padding:10px;margin-bottom:14px;">
+      <div style="font-size:0.6rem;color:#9b59b6;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Your Party (<span id="expPartyCount">0</span>/6)</div>
+      <div id="expPartySelected" style="display:flex;flex-wrap:wrap;gap:6px;min-height:40px;align-items:center;">
+        <div style="color:#3a4f6b;font-size:0.72rem;">No defenders selected</div>
+      </div>
+    </div>
+    <button id="expStartBtn" onclick="startExpedition()" disabled style="width:100%;background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;opacity:0.4;letter-spacing:1px;">Begin Expedition ⚔️</button>
+    <button onclick="closeExpedition()" style="width:100%;background:none;border:none;color:#3a4f6b;padding:10px;font-family:inherit;cursor:pointer;margin-top:6px;font-size:0.8rem;">Cancel</button>
+  </div>
+
+  <!-- Journey Map Phase -->
+  <div id="expPhaseMap" style="display:none;padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:0.55rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;">Expedition</div>
+        <div style="font-size:1.1rem;font-weight:900;color:#fff;">Battle <span id="expBattleNum">1</span> of 10</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.6rem;color:#7a8fb5;">Relics</div>
+        <div id="expRelicDisplay" style="font-size:1.2rem;"></div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div style="display:flex;gap:3px;margin-bottom:14px;">
+      <div id="expProgress" style="display:flex;gap:3px;flex:1;"></div>
+    </div>
+    <!-- Party status -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:0.6rem;color:#9b59b6;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Your Party</div>
+      <div id="expPartyStatus" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+    <!-- Next encounter -->
+    <div id="expEncounterCard" style="background:linear-gradient(160deg,#1a0030,#0d0020);border:1.5px solid rgba(155,89,182,0.4);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:0.6rem;color:#9b59b6;font-weight:900;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;" id="expEncounterLabel">Next Battle</div>
+      <div id="expEncounterPreview" style="font-size:1.8rem;margin-bottom:6px;"></div>
+      <div style="font-size:0.82rem;color:#b89fd4;" id="expEncounterDesc"></div>
+    </div>
+    <button id="expFightBtn" onclick="launchExpeditionBattle()" style="width:100%;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;letter-spacing:1px;">⚔️ Fight!</button>
+  </div>
+
+  <!-- Reward Phase -->
+  <div id="expPhaseReward" style="display:none;padding:20px;">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:3rem;margin-bottom:6px;" id="expRewardEmoji">🎁</div>
+      <div style="font-size:0.55rem;font-weight:900;letter-spacing:3px;color:#06d6a0;text-transform:uppercase;">Victory!</div>
+      <div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:4px;" id="expRewardTitle">Battle Won!</div>
+      <div style="font-size:0.78rem;color:#b89fd4;" id="expRewardDesc"></div>
+    </div>
+    <div id="expRewardChoices" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+    <button onclick="continueExpedition()" style="width:100%;background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;letter-spacing:1px;" id="expContinueBtn">Continue Journey ➡️</button>
+  </div>
+
+  <!-- Defeat Phase -->
+  <div id="expPhaseDefeat" style="display:none;padding:20px;text-align:center;">
+    <div style="font-size:4rem;margin-bottom:8px;animation:mBounce 0.8s ease infinite;">💀</div>
+    <div style="font-size:0.55rem;font-weight:900;letter-spacing:3px;color:#ef476f;text-transform:uppercase;margin-bottom:4px;">Expedition Failed</div>
+    <div style="font-size:1.3rem;font-weight:900;color:#fff;margin-bottom:8px;" id="expDefeatTitle">Your party was wiped out.</div>
+    <div style="font-size:0.82rem;color:#b89fd4;margin-bottom:8px;" id="expDefeatMsg"></div>
+    <div style="background:rgba(239,71,111,0.1);border:1px solid rgba(239,71,111,0.3);border-radius:12px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:0.6rem;color:#ef476f;font-weight:900;text-transform:uppercase;margin-bottom:6px;">You reached Battle <span id="expDefeatBattle">?</span></div>
+      <div style="font-size:0.78rem;color:#b89fd4;" id="expDefeatRelics"></div>
+    </div>
+    <button onclick="closeExpedition()" style="width:100%;background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;">Back to Castle</button>
+  </div>
+
+  <!-- Victory Phase -->
+  <div id="expPhaseVictory" style="display:none;padding:20px;text-align:center;">
+    <div style="font-size:4rem;margin-bottom:8px;animation:mBounce 0.6s ease infinite;">🏆</div>
+    <div style="font-size:0.55rem;font-weight:900;letter-spacing:3px;color:#ffd700;text-transform:uppercase;margin-bottom:4px;">Expedition Complete!</div>
+    <div style="font-size:1.5rem;font-weight:900;color:#ffd700;margin-bottom:8px;">THE BOSS IS SLAIN!</div>
+    <div style="font-size:0.85rem;color:#b89fd4;margin-bottom:14px;" id="expVictoryDesc"></div>
+    <div style="background:rgba(255,215,0,0.1);border:1.5px solid rgba(255,215,0,0.4);border-radius:14px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:0.6rem;color:#ffd700;font-weight:900;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Expedition Rewards</div>
+      <div id="expVictoryRewards" style="font-size:0.85rem;color:#fff;line-height:1.8;"></div>
+    </div>
+    <button onclick="closeExpedition()" style="width:100%;background:linear-gradient(135deg,#ffd700,#ff9500);color:#1a0d00;border:none;border-radius:12px;padding:14px;font-family:inherit;font-weight:900;font-size:1rem;cursor:pointer;">Claim Glory! 🏆</button>
+  </div>
+
 </div>
 
 <!-- Battle Result Overlay -->
@@ -3936,6 +4030,450 @@ function showDeserterPopup(deserters, onDone){
   document.body.appendChild(ov);
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EXPEDITION SYSTEM — Slay the Spire style 10-battle gauntlet
+// ══════════════════════════════════════════════════════════════════════════════
+
+var EXP_PARTY_SIZE = 6;       // defenders you pick
+var EXP_BATTLES = 10;         // total battles in a run
+
+// Relics — passive buffs found between battles
+var EXP_RELICS = [
+  { id:'atk_boost',    emoji:'⚔️',  name:'Sharpened Blades',  desc:'All defenders deal +25% damage.',      apply:function(defs){ defs.forEach(function(d){d.atk=Math.round(d.atk*1.25);}); } },
+  { id:'hp_boost',     emoji:'🛡️',  name:'Ancient Armor',     desc:'All defenders gain +30 max HP.',        apply:function(defs){ defs.forEach(function(d){d.hp+=30;d.maxHp+=30;}); } },
+  { id:'aoe_all',      emoji:'💥',  name:'Chain Lightning',   desc:'All your attacks hit all enemies.',      apply:function(defs){ defs.forEach(function(d){d.aoe=true;}); } },
+  { id:'dodge_all',    emoji:'🥷',  name:'Shadow Cloak',      desc:'All defenders gain dodge.',              apply:function(defs){ defs.forEach(function(d){d.dodge=true;}); } },
+  { id:'stun_all',     emoji:'❄️',  name:'Frost Aura',        desc:'All attacks have stun chance.',          apply:function(defs){ defs.forEach(function(d){d.stun=true;}); } },
+  { id:'heal_kill',    emoji:'🧛',  name:'Life Drain',        desc:'Heal 15 HP on every kill.',             apply:function(defs){ defs.forEach(function(d){d._healOnKill=15;}); } },
+  { id:'double_atk',   emoji:'⚡',  name:'Berserker Rage',    desc:'First attacker each round hits twice.',  apply:function(defs){ defs._doubleFirstAtk=true; } },
+  { id:'revive_once',  emoji:'🔥',  name:'Phoenix Feather',   desc:'One defender revives once per battle.',  apply:function(defs){ defs._hasRevive=true; } },
+  { id:'gold_vein',    emoji:'💰',  name:'Gold Vein',         desc:'Earn +50% gold from expedition.',        apply:function(defs){ defs._goldMult=1.5; } },
+  { id:'max_hp_heal',  emoji:'💊',  name:'Elixir of Life',    desc:'Fully heal all defenders right now.',    apply:function(defs){ defs.forEach(function(d){d.hp=d.maxHp;}); } },
+];
+
+// Encounter types for the 10 battles
+var EXP_ENCOUNTER_TYPES = [
+  { label:'Common Skirmish',  emoji:'👺', difficulty:1,  desc:'A pack of weak monsters. Warm up!' },
+  { label:'Ambush!',          emoji:'⚡', difficulty:1.2,desc:'They surprised your scouts. Less time to react.' },
+  { label:'Elite Guard',      emoji:'⚔️', difficulty:1.5,desc:'Trained soldiers. Expect resistance.' },
+  { label:'Monster Den',      emoji:'🐉', difficulty:1.8,desc:'A nest of hungry beasts.' },
+  { label:'Night Raid',       emoji:'🌑', difficulty:2,  desc:'They attack in darkness. All enemies stunned first turn is disabled.' },
+  { label:'Undead Horde',     emoji:'💀', difficulty:2.2,desc:'They just keep coming. Wave after wave.' },
+  { label:'Warlord Host',  emoji:'🗡️', difficulty:2.5,desc:'A warlord leads his army personally.' },
+  { label:'Demon Vanguard',   emoji:'👿', difficulty:3,  desc:'From the demon realm. They hit hard.' },
+  { label:'Ancient Colossus', emoji:'🏛️', difficulty:3.5,desc:'A creature older than your castle walls.' },
+  { label:'THE FINAL BOSS',   emoji:'💀', difficulty:5,  desc:'The ultimate evil. It has been waiting.' },
+];
+
+// Final boss options
+var EXP_FINAL_BOSSES = [
+  { name:'MATH OVERLORD SUPREME', emoji:'🔢', hp:3000, atk:300, aoe:true, stun:true, desc:'Born from every wrong answer. Every missed fact fed its power.' },
+  { name:'THE ETERNAL DRAGON',    emoji:'🐉', hp:2500, atk:280, aoe:true, stun:false,desc:'Ancient beyond counting. It has destroyed a thousand expeditions.' },
+  { name:'VOID EMPEROR',          emoji:'🌌', hp:2800, atk:320, aoe:true, stun:true, desc:'Commands the void itself. Your relics tremble before it.' },
+  { name:'THE LICH KING',         emoji:'☠️', hp:2600, atk:290, aoe:false,stun:true, desc:'Death incarnate. Even your strongest defenders feel fear.' },
+];
+
+// ── State ──
+var _exp = {
+  active: false,
+  party: [],           // selected defenders (copies with current HP)
+  relics: [],          // collected relic ids
+  battle: 0,          // 0-indexed current battle
+  gold: 0,            // gold earned this run
+  usedRelicIds: [],   // relics already offered (no repeats)
+};
+
+function openExpedition(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var charges=(ud.mp.battleCharges||0);
+  if(charges<2){
+    showMPToast('Expedition costs ⚔️2 battle charges! You have '+charges+'.');
+    return;
+  }
+  // Build party pool from placed defenders
+  var grid=ud.mp.baseGrid||{};
+  var pool=[];
+  var seen={};
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(!item||!item.defender) return;
+    if(seen[item.id]) return; seen[item.id]=true;
+    if(ud.mp.permaDead&&ud.mp.permaDead[k]) return;
+    pool.push({id:item.id,emoji:item.emoji,name:item.name,hp:item.hp,maxHp:item.hp,atk:item.atk,
+      range:item.range,aoe:item.aoe||false,healer:item.healer||false,
+      healBudget:item.healer?(item.hp*3):0,healUsed:0,
+      dodge:item.dodge||false,stun:item.stun||false,dead:false,gridKey:k});
+  });
+  if(pool.length<1){
+    showMPToast('You need defenders placed in your castle to go on an expedition!');
+    return;
+  }
+  // Reset state
+  _exp={active:true,party:[],relics:[],battle:0,gold:0,usedRelicIds:[],_pool:pool,_selectedIds:{}};
+  // Show party select
+  document.getElementById('expeditionScreen').style.display='block';
+  showExpPhase('party');
+  renderExpPartyPool(pool);
+}
+
+function closeExpedition(){
+  document.getElementById('expeditionScreen').style.display='none';
+  _exp.active=false;
+}
+
+function showExpPhase(phase){
+  ['party','map','reward','defeat','victory'].forEach(function(p){
+    var el=document.getElementById('expPhase'+p.charAt(0).toUpperCase()+p.slice(1));
+    if(el) el.style.display=(p===phase)?'block':'none';
+  });
+}
+
+function renderExpPartyPool(pool){
+  var el=document.getElementById('expPartyPool'); if(!el) return;
+  el.innerHTML='';
+  pool.forEach(function(def){
+    var selected=!!_exp._selectedIds[def.id];
+    var card=document.createElement('div');
+    card.style.cssText='background:'+(selected?'rgba(155,89,182,0.3)':'rgba(255,255,255,0.04)')+';'
+      +'border:2px solid '+(selected?'#9b59b6':'rgba(255,255,255,0.1)')+';border-radius:12px;'
+      +'padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.2s;';
+    card.innerHTML='<div style="font-size:2rem;">'+def.emoji+'</div>'
+      +'<div style="font-size:0.62rem;font-weight:900;color:'+(selected?'#e0c0ff':'#b89fd4')+';">'+def.name+'</div>'
+      +'<div style="font-size:0.55rem;color:#7a8fb5;">❤️'+def.hp+' ⚔️'+def.atk+'</div>'
+      +(selected?'<div style="font-size:0.55rem;color:#9b59b6;font-weight:900;">✓ SELECTED</div>':'');
+    card.onclick=function(){ toggleExpDefender(def); };
+    el.appendChild(card);
+  });
+  // Update selected panel
+  var selEl=document.getElementById('expPartySelected');
+  var countEl=document.getElementById('expPartyCount');
+  var startBtn=document.getElementById('expStartBtn');
+  var selectedList=_exp._pool.filter(function(d){return !!_exp._selectedIds[d.id];});
+  countEl.textContent=selectedList.length;
+  if(selectedList.length===0){
+    selEl.innerHTML='<div style="color:#3a4f6b;font-size:0.72rem;">No defenders selected</div>';
+  } else {
+    selEl.innerHTML=selectedList.map(function(d){
+      return '<span style="font-size:1.4rem;" title="'+d.name+'">'+d.emoji+'</span>';
+    }).join('');
+  }
+  var ready=selectedList.length===EXP_PARTY_SIZE;
+  startBtn.disabled=!ready;
+  startBtn.style.opacity=ready?'1':'0.4';
+}
+
+function toggleExpDefender(def){
+  if(_exp._selectedIds[def.id]){
+    delete _exp._selectedIds[def.id];
+  } else {
+    var count=Object.keys(_exp._selectedIds).length;
+    if(count>=EXP_PARTY_SIZE){
+      showMPToast('You can only pick '+EXP_PARTY_SIZE+' defenders!');
+      return;
+    }
+    _exp._selectedIds[def.id]=true;
+  }
+  renderExpPartyPool(_exp._pool);
+}
+
+function startExpedition(){
+  // Deduct 2 charges
+  var d=getData(), ud=d[userKey];
+  ud.mp.battleCharges=Math.max(0,(ud.mp.battleCharges||0)-2);
+  d[userKey]=ud; saveData(d);
+  updateBattleChargeDisplay();
+  // Build party as deep copies
+  _exp.party=_exp._pool.filter(function(def){return !!_exp._selectedIds[def.id];})
+    .map(function(def){ return JSON.parse(JSON.stringify(def)); });
+  _exp.battle=0;
+  showExpMap();
+}
+
+function showExpMap(){
+  showExpPhase('map');
+  var battleNum=_exp.battle+1;
+  document.getElementById('expBattleNum').textContent=battleNum;
+  // Progress dots
+  var prog=document.getElementById('expProgress');
+  prog.innerHTML='';
+  for(var i=0;i<EXP_BATTLES;i++){
+    var dot=document.createElement('div');
+    var done=i<_exp.battle;
+    var current=i===_exp.battle;
+    var isBoss=i===EXP_BATTLES-1;
+    dot.style.cssText='flex:1;height:8px;border-radius:4px;background:'
+      +(done?'#9b59b6':current?'#e056ef':'rgba(155,89,182,0.2)')+';'
+      +'border:1px solid '+(isBoss?'#ef476f':'rgba(155,89,182,0.3)')+';'
+      +'transition:background 0.3s;position:relative;';
+    if(isBoss&&!done){ var skull=document.createElement('div');skull.textContent='💀';skull.style.cssText='position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:0.7rem;';dot.appendChild(skull); }
+    prog.appendChild(dot);
+  }
+  // Party status
+  renderExpPartyStatus();
+  // Encounter card
+  var isBoss=_exp.battle===EXP_BATTLES-1;
+  var enc=isBoss?EXP_ENCOUNTER_TYPES[9]:EXP_ENCOUNTER_TYPES[Math.min(_exp.battle, 8)];
+  document.getElementById('expEncounterLabel').textContent=isBoss?'⚠️ FINAL BOSS ⚠️':('Battle '+battleNum+' of '+EXP_BATTLES);
+  document.getElementById('expEncounterPreview').textContent=enc.emoji;
+  document.getElementById('expEncounterDesc').textContent=enc.desc;
+  // Relics
+  document.getElementById('expRelicDisplay').textContent=_exp.relics.map(function(r){
+    var rel=EXP_RELICS.find(function(x){return x.id===r;});
+    return rel?rel.emoji:'';
+  }).join('') || '—';
+}
+
+function renderExpPartyStatus(){
+  var el=document.getElementById('expPartyStatus'); if(!el) return;
+  el.innerHTML='';
+  _exp.party.forEach(function(def){
+    var card=document.createElement('div');
+    var pct=def.dead?0:Math.max(0,Math.round(def.hp/def.maxHp*100));
+    var barCol=pct>60?'#06d6a0':pct>30?'#ffd700':'#ef476f';
+    card.style.cssText='background:rgba(255,255,255,0.04);border:1px solid rgba(155,89,182,'+(def.dead?'0.1':'0.3')+');'
+      +'border-radius:10px;padding:6px 8px;min-width:60px;text-align:center;opacity:'+(def.dead?'0.3':'1')+';';
+    card.innerHTML='<div style="font-size:1.4rem;'+(def.dead?'filter:grayscale(1);':'')+'">'+def.emoji+'</div>'
+      +'<div style="font-size:0.5rem;font-weight:900;color:#b89fd4;margin-bottom:3px;">'+def.name.split(' ')[0]+'</div>'
+      +(def.dead?'<div style="font-size:0.5rem;color:#ef476f;">💀 DEAD</div>'
+        :'<div style="width:50px;height:4px;background:#1a1a2e;border-radius:2px;overflow:hidden;">'
+        +'<div style="width:'+pct+'%;height:100%;background:'+barCol+';border-radius:2px;"></div></div>'
+        +'<div style="font-size:0.48rem;color:#7a8fb5;margin-top:1px;">'+def.hp+'/'+def.maxHp+'</div>');
+    el.appendChild(card);
+  });
+}
+
+function buildExpWave(){
+  var isBoss=_exp.battle===EXP_BATTLES-1;
+  if(isBoss){
+    var boss=EXP_FINAL_BOSSES[Math.floor(Math.random()*EXP_FINAL_BOSSES.length)];
+    return [{
+      id:'exp_boss', name:boss.name, emoji:boss.emoji,
+      hp:boss.hp, maxHp:boss.hp, atk:boss.atk,
+      range:3, speed:'ranged', alive:true, isMonster:true,
+      rarity:'legendary', reward:500, giant:true,
+      aoe:boss.aoe, stun:boss.stun,
+      isBoss:true,
+    }];
+  }
+  // Scale difficulty with battle index
+  var diffMult=EXP_ENCOUNTER_TYPES[Math.min(_exp.battle,8)].difficulty;
+  var count=Math.min(2+_exp.battle, 6);
+  var wave=[];
+  var rarities=['common','common','common','uncommon','uncommon','rare','rare','epic','legendary'];
+  var pool=MONSTER_TYPES.filter(function(m){
+    var rarity=rarities[Math.min(_exp.battle, rarities.length-1)];
+    return m.rarity===rarity || (m.rarity==='common'&&_exp.battle<3);
+  });
+  if(!pool.length) pool=MONSTER_TYPES.filter(function(m){return m.rarity==='common';});
+  for(var i=0;i<count;i++){
+    var mt=pool[Math.floor(Math.random()*pool.length)];
+    var entry=makeWaveEntry(mt);
+    entry.hp=Math.round(entry.hp*diffMult);
+    entry.maxHp=entry.hp;
+    entry.atk=Math.round(entry.atk*diffMult);
+    wave.push(entry);
+  }
+  return wave;
+}
+
+function launchExpeditionBattle(){
+  if(!_exp.active) return;
+  // Use party as defenders — apply relics first
+  var partyLive=_exp.party.filter(function(d){return !d.dead;});
+  if(!partyLive.length){
+    expDefeat('No defenders remain alive!');
+    return;
+  }
+  // Apply relic buffs to a copy
+  var partyForBattle=partyLive.map(function(d){return JSON.parse(JSON.stringify(d));});
+  _exp.relics.forEach(function(rid){
+    var rel=EXP_RELICS.find(function(x){return x.id===rid;});
+    if(rel) try{ rel.apply(partyForBattle); }catch(e){}
+  });
+  var wave=buildExpWave();
+  window._expBattleActive=true;
+  window._pendingWave=wave;
+  window._pendingIsTitanic=false;
+  window._isVoidBattle=false;
+  _battle.defenders=partyForBattle;
+  _battle.monsters=wave;
+  _battle.round=1;
+  _battle.log=[];
+  _battle.active=true;
+  _battle.creditsEarned=0;
+  _battle.isTitanic=false;
+  _battle.titanicId=null;
+  _battle.pendingDestroyNotifs=[];
+  _battle.turnQueue=buildQueue();
+  _battle.qIdx=0;
+  // Set title
+  var titleEl=document.getElementById('battleTitle');
+  if(titleEl){
+    var isBoss=_exp.battle===EXP_BATTLES-1;
+    titleEl.textContent=isBoss?'⚠️ FINAL BOSS — FIGHT FOR YOUR LIFE!':'⚔️ EXPEDITION BATTLE '+(_exp.battle+1)+'/'+EXP_BATTLES;
+    titleEl.style.color=isBoss?'#ffd700':'#9b59b6';
+  }
+  document.getElementById('battleOverlay').style.display='flex';
+  _deathPopupQueue=[];
+  _deathPopupOpen=false;
+  var hasD=partyForBattle.length>0;
+  battleLog('⚔️ Expedition Battle '+(_exp.battle+1)+' begins!');
+  renderDuelArena(hasD?'Tap ⚔️ ATTACK on your fighter!':'No defenders!');
+}
+
+// Called by checkBattleEnd when expedition is active
+function handleExpeditionBattleEnd(victory){
+  if(!window._expBattleActive) return;
+  window._expBattleActive=false;
+  document.getElementById('battleOverlay').style.display='none';
+  if(!victory){
+    // Sync HP losses back to party
+    syncExpPartyHP();
+    expDefeat('Your party was defeated on battle '+(_exp.battle+1)+'!');
+    return;
+  }
+  // Sync HP losses back
+  syncExpPartyHP();
+  var goldEarned=50*(_exp.battle+1);
+  _exp.gold+=goldEarned;
+  if(_exp.battle===EXP_BATTLES-1){
+    expVictory();
+    return;
+  }
+  _exp.battle++;
+  showExpReward(goldEarned);
+}
+
+function syncExpPartyHP(){
+  // Copy HP from battle defenders back to _exp.party (track damage taken)
+  _battle.defenders.forEach(function(bd){
+    var p=_exp.party.find(function(x){return x.id===bd.id;});
+    if(p){
+      p.hp=bd.dead?0:bd.hp;
+      p.dead=bd.dead||bd.hp<=0;
+    }
+  });
+}
+
+function showExpReward(goldEarned){
+  showExpPhase('reward');
+  // Pick a reward type: heal, relic, or gold bonus
+  var rewardType=Math.random();
+  var choices=[];
+
+  // Always offer: heal a random injured defender
+  var wounded=_exp.party.filter(function(d){return !d.dead&&d.hp<d.maxHp;});
+  if(wounded.length){
+    var target=wounded[Math.floor(Math.random()*wounded.length)];
+    var healAmt=Math.round(target.maxHp*0.5);
+    choices.push({
+      emoji:'💊', label:'Heal '+target.name,
+      desc:'Restore '+healAmt+' HP to '+target.emoji+' '+target.name,
+      action:function(){ target.hp=Math.min(target.maxHp, target.hp+healAmt); }
+    });
+  }
+
+  // Relic (if available ones left)
+  var ownedRelicIds=_exp.relics;
+  var available=EXP_RELICS.filter(function(r){
+    return ownedRelicIds.indexOf(r.id)===-1 && _exp.usedRelicIds.indexOf(r.id)===-1;
+  });
+  if(available.length){
+    var relic=available[Math.floor(Math.random()*available.length)];
+    _exp.usedRelicIds.push(relic.id);
+    choices.push({
+      emoji:relic.emoji, label:relic.name,
+      desc:relic.desc,
+      action:function(){ _exp.relics.push(relic.id); }
+    });
+  }
+
+  // Gold bonus
+  var bonus=goldEarned;
+  choices.push({
+    emoji:'💰', label:'+'+bonus+' Bonus Gold',
+    desc:'Extra gold added to your expedition haul.',
+    action:function(){ _exp.gold+=bonus; }
+  });
+
+  document.getElementById('expRewardEmoji').textContent='🎉';
+  document.getElementById('expRewardTitle').textContent='Battle '+ _exp.battle+' Won!';
+  document.getElementById('expRewardDesc').textContent='💰 +'+goldEarned+' gold earned. Choose a reward:';
+
+  var choicesEl=document.getElementById('expRewardChoices');
+  choicesEl.innerHTML='';
+  window._expRewardChosen=false;
+  choices.forEach(function(ch){
+    var btn=document.createElement('button');
+    btn.style.cssText='width:100%;background:rgba(155,89,182,0.12);border:1.5px solid rgba(155,89,182,0.4);'
+      +'border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;font-family:inherit;color:#fff;'
+      +'display:flex;align-items:center;gap:12px;transition:all 0.2s;';
+    btn.innerHTML='<span style="font-size:1.8rem;">'+ch.emoji+'</span>'
+      +'<div><div style="font-weight:900;font-size:0.88rem;">'+ch.label+'</div>'
+      +'<div style="font-size:0.72rem;color:#b89fd4;margin-top:2px;">'+ch.desc+'</div></div>';
+    btn.onclick=function(){
+      if(window._expRewardChosen) return;
+      window._expRewardChosen=true;
+      ch.action();
+      // Highlight chosen
+      choicesEl.querySelectorAll('button').forEach(function(b){b.style.opacity='0.4';b.disabled=true;});
+      btn.style.opacity='1';
+      btn.style.borderColor='#9b59b6';
+      btn.style.background='rgba(155,89,182,0.25)';
+      btn.disabled=false;
+      document.getElementById('expContinueBtn').style.display='block';
+    };
+    choicesEl.appendChild(btn);
+  });
+  document.getElementById('expContinueBtn').style.display='none';
+}
+
+function continueExpedition(){
+  showExpMap();
+}
+
+function expDefeat(msg){
+  showExpPhase('defeat');
+  document.getElementById('expDefeatTitle').textContent=msg||'Your party was defeated.';
+  document.getElementById('expDefeatBattle').textContent=_exp.battle+1;
+  var relicNames=_exp.relics.map(function(r){
+    var rel=EXP_RELICS.find(function(x){return x.id===r;});
+    return rel?rel.emoji+' '+rel.name:'';
+  }).join(', ')||'None';
+  document.getElementById('expDefeatRelics').textContent='Relics collected: '+relicNames;
+  document.getElementById('expDefeatMsg').textContent='You earned 💰'+_exp.gold+' gold before falling.';
+  // Award gold anyway for how far they got
+  if(_exp.gold>0){
+    var d=getData(),ud=d[userKey];
+    if(ud&&ud.mp){ ud.mp.credits=(ud.mp.credits||0)+_exp.gold; d[userKey]=ud; saveData(d); }
+    var el=document.getElementById('mpCredits'); if(el&&ud&&ud.mp) el.textContent=ud.mp.credits;
+  }
+  _exp.active=false;
+}
+
+function expVictory(){
+  showExpPhase('victory');
+  var bonusGold=_exp.gold+500; // big victory bonus
+  document.getElementById('expVictoryDesc').textContent='You survived all 10 battles and slew the final boss! A legendary feat.';
+  document.getElementById('expVictoryRewards').innerHTML=
+    '💰 <b>'+bonusGold+'</b> gold earned<br>'
+    +'⚔️ <b>3</b> battle charges restored<br>'
+    +'🏆 Expedition champion badge unlocked';
+  // Award gold + charges
+  var d=getData(),ud=d[userKey];
+  if(ud&&ud.mp){
+    ud.mp.credits=(ud.mp.credits||0)+bonusGold;
+    ud.mp.battleCharges=Math.min(3,(ud.mp.battleCharges||0)+3);
+    ud.expWins=(ud.expWins||0)+1;
+    d[userKey]=ud; saveData(d);
+    var el=document.getElementById('mpCredits'); if(el) el.textContent=ud.mp.credits;
+    updateBattleChargeDisplay();
+  }
+  _exp.active=false;
+}
+
 // ── CASTLE RECOVERY SYSTEM ───────────────────────────────────────────────────
 // Students must do math between battles. After 2 battles without a session,
 // the castle is "recovering" and battle is locked until they practice.
@@ -5744,6 +6282,8 @@ function checkBattleEnd(){
     }
     updateOminousBar();
     window._activeStudentMonster=null;
+    // Expedition battle end
+    if(window._expBattleActive){ handleExpeditionBattleEnd(true); return; }
     checkOminousWarning();
     // Re-check void sovereign — player just got richer from battle reward
     setTimeout(function(){ try{ if(checkVoidSovereign()) setTimeout(showVoidSovereign,2000); }catch(e){} },3500);
@@ -5836,6 +6376,8 @@ function checkBattleEnd(){
       saveData(d);
     }
     window._activeStudentMonster=null;
+    // Expedition battle end — defeat
+    if(window._expBattleActive){ handleExpeditionBattleEnd(false); return; }
     _battle.pendingDestroyNotifs=destroyMsgs;
     setTimeout(function(){
       document.getElementById('battleOverlay').style.display='none';
