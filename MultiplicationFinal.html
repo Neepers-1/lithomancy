@@ -37,17 +37,20 @@ body {
 }
 .companion-creature:active { animation:companionBounce 0.4s ease; }
 .companion-speech {
-  position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  position:fixed; z-index:8900; pointer-events:none;
   background:linear-gradient(135deg,#2d0a4a,#1a0632); border:2px solid #cc88ff;
-  border-radius:16px; padding:10px 14px; min-width:180px; max-width:240px;
-  text-align:center; font-family:inherit; font-size:0.75rem; color:#f0d0ff;
-  font-weight:700; line-height:1.5; box-shadow:0 4px 20px rgba(200,100,255,0.4);
-  animation:speechPop 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none;
-  white-space:pre-wrap;
+  border-radius:16px; padding:10px 14px; width:200px; max-width:80vw;
+  text-align:center; font-family:inherit; font-size:0.78rem; color:#f0d0ff;
+  font-weight:700; line-height:1.5; box-shadow:0 4px 20px rgba(200,100,255,0.5);
+  animation:speechPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  white-space:pre-wrap; display:none;
 }
 .companion-speech::after {
   content:''; position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
   border:8px solid transparent; border-top-color:#cc88ff; border-bottom:0;
+}
+.companion-speech.tail-below::after {
+  top:-9px; bottom:auto; border-top-color:transparent; border-bottom:8px solid #cc88ff;
 }
 .companion-sparkle {
   position:absolute; font-size:1rem; animation:sparkle 1.2s ease-in-out infinite;
@@ -1655,50 +1658,49 @@ document.getElementById('loginBtn').addEventListener('click',handleLogin);
 
 var COMPANION_USER = 'nani'; // only activates for this username (case-insensitive)
 
-// ── Thai-only funny phrases for a 4th grade girl ──
+// ── Thai funny phrases & ridiculous questions for a 4th grade girl ──
 var COMPANION_PHRASES = [
-  'หนูรู้มั้ย... ฉันชอบเลข 7 มากกว่าเลข 8! 😤',
-  'นานีทำการบ้านเสร็จแล้วยัง? ฉันก็ยังไม่ทำเหมือนกัน 🐛',
-  'โอ้โห! ฉันเพิ่งกินหนอนอร่อยมาก~ 😋🍃',
-  'นานีชอบกินอะไรมากที่สุด? ฉันชอบกินใบไม้สีเขียว! 🌿',
-  'ฉันฝันว่าได้บินได้... แต่ยังไม่ถึงเวลา 🦋💤',
-  'เฮ้! หนูเคยนับหนอนเป็นเพื่อนมั้ย? ฉันมีเพื่อนเยอะมาก! 🐛🐛🐛',
-  'ตอนนี้กี่โมงแล้ว? ฉันหิวข้าวแล้ว!! 🍚😩',
-  'นานีทำคณิตศาสตร์เก่งมาก ฉันทำได้แค่กินใบไม้ 🌸',
-  'เมื่อกี้ฉันเห็นผีเสื้อสวยมาก... เดี๋ยวฉันก็จะเป็นแบบนั้น! 🦋✨',
-  'หนูรู้มั้ยว่าหนอนกลิ้งไปมาได้? ดูสิ~ 🌀🐛',
-  'ฉันซ่อนอยู่นาน แต่นานีหาเจอแล้ว! 👀',
-  'เฮ้!! ฉันกำลังมองนานีอยู่นะ 😶👁️',
-  'วันนี้ฝนตกมั้ย? ฉันชอบฝน เพราะใบไม้จะอร่อยขึ้น 🌧️🌿',
-  'นานีเป็นนักคณิตศาสตร์ที่เก่งที่สุดที่ฉันเคยเห็น! (ฉันเห็นแค่นานีคนเดียว 😅)',
-  'ฉันเพิ่งนับ 7x8 ได้! มันเท่ากับ... เยอะมาก 🤔',
-  'บอกความลับได้มั้ย... ฉันกลัวผีเสื้อนิดหน่อย 🦋😨',
-  'อยากรู้มั้ยว่าฉันทำอะไรตอนหายไป? ฉันแค่นอนหลับ 😴🐛',
-  'ถ้าฉันเป็นมนุษย์ ฉันอยากกินส้มตำ! 🥗',
-  'เฮ้! เราเป็นเพื่อนที่ดีที่สุดกันนะ~ ใช่มั้ย? 💕',
-  'ฉันได้ยินว่ามีมอนสเตอร์ใหญ่มากกำลังมา... แต่นานีสู้ได้แน่ๆ! 💪',
-  'หนูรู้มั้ย ฉันนับได้ถึง 100 แต่ชอบ 9x9 มากที่สุด! 🔢',
-  'ฉันซ่อนอยู่ที่นี่เพราะที่นี่อุ่น 🌡️🐛',
-  'นานีสวยมากวันนี้! (ฉันบอกแบบนี้ทุกวัน 😄)',
-  'อ้าว! หนูเห็นฉันด้วยเหรอ? ฉันคิดว่าซ่อนอยู่ 🙈',
-  'ฉันกำลังฝึกเป็นซูเปอร์ฮีโร่! แต่ก่อนอื่นต้องกินใบไม้ก่อน 🌿🦸',
+  'นานีคิดว่าฉันกินพิซซ่าได้คนเดียวทั้งถาดมั้ย? 🍕🐛',
+  'ฉันอยากไปเที่ยวประเทศไทย! นานีพาฉันไปด้วยได้มั้ย? ✈️🌴',
+  'ฉันจะทำเบอร์เกอร์ให้นานีกินนะ! แต่ฉันไม่มีมือ... 🍔😅',
+  'นานีคิดว่าหนอนใส่รองเท้าได้มั้ย? ฉันอยากลอง 👟🐛',
+  'ฉันอยากเรียนขับรถ! แต่ฉันสั้นเกินไป 🚗😭',
+  'นานีคิดว่าดาวอังคารมีหนอนมั้ย? ฉันคิดว่ามี 🚀🐛',
+  'ฉันฝันว่าได้กินซูชิ 100 ชิ้น! อร่อยมากในฝัน 🍣😍',
+  'นานีคิดว่าฉันเป็นดาราได้มั้ย? ฉันหน้าตาดีมากนะ 🌟🐛',
+  'ฉันอยากซื้อบ้านในทะเล! ปลาจะเป็นเพื่อนบ้านฉัน 🏠🐠',
+  'นานีรู้มั้ย ฉันพยายามนับแกะแล้วหลับไปเลย... แกะตัวที่ 3 🐑💤',
+  'ฉันคิดจะเปิดร้านอาหาร! เมนูมีแค่ใบไม้ 🌿🍽️',
+  'นานีบอกหน่อยได้มั้ย 7x8 เท่ากับอะไร? ฉันลืมแล้ว 🤔🔢',
+  'ฉันเห็นเมฆรูปหนอนมาก! นั่นคือพี่น้องฉันแน่ๆ ☁️🐛',
+  'นานีคิดว่าถ้าหนอนกินเผ็ดจะเป็นยังไง? ฉันกลัวจะลอง 🌶️😱',
+  'ฉันอยากเรียนบัลเล่ต์! แต่ฉันไม่มีขา นั่นปัญหามั้ย? 🩰🤷',
+  'นานีช่วยฉันทำการบ้านได้มั้ย? โอ้... ฉันไม่มีการบ้าน 😌📚',
+  'ฉันลองนับดาวเมื่อคืน ได้ถึง 7 แล้วหลับ ⭐💤',
+  'นานีคิดว่าช้างชอบกินไอศกรีมมั้ย? ฉันคิดว่าชอบ 🐘🍦',
+  'ฉันอยากเป็นนักบินอวกาศ! แต่กลัวความมืด 🚀😰',
+  'วันนี้ฉันตื่นมาแล้วก็นอนต่อ แล้วก็ตื่นมาอีกที อย่างนี้ถือว่าขยันมั้ย? 😴',
+  'นานีคิดว่ายีราฟรู้สึกยังไงตอนฝนตก? คงเปียกมากกก 🦒🌧️',
+  'ฉันคิดจะเขียนหนังสือ! ชื่อเรื่อง "ชีวิตของหนอนที่ฉลาดมาก" 📖✍️',
+  'นานีเคยนับนิ้วเท้าตัวเองมั้ย? ฉันทำได้แค่ในจินตนาการ 🦶',
+  'ถ้าฉันเป็นครู ฉันจะสอนวิชา "การกินใบไม้ขั้นสูง" 🌿👩‍🏫',
+  'นานีคิดว่าแมวเข้าใจคณิตศาสตร์มั้ย? ฉันคิดว่าแมวฉลาดกว่าที่คิด 🐱🔢',
+  'ฉันอยากไปดูหิมะ! แต่กลัวหนาว แต่อยากไป แต่กลัว... 🌨️😰',
+  'นานีบอกได้มั้ยว่าเมฆทำจากอะไร? ฉันคิดว่าทำจากสำลี ☁️🤭',
 ];
 
-// ── Silly questions in Thai ──
-var COMPANION_QUESTIONS = [
-  'ถ้านานีเป็นสัตว์ นานีอยากเป็นอะไร? 🐾',
-  'นานีชอบเลขอะไรมากที่สุด? ฉันชอบเลข 7! 🔢',
-  'ถ้ามีพลังวิเศษได้ นานีอยากได้พลังอะไร? ✨',
-  'นานีชอบกินไอศกรีมรสอะไร? 🍦',
-  'นานีคิดว่าหนอนฉลาดมั้ย? ฉันว่าฉลาดนะ! 🐛🧠',
-  'ถ้าบ้านนานีเป็นปราสาท นานีอยากให้มีอะไรในปราสาท? 🏰',
-  'นานีกลัวอะไรมากที่สุด? ฉันกลัวนก! 🐦😨',
-  'ถ้านานีเป็นครู นานีจะสอนวิชาอะไร? 📚',
-  'นานีชอบดูหนังหรืออ่านหนังสือมากกว่ากัน? 📖🎬',
-  'ถ้าเดินทางได้ทุกที่ นานีอยากไปไหน? 🌍✈️',
-  'นานีฝันถึงอะไรเมื่อคืน? ฉันฝันว่าบินได้! 🦋💤',
-  'ถ้ามีซูเปอร์เพาเวอร์ นานีอยากหยุดเวลาหรืออ่านใจคนได้? 🤔',
+// ── Bye-bye messages when clicked too many times ──
+var COMPANION_BYE_MSGS = [
+  'บ๊ายบาย!! ฉันต้องไปนอนก่อนนะ อย่ากด! 😴🐛👋',
+  'โอ้โห!! กดเยอะมาก!! ฉันขอหยุดพักก่อนนะ~ 😤💕',
+  'โอเค โอเค!! ฉันได้ยินแล้ว! ไปก่อนนะ บ๊ายบาย!! 🐛👋',
+  'ฉันเหนื่อยแล้ว!! ขอนอนสักพักนะ จุ๊บๆ บ๊ายบาย!! 💤🐛',
+  'นานีกดฉันเยอะมากเลย!! ฉันขอหายไปแป๊บนึงนะ อย่าตามหาฉัน~ 🙈👋',
+  'โอเค! ฉันไปก่อนนะ!! อย่าคิดถึงมากนะ... (แต่ฉันคิดถึงนานีนะ 🤫) บ๊ายบาย!! 💕',
 ];
+
+var _companionClickCount = 0;
+var _companionClickResetTimer = null;
 
 var COMPANION_EXPRS = ['🌸','✨','🦋','🍀','💫','🌟','🎀','💕'];
 
@@ -1743,32 +1745,39 @@ function moveCompanionRandom(animate){
   applyCompanionPos(_companionEl, pos);
 }
 
-// Hide the companion for a while then reappear somewhere new
+// Companion appears intermittently — mostly hidden, pops up for 20-40s then vanishes
+// Visible window: 20–40 seconds. Hidden window: 2–5 minutes.
 function scheduleCompanionHide(){
-  if(_companionHideTimer) clearTimeout(_companionHideTimer);
-  // Move every 15–45 seconds while visible
-  var moveMs = 15000 + Math.random()*30000;
+  clearTimeout(_companionMoveTimer);
+  clearTimeout(_companionHideTimer);
+  // Wriggle to new spot once while visible (8-15s), then hide
+  var wiggleMs = 8000 + Math.random()*7000;
   _companionMoveTimer = setTimeout(function(){
     if(!_companionEl) return;
-    // 30% chance to disappear, 70% chance to just move
-    if(Math.random()<0.30){
+    if(Math.random()<0.5) moveCompanionRandom(true); // sometimes moves, sometimes stays
+    // Then hide after another short pause
+    var stayMore = 5000 + Math.random()*10000;
+    _companionHideTimer = setTimeout(function(){
+      if(!_companionEl) return;
       hideCompanionTemporarily();
-    } else {
-      moveCompanionRandom(true);
-      scheduleCompanionHide(); // schedule next move
-    }
-  }, moveMs);
+    }, stayMore);
+  }, wiggleMs);
 }
 
 function hideCompanionTemporarily(){
   if(!_companionEl) return;
   clearTimeout(_companionMoveTimer);
-  // Shrink + fade out
-  _companionEl.style.transition='transform 0.5s ease, opacity 0.5s';
-  _companionEl.style.transform='scale(0)';
+  clearTimeout(_companionHideTimer);
+  _companionClickCount = 0; // reset click count when hidden
+  // Shrink + fade out with a little wave
+  _companionEl.style.transition='transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s';
+  _companionEl.style.transform='scale(0) rotate(20deg)';
   _companionEl.style.opacity='0';
-  // Disappear for 1–3 minutes
-  var hideMs = 60000 + Math.random()*120000;
+  // Hide speech bubble too
+  var sp=document.getElementById('companionSpeech');
+  if(sp) sp.style.display='none';
+  // Gone for 3–8 minutes
+  var hideMs = 180000 + Math.random()*300000;
   _companionHideTimer = setTimeout(function(){
     reappearCompanion();
   }, hideMs);
@@ -1977,15 +1986,47 @@ function spawnCompanion(name, firstTime){
     }, 5500);
   }
 
-  // Start wandering after a moment
-  setTimeout(function(){ scheduleCompanionHide(); }, 8000);
+  // Start hidden immediately — appear after 30-90 seconds the first time
+  _companionEl.style.transform='scale(0)';
+  _companionEl.style.opacity='0';
+  var firstAppearMs = 30000 + Math.random()*60000;
+  _companionHideTimer = setTimeout(function(){ reappearCompanion(); }, firstAppearMs);
 }
 
 function companionSay(name, msg){
   if(!_companionEl) return;
   var speech=document.getElementById('companionSpeech');
   if(!speech) return;
+  // Detach bubble from wrap — append to body so it's never clipped
+  if(speech.parentNode && speech.parentNode !== document.body){
+    document.body.appendChild(speech);
+  }
   clearTimeout(_companionSpeechTimer);
+  // Position bubble above creature, clamped to viewport
+  var creature=_companionEl.querySelector('.companion-creature');
+  if(creature){
+    var r=creature.getBoundingClientRect();
+    var bubbleW=Math.min(220, window.innerWidth-16);
+    var left=r.left+r.width/2-bubbleW/2;
+    left=Math.max(8, Math.min(left, window.innerWidth-bubbleW-8));
+    // Place above — if creature is in top 120px, place below instead
+    var placeBelow = r.top < 130;
+    speech.style.position='fixed';
+    speech.style.left=left+'px';
+    speech.style.width=bubbleW+'px';
+    speech.style.transform='none';
+    if(placeBelow){
+      speech.style.top=(r.bottom+10)+'px';
+      speech.style.bottom='';
+      // Flip the tail to point up
+      speech.style.setProperty('--tail-top','true');
+    } else {
+      speech.style.top=(r.top-14)+'px';
+      speech.style.bottom='';
+      speech.style.transform='translateY(-100%)';
+    }
+    speech.style.zIndex='9899';
+  }
   // Swap expression randomly
   var creature=_companionEl.querySelector('.companion-creature');
   if(creature){
@@ -2012,15 +2053,25 @@ function companionSay(name, msg){
 function companionSpeak(name){
   var comp=getCompanionData(); if(!comp) return;
   var n=name||comp.name||'Starlight';
-  var phrase;
-  // 30% chance to ask a silly question instead
-  if(Math.random()<0.30){
-    phrase=COMPANION_QUESTIONS[Math.floor(Math.random()*COMPANION_QUESTIONS.length)];
-  } else {
-    var idx=(comp.phraseIdx||0)%COMPANION_PHRASES.length;
-    phrase=COMPANION_PHRASES[idx];
-    comp.phraseIdx=(idx+1)%COMPANION_PHRASES.length;
+
+  // Track clicks — reset after 8 seconds of inactivity
+  _companionClickCount++;
+  clearTimeout(_companionClickResetTimer);
+  _companionClickResetTimer=setTimeout(function(){ _companionClickCount=0; }, 8000);
+
+  // After 3 clicks say bye-bye and hide
+  if(_companionClickCount>=3){
+    _companionClickCount=0;
+    var byeMsg=COMPANION_BYE_MSGS[Math.floor(Math.random()*COMPANION_BYE_MSGS.length)];
+    companionSay(n, byeMsg);
+    setTimeout(function(){ hideCompanionTemporarily(); }, 2500);
+    return;
   }
+
+  // Shuffle between all phrases randomly (don't repeat until exhausted)
+  var pool=COMPANION_PHRASES;
+  var phrase=pool[Math.floor(Math.random()*pool.length)];
+  comp.phraseIdx=(comp.phraseIdx||0)+1;
   saveCompanionData(comp);
   companionSay(n, phrase);
 }
@@ -2622,13 +2673,53 @@ function checkAndSaveBadges(){
   if(changed) saveData(d);
 }
 
+function showCantStopBanner(){
+  // Remove any existing banner
+  var old=document.getElementById('cantStopBanner');
+  if(old) old.remove();
+  var el=document.createElement('div');
+  el.id='cantStopBanner';
+  var msgs=[
+    ['CANT STOP!', 'GO GO GO! 🔥', 'You were SO close! Keep going!'],
+    ['HEY!!', 'DONT GIVE UP! 💪', 'Just a little longer! You can do it!'],
+    ['WAIT!!', 'COME BACK! ⚡', 'Your streak is waiting for you!'],
+    ['NOOO!', 'KEEP GOING! 🚀', 'The numbers need you! Stay in it!'],
+    ['ONE MORE!', 'STAY IN IT! 🌟', 'You are getting faster every time!'],
+    ['SERIOUSLY?!', 'AGAIN?! 😤🔥', 'Stop quitting! You got this!'],
+    ['OH COME ON!', 'JUST FINISH IT! 😩', 'You quit TWICE already! Not again!'],
+    ['NOPE! 🚫', 'GET BACK IN THERE! 💥', 'Quitting is NOT an option right now!'],
+  ];
+  var m=msgs[Math.floor(Math.random()*msgs.length)];
+  el.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;'
+    +'background:rgba(0,0,0,0.0);pointer-events:none;transition:background 0.3s;';
+  el.innerHTML='<div style="text-align:center;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);pointer-events:all;">'
+    +'<div style="font-size:4rem;animation:mBounce 0.4s ease infinite;margin-bottom:8px;">🔥</div>'
+    +'<div style="font-size:2.8rem;font-weight:900;color:#ef476f;text-shadow:0 0 30px rgba(239,71,111,0.8);letter-spacing:3px;line-height:1.1;">'+m[0]+'<br>'+m[1]+'</div>'
+    +'<div style="font-size:1rem;color:#ffd700;font-weight:700;margin-top:10px;">'+m[2]+'</div>'
+    +'</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.background='rgba(0,0,0,0.7)'; },50);
+  setTimeout(function(){
+    el.style.transition='opacity 0.5s';
+    el.style.opacity='0';
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },600);
+  }, 2200);
+}
+
 // Called when End Early is clicked
 function recordEarlyQuit(){
   var d=getData(), ud=d[userKey];
   if(!ud) return;
   ud.earlyQuits=(ud.earlyQuits||0)+1;
+  // Track consecutive early quits (reset to 0 when a session is COMPLETED)
+  ud.consecutiveEarlyQuits=(ud.consecutiveEarlyQuits||0)+1;
   saveData(d);
   var count=ud.earlyQuits;
+  var consec=ud.consecutiveEarlyQuits;
+  // CANT STOP after 2-3 consecutive early exits
+  if(consec>=2){
+    setTimeout(showCantStopBanner, 300);
+  }
   // Quitter tease at exactly 5, once ever
   if(count===5&&!ud.quitterTeaseSeen){
     ud.quitterTeaseSeen=true; saveData(d);
@@ -2825,20 +2916,29 @@ function awardCredits(amount, reason){
 function earnSessionCredits(session){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   var earned=0;
-  // Accuracy bonus
+  // Base pay: just for showing up and doing math
+  earned+=10;
+  // Accuracy bonus — bigger rewards
   var acc=session.total>0?session.correct/session.total:0;
-  if(acc>=1.0) earned+=15;
-  else if(acc>=0.9) earned+=8;
-  else if(acc>=0.75) earned+=3;
-  // Speed bonus
+  if(acc>=1.0) earned+=30;       // perfect run
+  else if(acc>=0.9) earned+=18;
+  else if(acc>=0.75) earned+=8;
+  else if(acc>=0.5)  earned+=3;
+  // Speed MULTIPLIER — not just a flat bonus, scales everything
   var okT=session.times?session.times.filter(function(t){return t.ok;}):[];
   var avg=okT.length?okT.reduce(function(s,t){return s+t.ms;},0)/okT.length:9999;
-  if(avg<1000) earned+=20;
-  else if(avg<1500) earned+=12;
-  else if(avg<2000) earned+=6;
-  else if(avg<3000) earned+=2;
+  var speedMult=1.0;
+  var speedLabel='';
+  if(avg<800){  speedMult=3.0; speedLabel='⚡ LIGHTNING x3'; }
+  else if(avg<1000){ speedMult=2.5; speedLabel='⚡ BLAZING x2.5'; }
+  else if(avg<1500){ speedMult=2.0; speedLabel='⚡ FAST x2'; }
+  else if(avg<2000){ speedMult=1.5; speedLabel='⚡ GOOD x1.5'; }
+  else if(avg<3000){ speedMult=1.2; speedLabel='📈 x1.2'; }
+  session._speedMult=speedMult;
+  session._speedLabel=speedLabel;
+  earned=Math.round(earned*speedMult);
   // Legendary bonus
-  if(session._legendaryCount) earned+=30*session._legendaryCount;
+  if(session._legendaryCount) earned+=40*session._legendaryCount;
 
   // ── FARMING DETECTION ──────────────────────────────────────────────────────
   var factFingerprint = window._sessionFactFingerprint || null;
@@ -3116,7 +3216,8 @@ function checkBattleChargesAfterSession(dur){
 
   // ── MONSTER TRACKING ──
   // Each 30s of practice adds trackingProgress. 100% = monster group found!
-  var trackGain=Math.floor(dur/30)*30; // each 30s block = 30 tracking points
+  // Slowed down: each 30s = 4 points, capped at 20 per session → ~5+ sessions to find
+  var trackGain=Math.min(8, Math.floor(dur/30)*1); // very slow tracking — needs many sessions
   if(!ud.mp.trackingProgress) ud.mp.trackingProgress=0;
   if(!ud.mp.trackingMonster) ud.mp.trackingMonster=null;
 
@@ -3433,6 +3534,128 @@ function maybeZombifyDefender(def){
 }
 
 
+
+// ── DEFENDER UPKEEP ───────────────────────────────────────────────────────────
+// Each defender costs a small amount per day to maintain.
+// Checked once per day on castle open. If they can't pay, random defenders leave.
+
+var UPKEEP_PER_DEFENDER = 3; // gold per defender per day
+var UPKEEP_INTERVAL_MS  = 86400000; // 24 hours
+
+function checkDefenderUpkeep(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var mp=ud.mp;
+  var now=Date.now();
+  var lastUpkeep=mp.lastUpkeepTime||0;
+  if(now-lastUpkeep < UPKEEP_INTERVAL_MS) return; // only once per day
+
+  mp.lastUpkeepTime=now;
+
+  // Count defenders currently on the grid
+  var grid=mp.baseGrid||{};
+  var defKeys=[];
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(item&&item.defender) defKeys.push(k);
+  });
+
+  if(!defKeys.length){ d[userKey]=ud; saveData(d); return; }
+
+  var totalUpkeep=defKeys.length*UPKEEP_PER_DEFENDER;
+  var canPay=Math.min(mp.credits||0, totalUpkeep);
+  var shortfall=totalUpkeep-canPay;
+
+  // Deduct what they can pay
+  mp.credits=Math.max(0,(mp.credits||0)-canPay);
+  d[userKey]=ud; saveData(d);
+
+  var el=document.getElementById('mpCredits');
+  if(el) el.textContent=mp.credits;
+
+  if(shortfall<=0){
+    // Paid in full — show a small upkeep notice
+    if(totalUpkeep>0) showMPToast('💰 Upkeep paid: '+totalUpkeep+'g for '+defKeys.length+' defenders.');
+    return;
+  }
+
+  // Cannot afford — some defenders leave unpaid
+  var numLeaving=Math.ceil(shortfall/UPKEEP_PER_DEFENDER);
+  numLeaving=Math.min(numLeaving, defKeys.length);
+  // Shuffle and take first N
+  for(var i=defKeys.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=defKeys[i]; defKeys[i]=defKeys[j]; defKeys[j]=tmp;
+  }
+  var leaving=defKeys.slice(0,numLeaving);
+
+  // Build popup data
+  var deserters=leaving.map(function(k){
+    var cell=grid[k];
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    return {k:k, cell:cell, item:item||{emoji:'⚔️',name:'Defender'}, unmet:['food']};
+  });
+
+  var upkeepComplaints=[
+    "You did not pay me. I am leaving. This is how employment works. 😤",
+    "No gold, no guard. That is the deal. Always has been. Goodbye. 💰",
+    "I have a family to feed. You have no gold. I quit. 🏃",
+    "I fought monsters for you. You could not find "+UPKEEP_PER_DEFENDER+" gold. I QUIT. 😭",
+    "Unpaid for a full day. My dignity has limits. Not many, but some. Farewell. 👋",
+    "I did not spend years in warrior school to work for free. GOODBYE. 🎓⚔️",
+    "You are broke. I am a professional. These two facts are incompatible. 💸",
+  ];
+
+  // Override complaints for upkeep deserters
+  deserters.forEach(function(des){
+    des._upkeepComplaint=upkeepComplaints[Math.floor(Math.random()*upkeepComplaints.length)];
+  });
+
+  showUpkeepPopup(deserters, shortfall, totalUpkeep, function(){
+    var d2=getData(), ud2=d2[userKey]; if(!ud2||!ud2.mp) return;
+    deserters.forEach(function(des){ delete ud2.mp.baseGrid[des.k]; });
+    d2[userKey]=ud2; saveData(d2);
+    try{ renderBaseGrid&&renderBaseGrid(); }catch(e){}
+    showMPToast('💸 '+numLeaving+' defender'+(numLeaving>1?'s':'')+' left — could not afford upkeep!');
+  });
+}
+
+function showUpkeepPopup(deserters, shortfall, totalUpkeep, onDone){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.92);'
+    +'display:flex;align-items:center;justify-content:center;animation:popIn 0.3s ease;';
+
+  var cards=deserters.slice(0,3).map(function(des){
+    var complaint=des._upkeepComplaint||'I quit.';
+    return '<div style="background:rgba(255,165,0,0.1);border:1.5px solid rgba(255,165,0,0.4);border-radius:14px;padding:12px 14px;margin-bottom:8px;text-align:left;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">'
+      +'<span style="font-size:2rem;">'+des.item.emoji+'</span>'
+      +'<div><div style="font-size:0.85rem;font-weight:900;color:#fff;">'+des.item.name+'</div>'
+      +'<div style="font-size:0.58rem;color:#ffa500;font-weight:700;letter-spacing:1px;text-transform:uppercase;">UNPAID — LEAVING</div></div></div>'
+      +'<div style="font-size:0.75rem;color:#ffd180;line-height:1.5;font-style:italic;">"'+complaint+'"</div>'
+      +'</div>';
+  }).join('');
+
+  var extra=deserters.length>3?'<div style="font-size:0.7rem;color:#ffa500;text-align:center;margin-bottom:8px;">...and '+(deserters.length-3)+' more.</div>':'';
+
+  ov.innerHTML='<div style="max-width:340px;width:92%;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="text-align:center;margin-bottom:14px;">'
+    +'<div style="font-size:3rem;">💸</div>'
+    +'<div style="font-size:0.55rem;font-weight:900;letter-spacing:4px;color:#ffa500;text-transform:uppercase;margin:6px 0 4px;">Upkeep Crisis!</div>'
+    +'<div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:4px;">You cannot afford your army!</div>'
+    +'<div style="font-size:0.75rem;color:#b89fd4;margin-bottom:10px;">Daily upkeep: <b style="color:#ffa500;">💰'+totalUpkeep+'</b> · Shortfall: <b style="color:#ef476f;">💰'+shortfall+'</b></div>'
+    +'<div style="font-size:0.68rem;color:#7a8fb5;">Each defender costs 💰'+UPKEEP_PER_DEFENDER+' per day. Win more battles... wait, no. Do more MATH. 🧠</div>'
+    +'</div>'
+    +cards+extra
+    +'<button onclick="this.parentNode.parentNode.remove();(window._upkeepCb&&window._upkeepCb());" '
+    +'style="width:100%;background:linear-gradient(135deg,#ffa500,#e67e00);color:#fff;border:none;'
+    +'border-radius:12px;padding:12px;font-family:inherit;font-weight:900;font-size:0.88rem;'
+    +'cursor:pointer;margin-top:4px;">Go Earn Gold! 🧠💰</button>'
+    +'</div>';
+  window._upkeepCb=onDone;
+  document.body.appendChild(ov);
+}
+
 // ── DEFENDER MORALE SYSTEM ────────────────────────────────────────────────────
 // Each defender type has specific facility needs. If not met when castle is
 // overpopulated (defenders > facilities ratio), they desert with a complaint.
@@ -3464,60 +3687,84 @@ var FACILITY_COMPLAINTS = {
   toilet: [
     "WE NEED A TOILET. This is NOT negotiable. I quit. 🚽",
     "There is ONE toilet for 12 warriors. I have standards. Goodbye. 🚽",
-    "I've been holding it since Tuesday. I QUIT. 🚽💀",
-    "No. Absolutely not. Build a bathroom or I'm gone. 🚽",
+    "I have been holding it since Tuesday. I QUIT. 🚽💀",
+    "No. Absolutely not. Build a bathroom or I am gone. 🚽",
+    "The vampire pooped his pants. There was no toilet. He is not happy. Neither am I. 🚽😤",
+    "Last night someone used a bucket. A BUCKET. I did not sign up for this. 🪣",
+    "I am a professional soldier. I have needs. One of them is a bathroom. Right now. 🚽",
   ],
   food: [
-    "I've eaten nothing but sadness for 3 days. I deserve better. 🍳",
-    "The cafeteria is a myth. I'm leaving to find a sandwich. 🥪",
-    "One (1) cracker. That's what they gave me. I QUIT. 🍪😤",
-    "I'm a knight. I need MEALS. Not vibes. Real food. 🍖",
+    "I have eaten nothing but sadness for 3 days. I deserve better. 🍳",
+    "The cafeteria is a myth. I am leaving to find a sandwich. 🥪",
+    "One cracker. That is what they gave me. ONE. CRACKER. I QUIT. 🍪😤",
+    "I am a knight. I need MEALS. Not vibes. Real food. 🍖",
     "There is no kitchen. The wizard tried to conjure soup. It was not soup. 🧙😰",
+    "The berserker ate my boot. Because there was no food. I am leaving. 👢",
+    "Day 9 of eating raw wheat. I am not a horse. Build a kitchen. 🌾😭",
   ],
   bed: [
+    "I slept in the dirt and a beetle bit my butt. I am NOT happy. I need some place to live bro, or I am outta here! 🐛😤",
     "I have been sleeping on the FLOOR. The stone floor. For weeks. 🛏️",
-    "No barracks. No cot. No pillow. I'm a professional. This is beneath me. 😤",
+    "No barracks. No cot. No pillow. I am a professional. This is beneath me. 😤",
     "I found a pile of hay in the corner. That is not a bed. I QUIT. 🛏️",
+    "A rat nested in my helmet while I slept on the ground. My helmet. GOODBYE. 🐀",
+    "The knight snores. We are all sleeping next to the knight. With no beds. I cannot do this anymore. 😩",
+    "I woke up with a rock imprint on my face. A ROCK. WHERE ARE THE BEDS. 🗿",
   ],
   medical: [
-    "I got hit by an arrow LAST WEEK and there's no medic. Bye. 🏥",
-    "The treatment here is 'walk it off.' I am not walking it off. ⛺",
-    "A wizard tried to heal me with multiplication. It didn't work. I quit. 🩹",
+    "I got hit by an arrow LAST WEEK and there is no medic. Bye. 🏥",
+    "The treatment here is walk it off. I am not walking it off. I have an arrow in my knee. ⛺",
+    "A wizard tried to heal me with multiplication. It did not work. I quit. 🩹",
+    "The bandages are just old socks. SOCKS. I need a real medic tent! 🧦🩹",
+    "My battle wound has been treated with a wish and a prayer for two weeks. I am done. 😤",
   ],
   break: [
     "I have not had a single day off since I was hired. NOT. ONE. 😩",
     "There is no break room. There is no break. There is only war. I quit. ☕",
     "I need to sit down for FIVE MINUTES. Is that too much to ask?? 🪑",
+    "The wizard fell asleep standing up during the last battle. We need a break room. NOW. 💤",
+    "I asked for five minutes of peace. I got a goblin attack instead. I quit. 👺",
   ],
   study: [
     "A wizard without a library is just a man in a hat. Good day. 📚",
     "My spell books are stacked in the hallway. THE HALLWAY. I quit. 📖",
-    "How am I supposed to learn new spells? FROM MEMORY?? I'm out. 🧙‍♂️",
+    "How am I supposed to learn new spells? FROM MEMORY?? I am out. 🧙",
+    "Someone used my spell book as a doorstop. A DOORSTOP. Build a library. 😭📚",
+    "I found my ancient tome of destruction being used to prop up a table leg. I QUIT. 📖💀",
   ],
   stable: [
     "My dragon has nowhere to sleep. My dragon is VERY upset. So am I. 🐉",
-    "The horse is living in the kitchen. The KITCHEN. I'm leaving. 🐎",
-    "There are no stables. My mount has been parked outside for 3 months. Bye. 🐴",
+    "The horse is living in the kitchen. The KITCHEN. I am leaving. 🐎",
+    "There are no stables. My mount has been parked outside for 3 months. Goodbye. 🐴",
+    "My dragon tried to sleep in the barracks. It did not go well for the barracks. BUILD A STABLE. 🐲🔥",
+    "The horse escaped again. We have no stable. This is the fourth time this week. I quit. 🐎💨",
   ],
   prayer: [
     "No chapel. No shrine. Not even a candle. I cannot bless anything here. ⛪",
     "The spirits require a place of worship. This place has a catapult. I quit. 🙏",
     "My faith is strong. My workplace is not. Farewell. 🕊️",
+    "I tried to pray in the toilet room. It was occupied. By the knight. For a very long time. I need a chapel. 🚽🙏",
   ],
   luxury: [
     "I am a vampire knight. I require CERTAIN STANDARDS. This is not them. 🧛",
     "No sauna. No silk. Nothing. I am moving to a better castle. 💅",
-    "The Archmage said we'd have a spa. The Archmage LIED. 🧖",
+    "The Archmage promised a spa. The Archmage LIED. I am writing a strongly-worded letter and then leaving. 🧖",
+    "I am a vampire. I require darkness, elegance, and at minimum A BATH. There is none of these things. Farewell. 🧛🦇",
+    "The conditions here are beneath me. I have been alive for 400 years. I deserve a sauna. AT MINIMUM. 💅",
   ],
   armory: [
     "My sword has not been sharpened in months. It is basically a stick now. ⚔️",
-    "The armory is LITERALLY JUST A CORNER. With some nails. I QUIT. 🗡️",
-    "Where do I put my equipment? Oh, on the floor? Right. Goodbye. 🔨",
+    "The armory is LITERALLY JUST A CORNER. With some nails in it. I QUIT. 🗡️",
+    "Where do I put my equipment? Oh, on the floor? Great. Goodbye. 🔨",
+    "I found my battle axe being used as a kitchen knife. THERE IS NO KITCHEN. THERE IS NOTHING. 🪓😤",
+    "My armor has been rusting since I got here. There is no armory. There is no maintenance. I am leaving. ⚔️🦀",
   ],
   shower: [
-    "We smell terrible. All of us. No exceptions. Including the wizard. 🚿",
+    "We smell terrible. All of us. No exceptions. Including the wizard. Especially the wizard. 🚿",
     "I have been in full armor for 6 weeks without a shower. I QUIT. 💀",
     "The ninja smells like a ninja who has never showered. I cannot work like this. 🥷😷",
+    "I asked if I could wash up. They handed me a cup of rain water. ONE CUP. I am gone. 🚿😤",
+    "The berserker has not bathed since the last lunar eclipse. I know because I asked. Build showers. NOW. 🪓💀",
   ],
 };
 
@@ -4867,7 +5114,7 @@ function resolveHits(action){
       updateTokenHP(v, action.side==='defender');
       floatAboveToken(vEl, '-'+action.dmg, '#ef476f', true);
       if(v.hp<=0){
-        if(action.side==='defender'){ _battle.creditsEarned+=v.reward; trackKill(v); }
+        if(action.side==='defender'){ _battle.creditsEarned+=Math.round((v.reward||0)*0.40); trackKill(v); }
         else { v.dead=true; defenderKilled(v,action.attacker); }
         action.deaths.push(v);
         showDeathOnToken(vEl, v, action.side==='defender');
@@ -4884,7 +5131,7 @@ function resolveHits(action){
     updateTokenHP(t, action.side==='defender');
     floatAboveToken(targetEl, '-'+action.dmg, '#ef476f', true);
     if(t.hp<=0){
-      if(action.side==='defender'){ _battle.creditsEarned+=t.reward; trackKill(t); }
+      if(action.side==='defender'){ _battle.creditsEarned+=Math.round((t.reward||0)*0.40); trackKill(t); }
       else { t.dead=true; defenderKilled(t,action.attacker); }
       action.deaths.push(t);
       showDeathOnToken(targetEl, t, action.side==='defender');
@@ -6107,6 +6354,7 @@ function applyCastleResetV2(ud, d){
     voidPending: false,
     voidBattleActive: false,
     lastVoidTime: 0,
+    lastUpkeepTime: 0,
     ominousCountdown: 0,
     forcedAttackPending: false,
     lastRaidTime: 0,
@@ -6160,6 +6408,8 @@ function showMyPlace(){
   }, 600);
   // Check defender morale — desertion if no facilities
   setTimeout(function(){ try{ checkDefenderMorale(); }catch(e){} }, 1800);
+  // Check daily upkeep — defenders leave if unpaid
+  setTimeout(function(){ try{ checkDefenderUpkeep(); }catch(e){} }, 2400);
   var d=getData(), ud=d[userKey];
   // Ensure new mp fields exist
   if(ud&&ud.mp){
@@ -7069,6 +7319,11 @@ function endQuiz(){
   try { _earnedCredits=earnSessionCredits(session)||0; } catch(e){}
   try { checkBattleChargesAfterSession(totalTime); } catch(e){}
   try { updateRecoveryAfterSession(); } catch(e){}
+  // Reset consecutive early quit counter — they finished this one!
+  try {
+    var _qd=getData(),_qud=_qd[userKey];
+    if(_qud){ _qud.consecutiveEarlyQuits=0; _qd[userKey]=_qud; saveData(_qd); }
+  } catch(e){}
   try { sendToSheets(userKey, session); } catch(e){}
   try {
     var _d=getData(),_ud=_d[userKey];
@@ -7257,8 +7512,11 @@ function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated,
   var rcBox=document.getElementById('resCreditsEarned');
   var rcAmt=document.getElementById('resCreditsAmt');
   if(rcBox&&rcAmt){
-    if(earnedCredits>0){ rcBox.style.display='block'; rcAmt.textContent='💰 +'+earnedCredits; }
-    else { rcBox.style.display='none'; }
+    if(earnedCredits>0){
+      rcBox.style.display='block';
+      var mult=session&&session._speedLabel?session._speedLabel:'';
+      rcAmt.textContent='💰 +'+earnedCredits+(mult?' ('+mult+')':'');
+    } else { rcBox.style.display='none'; }
   }
 
   // Set hero section
