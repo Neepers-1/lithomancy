@@ -4084,6 +4084,7 @@ var _exp = {
   usedRelicIds: [],   // relics already offered (no repeats)
 };
 
+window.openExpedition=openExpedition; window.closeExpedition=closeExpedition; window.startExpedition=startExpedition; window.launchExpeditionBattle=launchExpeditionBattle; window.continueExpedition=continueExpedition; window.expDefeat=expDefeat; window.expVictory=expVictory;
 function openExpedition(){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
   var charges=(ud.mp.battleCharges||0);
