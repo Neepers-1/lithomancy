@@ -1340,8 +1340,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 </div>
 
 <!-- The Void Sovereign Overlay -->
-<div id="voidSovereignOverlay" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,0.0);align-items:center;justify-content:center;flex-direction:column;transition:background 1.5s;">
-  <div id="voidSovereignCard" style="background:linear-gradient(160deg,#0a000f,#1a0028);border:2px solid #8b008b;border-radius:24px;padding:36px 28px;max-width:340px;width:92%;text-align:center;animation:voidPulse 2s ease-in-out infinite;transform:scale(0);transition:transform 0.6s cubic-bezier(0.34,1.56,0.64,1);">
+<div id="voidSovereignOverlay" style="display:none;position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,0.0);align-items:center;justify-content:center;flex-direction:column;transition:background 1.5s;pointer-events:none;">
+  <div id="voidSovereignCard" style="background:linear-gradient(160deg,#0a000f,#1a0028);border:2px solid #8b008b;border-radius:24px;padding:36px 28px;max-width:340px;width:92%;text-align:center;animation:voidPulse 2s ease-in-out infinite;transform:scale(1);transition:transform 0.6s cubic-bezier(0.34,1.56,0.64,1);pointer-events:all;overflow-y:auto;max-height:90vh;">
     <div style="font-size:5rem;animation:voidFloat 2.5s ease-in-out infinite;filter:drop-shadow(0 0 24px #da70d6);">🌌</div>
     <div style="font-size:0.55rem;font-weight:900;letter-spacing:5px;color:#8b008b;text-transform:uppercase;margin:8px 0 4px;">A Great Reckoning</div>
     <div style="font-size:1.6rem;font-weight:900;color:#da70d6;margin-bottom:10px;line-height:1.2;" id="voidSovTitle">THE VOID SOVEREIGN</div>
@@ -3472,26 +3472,30 @@ function showVoidSovereign(){
   var mp=ud.mp;
   var msg=mp.voidMsg||'The Void Sovereign has arrived.';
   var trigger=mp.voidTriggerMsg||'Your castle has grown too powerful.';
-  var voidTierNow=(ud&&ud.mp&&ud.mp.voidPowerTier)||1;
+  var voidTierNow=(mp.voidPowerTier)||1;
   var tierLabel=voidTierNow===3?'☠️ TIER III — THE WORLD ENDER':voidTierNow===2?'⚠️ TIER II — EXTRA POWERFUL':'';
   document.getElementById('voidSovTitle').innerHTML='THE VOID SOVEREIGN'+(tierLabel?'<br><span style="color:#ff4444;font-size:0.75rem;font-weight:900;">'+tierLabel+'</span>':'');
   document.getElementById('voidSovMsg').textContent=msg;
   document.getElementById('voidSovTrigger').textContent='"'+trigger+'"';
   var ov=document.getElementById('voidSovereignOverlay');
+  // Make sure castle screen is open so battle can launch
+  if(document.getElementById('myPlaceScreen') && !document.getElementById('myPlaceScreen').classList.contains('active')){
+    showMyPlace();
+  }
   ov.style.display='flex';
-  // Fade in background
-  setTimeout(function(){ ov.style.background='rgba(10,0,20,0.97)'; },50);
-  // Scale in card
-  setTimeout(function(){ document.getElementById('voidSovereignCard').style.transform='scale(1)'; },100);
+  ov.style.pointerEvents='all';
+  ov.style.background='rgba(10,0,20,0.97)';
 }
 
 function acceptVoidSovereign(){
   var ov=document.getElementById('voidSovereignOverlay');
   ov.style.display='none';
-  ov.style.background='rgba(0,0,0,0)';
-  document.getElementById('voidSovereignCard').style.transform='scale(0)';
-  // Launch the void battle
-  launchVoidBattle();
+  ov.style.pointerEvents='none';
+  // Make sure castle is showing before battle launches
+  if(document.getElementById('myPlaceScreen') && !document.getElementById('myPlaceScreen').classList.contains('active')){
+    showMyPlace();
+  }
+  setTimeout(function(){ launchVoidBattle(); }, 100);
 }
 
 // Build the Void Sovereign as a multi-part titanic-style monster
