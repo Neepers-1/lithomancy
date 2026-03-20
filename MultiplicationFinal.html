@@ -1660,33 +1660,40 @@ var COMPANION_USER = 'nani'; // only activates for this username (case-insensiti
 
 // ── Thai funny phrases & ridiculous questions for a 4th grade girl ──
 var COMPANION_PHRASES = [
-  'นานีคิดว่าฉันกินพิซซ่าได้คนเดียวทั้งถาดมั้ย? 🍕🐛',
-  'ฉันอยากไปเที่ยวประเทศไทย! นานีพาฉันไปด้วยได้มั้ย? ✈️🌴',
-  'ฉันจะทำเบอร์เกอร์ให้นานีกินนะ! แต่ฉันไม่มีมือ... 🍔😅',
-  'นานีคิดว่าหนอนใส่รองเท้าได้มั้ย? ฉันอยากลอง 👟🐛',
-  'ฉันอยากเรียนขับรถ! แต่ฉันสั้นเกินไป 🚗😭',
-  'นานีคิดว่าดาวอังคารมีหนอนมั้ย? ฉันคิดว่ามี 🚀🐛',
-  'ฉันฝันว่าได้กินซูชิ 100 ชิ้น! อร่อยมากในฝัน 🍣😍',
-  'นานีคิดว่าฉันเป็นดาราได้มั้ย? ฉันหน้าตาดีมากนะ 🌟🐛',
-  'ฉันอยากซื้อบ้านในทะเล! ปลาจะเป็นเพื่อนบ้านฉัน 🏠🐠',
-  'นานีรู้มั้ย ฉันพยายามนับแกะแล้วหลับไปเลย... แกะตัวที่ 3 🐑💤',
-  'ฉันคิดจะเปิดร้านอาหาร! เมนูมีแค่ใบไม้ 🌿🍽️',
-  'นานีบอกหน่อยได้มั้ย 7x8 เท่ากับอะไร? ฉันลืมแล้ว 🤔🔢',
-  'ฉันเห็นเมฆรูปหนอนมาก! นั่นคือพี่น้องฉันแน่ๆ ☁️🐛',
-  'นานีคิดว่าถ้าหนอนกินเผ็ดจะเป็นยังไง? ฉันกลัวจะลอง 🌶️😱',
-  'ฉันอยากเรียนบัลเล่ต์! แต่ฉันไม่มีขา นั่นปัญหามั้ย? 🩰🤷',
-  'นานีช่วยฉันทำการบ้านได้มั้ย? โอ้... ฉันไม่มีการบ้าน 😌📚',
-  'ฉันลองนับดาวเมื่อคืน ได้ถึง 7 แล้วหลับ ⭐💤',
-  'นานีคิดว่าช้างชอบกินไอศกรีมมั้ย? ฉันคิดว่าชอบ 🐘🍦',
-  'ฉันอยากเป็นนักบินอวกาศ! แต่กลัวความมืด 🚀😰',
-  'วันนี้ฉันตื่นมาแล้วก็นอนต่อ แล้วก็ตื่นมาอีกที อย่างนี้ถือว่าขยันมั้ย? 😴',
-  'นานีคิดว่ายีราฟรู้สึกยังไงตอนฝนตก? คงเปียกมากกก 🦒🌧️',
-  'ฉันคิดจะเขียนหนังสือ! ชื่อเรื่อง "ชีวิตของหนอนที่ฉลาดมาก" 📖✍️',
-  'นานีเคยนับนิ้วเท้าตัวเองมั้ย? ฉันทำได้แค่ในจินตนาการ 🦶',
-  'ถ้าฉันเป็นครู ฉันจะสอนวิชา "การกินใบไม้ขั้นสูง" 🌿👩‍🏫',
-  'นานีคิดว่าแมวเข้าใจคณิตศาสตร์มั้ย? ฉันคิดว่าแมวฉลาดกว่าที่คิด 🐱🔢',
-  'ฉันอยากไปดูหิมะ! แต่กลัวหนาว แต่อยากไป แต่กลัว... 🌨️😰',
-  'นานีบอกได้มั้ยว่าเมฆทำจากอะไร? ฉันคิดว่าทำจากสำลี ☁️🤭',
+  // Silly ridiculous questions
+  'นานีคิดว่าฉันกินพิซซ่าทั้งถาดคนเดียวได้มั้ย? 🍕🤔',
+  'ถ้าฉันไปเที่ยวประเทศไทยได้ นานีพาฉันไปด้วยได้มั้ย? ✈️🇹🇭',
+  'ฉันทำแฮมเบอร์เกอร์ให้นานีได้มั้ย? ฉันไม่มีมือแต่จะพยายาม 🍔🐛',
+  'นานีคิดว่าหนอนอย่างฉันว่ายน้ำได้มั้ย? ขอถามจริงๆ นะ 🌊😐',
+  'ถ้าฉันใส่รองเท้าได้ ฉันต้องซื้อกี่คู่? ฉันมีขาเยอะมากนะ 👟😱',
+  'ฉันฝันว่าขับรถได้... แต่ไม่ถึงคันเบรค ทำยังไงดี? 🚗💨',
+  'นานีชอบโดนัทรสอะไร? ฉันชอบรสใบไม้ 🍩🌿',
+  'ถ้าฉันเป็นครูสอนคณิตศาสตร์ นานีจะชอบมั้ย? 📚😅',
+  'ฉันสามารถเป็นนักร้องได้มั้ย? ฉันร้องได้แค่เสียงหนอนนะ 🎤🐛',
+  'นานีบอกได้มั้ยว่าดาวดวงไหนอร่อยที่สุด? ฉันอยากลองกิน ⭐😋',
+  'ถ้าฉันมีปีก ฉันจะบินไปโรงเรียนกับนานีได้มั้ย? 🦋🏫',
+  'ฉันอยากลองกินซูชิสักครั้งในชีวิต นานีพาไปได้มั้ย? 🍣🐛',
+  'คิดว่าฉันจะเป็นนักฟุตบอลได้มั้ย? ฉันมีขาเยอะมากนะ ⚽🐛',
+  'ถ้าฉันใหญ่ขึ้นเป็น 10 เท่า นานีจะยังเป็นเพื่อนกันมั้ย? 🐉😟',
+  'ฉันควรซื้อโทรศัพท์ใหม่มั้ย? แต่ฉันไม่มีนิ้วกด... 📱🤔',
+  'ฉันอยากไปทะเล... แต่กลัวปลา ช่วยจับปลาออกให้ก่อนได้มั้ย? 🏖️🐟😨',
+  'นานีคิดว่าฉันจะชนะกินข้าวแข่งกับนานีได้มั้ย? 🍚🏆',
+  'ถ้าฉันเป็นเมฆ ฉันจะลอยไปที่ไหนดี? นานีช่วยเลือกให้ฉันด้วย ☁️',
+  // Random funny observations  
+  'หนูรู้มั้ย... ฉันชอบเลข 7 มากกว่าเลข 8! 😤',
+  'นานีทำการบ้านเสร็จแล้วยัง? ฉันก็ยังไม่ทำเหมือนกัน 🐛',
+  'โอ้โห! ฉันเพิ่งกินใบไม้อร่อยมาก~ 😋🍃',
+  'ตอนนี้กี่โมงแล้ว? ฉันหิวข้าวแล้ว!! 🍚😩',
+  'เมื่อกี้ฉันเห็นผีเสื้อสวยมาก... เดี๋ยวฉันก็จะเป็นแบบนั้น! 🦋✨',
+  'ฉันซ่อนอยู่นาน แต่นานีหาเจอแล้ว! 👀',
+  'วันนี้ฝนตกมั้ย? ฉันชอบฝน เพราะใบไม้จะอร่อยขึ้น 🌧️🌿',
+  'นานีเป็นนักคณิตศาสตร์ที่เก่งที่สุดที่ฉันเคยเห็น! (ฉันเห็นแค่นานีคนเดียว 😅)',
+  'บอกความลับได้มั้ย... ฉันกลัวผีเสื้อนิดหน่อย 🦋😨',
+  'อยากรู้มั้ยว่าฉันทำอะไรตอนหายไป? ฉันแค่นอนหลับ 😴🐛',
+  'อ้าว! หนูเห็นฉันด้วยเหรอ? ฉันคิดว่าซ่อนอยู่ 🙈',
+  'ฉันกำลังฝึกเป็นซูเปอร์ฮีโร่! แต่ก่อนอื่นต้องกินใบไม้ก่อน 🌿🦸',
+  'นานีคิดว่าฉันน่ารักมั้ย? คิดดีๆ นะ ฉันรอ 🐛👀',
+  'เฮ้!! ถ้าฉันเป็นยักษ์ใหญ่ นานีจะยังกล้าคุยกับฉันมั้ย? 👹💕',
 ];
 
 // ── Bye-bye messages when clicked too many times ──
@@ -3215,9 +3222,8 @@ function checkBattleChargesAfterSession(dur){
   ud.mp.battleCharges=Math.min(maxCharges, prev+newCharges);
 
   // ── MONSTER TRACKING ──
-  // Each 30s of practice adds trackingProgress. 100% = monster group found!
-  // Slowed down: each 30s = 4 points, capped at 20 per session → ~5+ sessions to find
-  var trackGain=Math.min(8, Math.floor(dur/30)*1); // very slow tracking — needs many sessions
+  // Tracking is very slow — max 5 pts per session → needs 20 sessions minimum to find
+  var trackGain=Math.min(5, Math.floor(dur/30)*1);
   if(!ud.mp.trackingProgress) ud.mp.trackingProgress=0;
   if(!ud.mp.trackingMonster) ud.mp.trackingMonster=null;
 
@@ -3382,8 +3388,8 @@ function updateBattleChargeDisplay(){
 // Effect: steals gold each attack round, turns killed defenders into zombies
 // Zombies join the monster side and fight back
 
-var VOID_SOVEREIGN_GOLD_THRESHOLD = 5000;
-var VOID_SOVEREIGN_GRID_THRESHOLD = 0.9; // 90% full
+var VOID_SOVEREIGN_GOLD_THRESHOLD = 2000;
+var VOID_SOVEREIGN_GRID_THRESHOLD = 0.65; // 65% full — triggers much sooner
 
 var VOID_TRIGGER_MSGS = [
   { trigger:"Your wealth has drawn the darkness.", msg:"The Void Sovereign has sensed your overflowing coffers. It wants what you have — and it will take it by force." },
@@ -3394,6 +3400,22 @@ var VOID_TRIGGER_MSGS = [
 ];
 
 // Check if castle is >= 90% full
+function isCastleOccupiedFraction(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return 0;
+  var grid=ud.mp.baseGrid||{};
+  var total=MP_GRID_COLS*MP_GRID_ROWS;
+  var occupied=new Set();
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    var parts=k.split('_'); var kr=parseInt(parts[0]),kc=parseInt(parts[1]);
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    var w=item?item.w:1, h=item?item.h:1;
+    for(var rr=0;rr<h;rr++) for(var cc=0;cc<w;cc++) occupied.add((kr+rr)+'_'+(kc+cc));
+  });
+  return occupied.size/total;
+}
+function isCastleVeryFull(){ return isCastleOccupiedFraction()>=0.80; }
+function isCastlePackedFull(){ return isCastleOccupiedFraction()>=0.92; }
 function isCastleFull(){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
   var grid=ud.mp.baseGrid||{};
@@ -3418,10 +3440,16 @@ function checkVoidSovereign(){
   if(mp.voidPending||mp.forcedAttackPending) return false;
   // Don't trigger more than once per hour
   var lastVoid=mp.lastVoidTime||0;
-  if(Date.now()-lastVoid < 3600000) return false;
-  var rich=(mp.credits||0)>=VOID_SOVEREIGN_GOLD_THRESHOLD;
+  if(Date.now()-lastVoid < 1200000) return false; // 20 min cooldown
+  var credits=mp.credits||0;
+  var rich=credits>=VOID_SOVEREIGN_GOLD_THRESHOLD;
   var full=isCastleFull();
   if(!rich&&!full) return false;
+  // Scale power tier based on how overpowered they are
+  var powerTier=1;
+  if(credits>=8000 || isCastleVeryFull()) powerTier=2;
+  if(credits>=15000 || isCastlePackedFull()) powerTier=3;
+  mp.voidPowerTier=powerTier;
   // Trigger!
   mp.voidPending=true;
   mp.lastVoidTime=Date.now();
@@ -3438,7 +3466,9 @@ function showVoidSovereign(){
   var mp=ud.mp;
   var msg=mp.voidMsg||'The Void Sovereign has arrived.';
   var trigger=mp.voidTriggerMsg||'Your castle has grown too powerful.';
-  document.getElementById('voidSovTitle').textContent='THE VOID SOVEREIGN';
+  var voidTierNow=(ud&&ud.mp&&ud.mp.voidPowerTier)||1;
+  var tierLabel=voidTierNow===3?'☠️ TIER III — THE WORLD ENDER':voidTierNow===2?'⚠️ TIER II — EXTRA POWERFUL':'';
+  document.getElementById('voidSovTitle').innerHTML='THE VOID SOVEREIGN'+(tierLabel?'<br><span style="color:#ff4444;font-size:0.75rem;font-weight:900;">'+tierLabel+'</span>':'');
   document.getElementById('voidSovMsg').textContent=msg;
   document.getElementById('voidSovTrigger').textContent='"'+trigger+'"';
   var ov=document.getElementById('voidSovereignOverlay');
@@ -3460,14 +3490,32 @@ function acceptVoidSovereign(){
 
 // Build the Void Sovereign as a multi-part titanic-style monster
 function buildVoidWave(){
-  return [
-    { id:'void_tendril_1', name:'Void Tendril',   emoji:'🌀', hp:80,  maxHp:80,  atk:20, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:false, reward:0, isVoid:true },
-    { id:'void_tendril_2', name:'Void Tendril',   emoji:'🌀', hp:80,  maxHp:80,  atk:20, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:false, reward:0, isVoid:true },
-    { id:'void_eye_l',     name:'Watching Eye',   emoji:'👁️', hp:60,  maxHp:60,  atk:30, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:true,  reward:0, isVoid:true },
-    { id:'void_eye_r',     name:'Watching Eye',   emoji:'👁️', hp:60,  maxHp:60,  atk:30, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:true,  reward:0, isVoid:true },
-    { id:'void_maw',       name:'The Void Maw',   emoji:'🕳️', hp:150, maxHp:150, atk:40, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true,  stun:false, reward:0, isVoid:true },
-    { id:'void_core',      name:'Void Core',       emoji:'🌌', hp:250, maxHp:250, atk:50, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true,  stun:true,  reward:200, isVoid:true, giant:true },
+  var d=getData(), ud=d[userKey];
+  var tier=(ud&&ud.mp&&ud.mp.voidPowerTier)||1;
+
+  // Base wave — always present
+  var wave=[
+    { id:'void_tendril_1', name:'Void Tendril',   emoji:'🌀', hp:80*tier,  maxHp:80*tier,  atk:20*tier, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:false, reward:0, isVoid:true },
+    { id:'void_tendril_2', name:'Void Tendril',   emoji:'🌀', hp:80*tier,  maxHp:80*tier,  atk:20*tier, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:false, reward:0, isVoid:true },
+    { id:'void_eye_l',     name:'Watching Eye',   emoji:'👁️', hp:60*tier,  maxHp:60*tier,  atk:30*tier, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:true,  reward:0, isVoid:true },
+    { id:'void_eye_r',     name:'Watching Eye',   emoji:'👁️', hp:60*tier,  maxHp:60*tier,  atk:30*tier, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:false, stun:true,  reward:0, isVoid:true },
+    { id:'void_maw',       name:'The Void Maw',   emoji:'🕳️', hp:150*tier, maxHp:150*tier, atk:40*tier, range:2, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true,  stun:false, reward:0, isVoid:true },
+    { id:'void_core',      name:'Void Core',       emoji:'🌌', hp:250*tier, maxHp:250*tier, atk:55*tier, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true,  stun:true,  reward:100*tier, isVoid:true, giant:true },
   ];
+
+  // Tier 2+: add Void Colossi (massive AOE attackers)
+  if(tier>=2){
+    wave.push({ id:'void_colossus_1', name:'Void Colossus', emoji:'🗿', hp:400, maxHp:400, atk:70, range:2, speed:'melee', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true, stun:true, reward:0, isVoid:true, giant:true });
+    wave.push({ id:'void_colossus_2', name:'Void Colossus', emoji:'🗿', hp:400, maxHp:400, atk:70, range:2, speed:'melee', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true, stun:true, reward:0, isVoid:true, giant:true });
+    wave.push({ id:'void_reaper',     name:'Void Reaper',   emoji:'☠️', hp:300, maxHp:300, atk:90, range:3, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true, stun:true, reward:0, isVoid:true });
+  }
+
+  // Tier 3: the WORLD ENDER joins — nearly unkillable, wrecks everything
+  if(tier>=3){
+    wave.push({ id:'void_worldender', name:'THE WORLD ENDER', emoji:'🌑', hp:1500, maxHp:1500, atk:150, range:4, speed:'ranged', alive:true, isMonster:true, isTitanicPart:true, parentName:'VOID SOVEREIGN', aoe:true, stun:true, reward:0, isVoid:true, giant:true });
+  }
+
+  return wave;
 }
 
 function launchVoidBattle(){
@@ -3487,9 +3535,13 @@ function applyVoidEffects(){
   if(!window._isVoidBattle) return;
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
   // Steal 5–15% of current gold per round
-  var steal=Math.round((ud.mp.credits||0)*( 0.05+Math.random()*0.10 ));
-  steal=Math.max(steal,10); // at least 10
-  steal=Math.min(steal,500); // at most 500 per round
+  var tier=(ud.mp.voidPowerTier)||1;
+  var drainPct=tier===3 ? (0.20+Math.random()*0.15)   // tier 3: 20-35% per round!
+             : tier===2 ? (0.12+Math.random()*0.10)   // tier 2: 12-22%
+                        : (0.05+Math.random()*0.08);  // tier 1: 5-13%
+  var steal=Math.round((ud.mp.credits||0)*drainPct);
+  steal=Math.max(steal, tier*20);   // minimum scales with tier
+  steal=Math.min(steal, tier*2000); // cap scales with tier
   ud.mp.credits=Math.max(0,(ud.mp.credits||0)-steal);
   d[userKey]=ud; saveData(d);
   // Update display
@@ -5507,8 +5559,33 @@ function checkBattleEnd(){
         ud.mp.ominousCountdown=1; // comes back next session
         window._arrivedAutoTriggered=false;
       }
-      // Void defeat — it retreats for now but will return if still hoarding
+      // Void defeat — SMASH defenders and steal gold as punishment
       if(window._isVoidBattle){
+        var voidTier=ud.mp.voidPowerTier||1;
+        // Steal a big chunk of gold on defeat
+        var defeatSteal=Math.round((ud.mp.credits||0)*(0.25+voidTier*0.10));
+        ud.mp.credits=Math.max(0,(ud.mp.credits||0)-defeatSteal);
+        _battle._voidDefeatSteal=defeatSteal;
+        // Permanently destroy defenders — more at higher tiers
+        var gridKeys=Object.keys(ud.mp.baseGrid||{});
+        var defKeys=gridKeys.filter(function(k){
+          var cell=ud.mp.baseGrid[k]; if(!cell) return false;
+          var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+          return item&&item.defender&&!cell.destroyed;
+        });
+        // Shuffle and destroy some
+        defKeys.sort(function(){return Math.random()-0.5;});
+        var destroyCount=Math.min(defKeys.length, voidTier+1); // tier1=2, tier2=3, tier3=4
+        for(var di=0;di<destroyCount;di++){
+          var dk=defKeys[di];
+          if(ud.mp.baseGrid[dk]){
+            ud.mp.baseGrid[dk].destroyed=true;
+            ud.mp.baseGrid[dk].damaged=true;
+            ud.mp.baseGrid[dk].repairCost=999; // expensive!
+            if(!ud.mp.permaDead) ud.mp.permaDead={};
+            ud.mp.permaDead[dk]=true;
+          }
+        }
         ud.mp.voidBattleActive=false;
         window._isVoidBattle=false;
         window._pendingIsTitanic=false;
@@ -5543,9 +5620,18 @@ function checkBattleEnd(){
       document.getElementById('battleOverlay').style.display='none';
       if(_battle.pendingDestroyNotifs.length){ showNextDestroyNotif(); }
       else {
-        var msg=_battle.defenders.length===0
-          ?'💥 The monsters destroyed your base!\n\nYou had no defenders!'
-          :'💀 Your defenders were overwhelmed!\n\nThe dark forces damaged your castle!';
+        var msg;
+        if(window._isVoidBattle||_battle.titanicId==='void_sovereign'){
+          var stolen=_battle._voidDefeatSteal||0;
+          var tier2=(ud&&ud.mp&&ud.mp.voidPowerTier)||1;
+          msg='🌌 THE VOID SOVEREIGN WINS!\n💰 Stole '+stolen+' gold!\n'
+            +(tier2>=2?'☠️ Your strongest defenders are DESTROYED!\n':'')
+            +'Build less. Hoard less. The Void remembers.';
+        } else if(_battle.defenders.length===0){
+          msg='💥 The monsters destroyed your base!\n\nYou had no defenders!';
+        } else {
+          msg='💀 Your defenders were overwhelmed!\n\nThe dark forces damaged your castle!';
+        }
         showBattleResult(false, msg, 0);
       }
     },2800);
@@ -7514,7 +7600,7 @@ function showResults(s, defeated, attackedZone, wasLegendary, legendaryDefeated,
   if(rcBox&&rcAmt){
     if(earnedCredits>0){
       rcBox.style.display='block';
-      var mult=session&&session._speedLabel?session._speedLabel:'';
+      var mult=s&&s._speedLabel?s._speedLabel:'';
       rcAmt.textContent='💰 +'+earnedCredits+(mult?' ('+mult+')':'');
     } else { rcBox.style.display='none'; }
   }
