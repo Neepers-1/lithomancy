@@ -863,8 +863,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.9 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Persistent Expedition HP · Damage Carries Over</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v4.0 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Multi-Need Defenders · Powerful = More Demands</div>
         </div>
       </div>
     </div>
@@ -4098,26 +4098,58 @@ var DECOR_WANT_POOL = [
   ]},
 ];
 
+
+// How many decor wants a defender gets — scales with their power/cost
+function defenderWantCount(item){
+  var cost=item.cost||0;
+  if(cost>=150) return 3;  // Dragon Rider, Golem, Archmage, Titan, Phoenix, Sea Serpent
+  if(cost>=65)  return 2;  // Berserker, Ice Witch, Paladin, Eng Cat, Dwarf Cannon, Vampire, Catapult
+  return 1;                // Guard, Archer, Wizard, Priest, Knight, Ninja
+}
+
+// Pick N unique random wants from pool
+function pickRandomWants(n){
+  var pool=DECOR_WANT_POOL.slice();
+  var picks=[];
+  for(var i=0;i<n&&pool.length;i++){
+    var idx=Math.floor(Math.random()*pool.length);
+    picks.push(pool.splice(idx,1)[0]);
+  }
+  return picks;
+}
 // Assign a random decor want to a defender when first placed
-// Stored in ud.mp.defenderDecorWants[gridKey] = { itemId, battleCount }
+// Stored in ud.mp.defenderDecorWants[gridKey] = { itemIds:[], battlesSince:0 }
 function getOrAssignDecorWant(gridKey, defenderId){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return null;
   if(!ud.mp.defenderDecorWants) ud.mp.defenderDecorWants={};
   if(ud.mp.defenderDecorWants[gridKey]) return ud.mp.defenderDecorWants[gridKey];
-  // Pick a random want from the pool, biased toward cheap/common items
-  var want=DECOR_WANT_POOL[Math.floor(Math.random()*DECOR_WANT_POOL.length)];
-  ud.mp.defenderDecorWants[gridKey]={ itemId:want.id, battlesSince:0 };
+  var item=SHOP_ITEMS.find(function(x){return x.id===defenderId;});
+  var n=item?defenderWantCount(item):1;
+  var wants=pickRandomWants(n);
+  ud.mp.defenderDecorWants[gridKey]={ itemIds:wants.map(function(w){return w.id;}), battlesSince:0 };
   d[userKey]=ud; saveData(d);
   return ud.mp.defenderDecorWants[gridKey];
 }
 
-// Check if a decoration want is satisfied — item must be present anywhere in the grid
+// Check if a single decor item is placed anywhere in the grid
 function isDecorWantSatisfied(itemId){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
   var grid=ud.mp.baseGrid||{};
   return Object.keys(grid).some(function(k){
     var cell=grid[k]; return cell&&cell.id===itemId;
   });
+}
+
+// Check if ALL wants for a defender are satisfied
+function areAllWantsSatisfied(wantEntry){
+  var ids=wantEntry.itemIds||(wantEntry.itemId?[wantEntry.itemId]:[]);
+  return ids.every(function(id){ return isDecorWantSatisfied(id); });
+}
+
+// Check if ANY want is unsatisfied
+function hasUnmetWant(wantEntry){
+  var ids=wantEntry.itemIds||(wantEntry.itemId?[wantEntry.itemId]:[]);
+  return ids.some(function(id){ return !isDecorWantSatisfied(id); });
 }
 
 // After each battle, increment unsatisfied defender counters and maybe trigger desertion
@@ -4137,20 +4169,27 @@ function checkDecorDesertion(){
 
     // Ensure want is assigned
     if(!mp.defenderDecorWants[k]){
-      var want=DECOR_WANT_POOL[Math.floor(Math.random()*DECOR_WANT_POOL.length)];
-      mp.defenderDecorWants[k]={ itemId:want.id, battlesSince:0 };
+      var n2=defenderWantCount(item);
+      var wants2=pickRandomWants(n2);
+      mp.defenderDecorWants[k]={ itemIds:wants2.map(function(w){return w.id;}), battlesSince:0 };
     }
-    var want=mp.defenderDecorWants[k];
-    if(isDecorWantSatisfied(want.itemId)){
-      want.battlesSince=0; // reset if satisfied
+    // Migrate old single-want format
+    var wantEntry=mp.defenderDecorWants[k];
+    if(wantEntry.itemId&&!wantEntry.itemIds){
+      wantEntry.itemIds=[wantEntry.itemId];
+      delete wantEntry.itemId;
+    }
+    if(areAllWantsSatisfied(wantEntry)){
+      wantEntry.battlesSince=0; // reset if all satisfied
       return;
     }
-    // Not satisfied — increment
-    want.battlesSince=(want.battlesSince||0)+1;
+    // Not all satisfied — increment
+    wantEntry.battlesSince=(wantEntry.battlesSince||0)+1;
     // After 2-3 battles (random) they leave
     var threshold=2+Math.floor(Math.random()*2); // 2 or 3
-    if(want.battlesSince>=threshold){
-      deserters.push({k:k, cell:cell, item:item, wantId:want.itemId});
+    if(wantEntry.battlesSince>=threshold){
+      var unmetIds=(wantEntry.itemIds||[]).filter(function(id){return !isDecorWantSatisfied(id);});
+      deserters.push({k:k, cell:cell, item:item, wantIds:unmetIds});
     }
   });
 
@@ -4177,22 +4216,24 @@ function showDecorDeserterPopup(deserters, onDone){
     +'display:flex;align-items:center;justify-content:center;animation:popIn 0.3s ease;';
 
   var cards=deserters.slice(0,3).map(function(des){
-    var want=DECOR_WANT_POOL.find(function(w){return w.id===des.wantId;});
-    if(!want) return '';
-    var complaint=want.complaint[Math.floor(Math.random()*want.complaint.length)];
+    var wantIds=des.wantIds||[des.wantId];
+    var wants=wantIds.map(function(id){ return DECOR_WANT_POOL.find(function(w){return w.id===id;}); }).filter(Boolean);
+    if(!wants.length) return '';
+    var firstWant=wants[0];
+    var complaint=firstWant.complaint[Math.floor(Math.random()*firstWant.complaint.length)];
+    var wantTags=wants.map(function(w){
+      return '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);border-radius:6px;padding:3px 8px;font-size:0.72rem;color:#ffd700;font-weight:900;margin:2px;">'+w.emoji+' '+w.name+'</span>';
+    }).join('');
     return '<div style="background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.4);'
       +'border-radius:14px;padding:14px 16px;margin-bottom:10px;text-align:left;">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
       +'<span style="font-size:2.2rem;">'+des.item.emoji+'</span>'
       +'<div><div style="font-size:0.9rem;font-weight:900;color:#fff;">'+des.item.name+'</div>'
       +'<div style="font-size:0.6rem;color:#ef476f;font-weight:700;letter-spacing:1px;text-transform:uppercase;">DESERTING</div></div>'
-      +'<div style="margin-left:auto;text-align:center;">'
-      +'<div style="font-size:1.6rem;">'+want.emoji+'</div>'
-      +'<div style="font-size:0.48rem;color:#9b59b6;font-weight:900;">WANTED</div>'
-      +'</div></div>'
-      +'<div style="font-size:0.78rem;color:#ffb3b3;line-height:1.5;font-style:italic;">"'+complaint+'"</div>'
-      +'<div style="margin-top:8px;background:rgba(155,89,182,0.15);border-radius:8px;padding:6px 10px;font-size:0.68rem;color:#b89fd4;">'
-      +'🛒 They wanted: <b style="color:#ffd700;">'+want.emoji+' '+want.name+'</b> placed in your castle.'
+      +'</div>'
+      +'<div style="font-size:0.78rem;color:#ffb3b3;line-height:1.5;font-style:italic;margin-bottom:8px;">"'+complaint+'"</div>'
+      +'<div style="background:rgba(155,89,182,0.15);border-radius:8px;padding:6px 10px;font-size:0.62rem;color:#b89fd4;">'
+      +'🛒 Still missing: '+wantTags
       +'</div></div>';
   }).join('');
 
@@ -4220,9 +4261,7 @@ function showDefenderWantPopup(item, dw, gridKey){
   var existing=document.getElementById('defenderWantPopup');
   if(existing) existing.remove();
 
-  var want=DECOR_WANT_POOL.find(function(w){return w.id===dw.itemId;});
-  if(!want) return;
-
+  var wants=dw.wants||[{id:dw.itemId,emoji:dw.emoji,name:dw.name,satisfied:dw.satisfied,complaint:[]}];
   var satisfied=dw.satisfied;
   var battlesLeft=satisfied?null:Math.max(0,(3-(dw.battlesSince||0)));
 
@@ -4234,8 +4273,9 @@ function showDefenderWantPopup(item, dw, gridKey){
   var statusColor=satisfied?'#06d6a0':'#ef476f';
   var statusBg=satisfied?'rgba(6,214,160,0.12)':'rgba(239,71,111,0.12)';
   var statusBorder=satisfied?'rgba(6,214,160,0.4)':'rgba(239,71,111,0.4)';
-  var statusIcon=satisfied?'✅':'⚠️';
-  var statusText=satisfied?'NEED MET — HAPPY!':'NEED NOT MET';
+  var unmetWants=wants.filter(function(w){return !w.satisfied;});
+  var statusIcon=satisfied?'✅':(unmetWants.length===wants.length?'⚠️':'⚠️');
+  var statusText=satisfied?'ALL NEEDS MET — HAPPY!':(unmetWants.length+'/'+wants.length+' NEEDS UNMET');
 
   var urgencyHtml='';
   if(!satisfied){
@@ -4245,44 +4285,41 @@ function showDefenderWantPopup(item, dw, gridKey){
         +'🚨 LEAVING SOON! Only '+(battlesLeft===0?'this battle':'1 more battle')+' before they quit! 🚨</div>';
     } else {
       urgencyHtml='<div style="font-size:0.72rem;color:#b89fd4;margin-bottom:12px;text-align:center;">'
-        +'Leaves in ~'+battlesLeft+' battle'+(battlesLeft===1?'':'s')+' if not satisfied.</div>';
+        +'Leaves in ~'+battlesLeft+' battle'+(battlesLeft===1?'':'s')+' if not all met.</div>';
     }
   }
 
-  var randomComplaint=want.complaint[Math.floor(Math.random()*want.complaint.length)];
+  // Build want rows
+  var wantRows=wants.map(function(w){
+    var wantDef=DECOR_WANT_POOL.find(function(x){return x.id===w.id;});
+    var randomComplaint=wantDef&&wantDef.complaint.length?wantDef.complaint[Math.floor(Math.random()*wantDef.complaint.length)]:'';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:6px;'
+      +'background:'+(w.satisfied?'rgba(6,214,160,0.08)':'rgba(239,71,111,0.08)')+';'
+      +'border:1px solid '+(w.satisfied?'rgba(6,214,160,0.3)':'rgba(239,71,111,0.3)')+';text-align:left;">'
+      +'<span style="font-size:1.8rem;flex-shrink:0;">'+w.emoji+'</span>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:0.82rem;font-weight:900;color:#fff;">'+w.name+'</div>'
+      +(w.satisfied
+        ? '<div style="font-size:0.65rem;color:#06d6a0;font-weight:700;">✅ In your castle!</div>'
+        : '<div style="font-size:0.65rem;color:#ef476f;font-weight:700;">❌ Not placed yet</div>'
+          +(randomComplaint?'<div style="font-size:0.62rem;color:#ffb3b3;font-style:italic;margin-top:2px;">"'+randomComplaint+'"</div>':'')
+      )
+      +'</div></div>';
+  }).join('');
 
-  ov.innerHTML='<div style="max-width:320px;width:92%;background:linear-gradient(160deg,#0d1520,#1a2a3a);'
-    +'border:2px solid '+(satisfied?'#06d6a055':'#ef476f55')+';border-radius:20px;padding:24px 22px;'
-    +'text-align:center;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">'
-    // Defender header
-    +'<div style="font-size:3rem;margin-bottom:4px;">'+item.emoji+'</div>'
-    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:12px;">'+item.name+'</div>'
-    // Status badge
+  ov.innerHTML='<div style="max-width:340px;width:92%;background:linear-gradient(160deg,#0d1520,#1a2a3a);'
+    +'border:2px solid '+(satisfied?'#06d6a055':'#ef476f55')+';border-radius:20px;padding:22px 20px;'
+    +'text-align:center;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);max-height:88vh;overflow-y:auto;">'
+    +'<div style="font-size:2.8rem;margin-bottom:4px;">'+item.emoji+'</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:10px;">'+item.name+'</div>'
     +'<div style="background:'+statusBg+';border:1.5px solid '+statusBorder+';border-radius:10px;'
-    +'padding:8px 14px;margin-bottom:14px;display:inline-block;">'
+    +'padding:6px 14px;margin-bottom:12px;display:inline-block;">'
     +'<span style="font-size:0.6rem;font-weight:900;color:'+statusColor+';letter-spacing:2px;text-transform:uppercase;">'+statusIcon+' '+statusText+'</span>'
     +'</div>'
-    // What they want
-    +'<div style="background:rgba(155,89,182,0.12);border:1.5px solid rgba(155,89,182,0.3);'
-    +'border-radius:14px;padding:14px 16px;margin-bottom:12px;">'
-    +'<div style="font-size:0.6rem;font-weight:900;color:#9b59b6;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">They Want</div>'
-    +'<div style="font-size:2.5rem;margin-bottom:4px;">'+want.emoji+'</div>'
-    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:4px;">'+want.name+'</div>'
-    +(satisfied
-      ? '<div style="font-size:0.75rem;color:#06d6a0;font-weight:700;">✅ Already placed in your castle!</div>'
-      : '<div style="font-size:0.75rem;color:#b89fd4;">Place one in your castle from the 🛒 Shop.</div>'
-    )
-    +'</div>'
+    +'<div style="font-size:0.6rem;font-weight:900;color:#9b59b6;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Their Requirements</div>'
+    +wantRows
     +urgencyHtml
-    // Quote
-    +(satisfied
-      ? '<div style="font-size:0.78rem;color:#4a7a5a;font-style:italic;margin-bottom:16px;">"Thank you for the '+want.name+'. I am satisfied." 😌</div>'
-      : '<div style="background:rgba(239,71,111,0.08);border-radius:10px;padding:10px 12px;margin-bottom:16px;">'
-        +'<div style="font-size:0.7rem;color:#ef476f;font-weight:700;font-style:italic;">"'+randomComplaint+'"</div>'
-        +'</div>'
-    )
-    // Buttons
-    +'<div style="display:flex;gap:8px;">'
+    +'<div style="display:flex;gap:8px;margin-top:12px;">'
     +(satisfied
       ? '<button onclick="document.getElementById(\'defenderWantPopup\').remove()" '
         +'style="flex:1;background:linear-gradient(135deg,#06d6a0,#04a876);color:#0a1a10;border:none;'
@@ -4304,11 +4341,21 @@ function showDefenderWantPopup(item, dw, gridKey){
 function getDefenderWantDisplay(gridKey){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return null;
   if(!ud.mp.defenderDecorWants) return null;
-  var want=ud.mp.defenderDecorWants[gridKey]; if(!want) return null;
-  var wantDef=DECOR_WANT_POOL.find(function(w){return w.id===want.itemId;});
-  if(!wantDef) return null;
-  var satisfied=isDecorWantSatisfied(want.itemId);
-  return { emoji:wantDef.emoji, name:wantDef.name, satisfied:satisfied, battlesSince:want.battlesSince||0 };
+  var wantEntry=ud.mp.defenderDecorWants[gridKey]; if(!wantEntry) return null;
+  // Migrate old format
+  if(wantEntry.itemId&&!wantEntry.itemIds) wantEntry.itemIds=[wantEntry.itemId];
+  var ids=wantEntry.itemIds||[];
+  var wants=ids.map(function(id){
+    var def=DECOR_WANT_POOL.find(function(w){return w.id===id;});
+    if(!def) return null;
+    return { id:id, emoji:def.emoji, name:def.name, satisfied:isDecorWantSatisfied(id), complaint:def.complaint };
+  }).filter(Boolean);
+  if(!wants.length) return null;
+  var allSatisfied=wants.every(function(w){return w.satisfied;});
+  var itemId=wants[0].id; // keep for backwards compat
+  return { wants:wants, satisfied:allSatisfied, itemId:itemId,
+           emoji:wants[0].emoji, name:wants[0].name, // first want for grid icon
+           battlesSince:wantEntry.battlesSince||0 };
 }
 
 function checkDefenderMorale(){
@@ -7427,8 +7474,9 @@ window.cellClick=function(key){
     if(_placedItem&&_placedItem.defender){
       if(!ud.mp.defenderDecorWants) ud.mp.defenderDecorWants={};
       if(!ud.mp.defenderDecorWants[key]){
-        var _want=DECOR_WANT_POOL[Math.floor(Math.random()*DECOR_WANT_POOL.length)];
-        ud.mp.defenderDecorWants[key]={ itemId:_want.id, battlesSince:0 };
+        var _n=defenderWantCount(_placedItem);
+        var _wants=pickRandomWants(_n);
+        ud.mp.defenderDecorWants[key]={ itemIds:_wants.map(function(w){return w.id;}), battlesSince:0 };
       }
     }
     saveData(d);
