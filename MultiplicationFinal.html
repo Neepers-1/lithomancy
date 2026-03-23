@@ -863,8 +863,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v4.0 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Multi-Need Defenders · Powerful = More Demands</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v4.1 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Exploit Fix · I See You Bro 👁️</div>
         </div>
       </div>
     </div>
@@ -1093,7 +1093,11 @@ tr:hover td { background: rgba(255,255,255,0.03); }
     <div id="mp-base-view" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 10px 80px;">
       <div id="mpSelectedItem" style="text-align:center;min-height:22px;margin-bottom:4px;font-size:0.75rem;font-weight:800;color:#ffd700;"></div>
       <div id="godBattleTestBtn" style="display:none;text-align:center;margin-bottom:6px;">
-        <button onclick="startBattle(false)" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:8px;padding:6px 16px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">🧪 TEST BATTLE (GOD)</button>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+          <button onclick="startBattle(false)" style="background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">🧪 TEST BATTLE</button>
+          <button onclick="godAddGold()" style="background:linear-gradient(135deg,#b8860b,#ffd700);color:#1a0d00;border:none;border-radius:8px;padding:6px 14px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">💰 +500 Gold</button>
+          <button onclick="godAddCharge()" style="background:linear-gradient(135deg,#ef476f,#c0392b);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-family:inherit;font-weight:900;font-size:0.72rem;cursor:pointer;letter-spacing:1px;">⚔️ +Charge</button>
+        </div>
       </div>
       <div class="base-canvas" id="baseCanvas" style="margin:0 auto;" oncontextmenu="return false;"></div>
       <div style="font-size:0.62rem;color:#3a4f6b;margin:4px 0 10px;text-align:center;" id="mpLastSeen"></div>
@@ -2245,6 +2249,7 @@ function handleLogin(){
     try { applyGoldenTheme(); } catch(e){}
     // Init companion for Nani
     try { initCompanion(); } catch(e){}
+    try { checkExploiterBadgeOnLogin(); } catch(e){}
   } catch(err) {
     console.error('Login error:', err);
     nameInput.style.borderColor='#ef476f';
@@ -2257,6 +2262,24 @@ function handleLogin(){
 function applyCastleReset(ud){
   // DISABLED — already ran, caused data loss issues. Do not re-enable.
   return;
+}
+
+function godAddGold(){
+  if(userKey!=='god') return;
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  ud.mp.credits=(ud.mp.credits||0)+500;
+  d[userKey]=ud; saveData(d);
+  var el=document.getElementById('mpCredits'); if(el) el.textContent=ud.mp.credits;
+  showMPToast('💰 +500 gold added!');
+}
+
+function godAddCharge(){
+  if(userKey!=='god') return;
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  ud.mp.battleCharges=Math.min(3,(ud.mp.battleCharges||0)+1);
+  d[userKey]=ud; saveData(d);
+  updateBattleChargeDisplay();
+  showMPToast('⚔️ Battle charge added! ('+ud.mp.battleCharges+'/3)');
 }
 
 function seedGodAccount(){
@@ -3020,6 +3043,60 @@ function awardCredits(amount, reason){
 }
 
 // Earn credits based on session performance
+
+// ── EXPLOIT BADGE — shown when commutative pair cycling detected ──────────────
+function showExploiterBadge(){
+  // Remove any existing one
+  var existing=document.getElementById('exploiterBadge');
+  if(existing) { clearTimeout(existing._timeout); existing.remove(); }
+
+  var el=document.createElement('div');
+  el.id='exploiterBadge';
+  el.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:99999;'
+    +'background:linear-gradient(135deg,#1a0a00,#2a1000);border:2px solid #ff8c00;border-radius:14px;'
+    +'padding:12px 18px;max-width:320px;width:90%;text-align:center;font-family:inherit;'
+    +'box-shadow:0 0 30px rgba(255,140,0,0.5);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);'
+    +'cursor:pointer;';
+
+  el.innerHTML='<div style="font-size:0.5rem;font-weight:900;letter-spacing:3px;color:#ff8c00;'
+    +'text-transform:uppercase;margin-bottom:4px;">🚨 EXPLOIT DETECTED 🚨</div>'
+    +'<div style="font-size:1.5rem;margin-bottom:4px;">👁️</div>'
+    +'<div style="font-size:0.88rem;font-weight:900;color:#ffd700;margin-bottom:4px;">'
+    +'I know what you doin bro!</div>'
+    +'<div style="font-size:0.72rem;color:#ff8c00;font-weight:700;line-height:1.5;">'
+    +'Me watching you! 😤<br>'
+    +'<span style="font-size:0.62rem;color:#7a4f20;">6×4 and 4×6 are the SAME FACT.<br>'
+    +'Nice try though. 😂</span></div>'
+    +'<div style="font-size:0.58rem;color:#4a3020;margin-top:6px;">Badge disappears in 10 minutes</div>';
+
+  // Click to dismiss early
+  el.addEventListener('click', function(){ el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(function(){ el.remove(); },300); });
+
+  document.body.appendChild(el);
+
+  // Save exploit badge to user data (temporary, 10 min)
+  var d=getData(), ud=d[userKey];
+  if(ud){
+    ud.exploiterBadgeTime=Date.now();
+    d[userKey]=ud; saveData(d);
+  }
+
+  // Auto-remove after 10 minutes
+  el._timeout=setTimeout(function(){
+    el.style.opacity='0'; el.style.transition='opacity 0.5s';
+    setTimeout(function(){ if(el.parentNode) el.remove(); }, 600);
+  }, 600000); // 10 min
+}
+
+// Show exploit badge on login if they had one recently (within 10 min)
+function checkExploiterBadgeOnLogin(){
+  var d=getData(), ud=d[userKey]; if(!ud) return;
+  var t=ud.exploiterBadgeTime||0;
+  if(Date.now()-t < 600000){ // still within 10 min
+    setTimeout(showExploiterBadge, 1500);
+  }
+}
+
 function earnSessionCredits(session){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   var earned=0;
@@ -3058,6 +3135,12 @@ function earnSessionCredits(session){
       return avg !== null && avg < 1000; // gold zone = under 1s
     });
   }
+  // Commutative exploit detection — show the shame badge
+  if(window._commuteExploitDetected){
+    window._commuteExploitDetected=false;
+    showExploiterBadge();
+  }
+
   if(factFingerprint && earned > 0 && allGold){
     if(!ud.mp) ud.mp={};
     if(!ud.mp.farmTrack) ud.mp.farmTrack={};
@@ -8372,8 +8455,24 @@ function updateAttackLaunchReady(){
 window.launchAttack=function(dur){
   var keys=Object.keys(activeAttackZoneFacts).filter(function(k){return activeAttackZoneFacts[k];});
   if(!keys.length) return;
-  // Fingerprint: sorted fact keys joined — used for farming detection
-  window._sessionFactFingerprint=keys.slice().sort().join('|');
+  // Fingerprint: normalize commutative pairs (6x4 == 4x6) then sort
+  // This stops the exploit of cycling through a×b and b×a as "different" facts
+  var normalizedKeys=keys.map(function(k){
+    var p=k.split('x'), a=parseInt(p[0]), b=parseInt(p[1]);
+    return (a<=b?a+'x'+b:b+'x'+a); // always smaller×larger
+  });
+  // Detect commutative exploit: if original keys differ from normalized, player is cycling pairs
+  var originalSorted=keys.slice().sort().join('|');
+  var normalizedSorted=normalizedKeys.slice().sort().join('|');
+  var uniqueNormalized=[...new Set(normalizedKeys)].sort().join('|');
+  // If they have duplicate canonical facts (e.g. 6x4 AND 4x6 → both become 4x6), it's the exploit
+  if(normalizedKeys.length !== new Set(normalizedKeys).size){
+    // They have commutative duplicates — flag it
+    window._commuteExploitDetected = true;
+  } else {
+    window._commuteExploitDetected = false;
+  }
+  window._sessionFactFingerprint=uniqueNormalized;
   var d=getData(), ud=d[userKey];
   var facts=keys.map(function(k){ var p=k.split('x'); return [parseInt(p[0]),parseInt(p[1])]; });
 
