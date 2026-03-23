@@ -863,8 +863,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.8 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Expedition Fix · Decor Wants · Gold Farm Penalty</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.9 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Persistent Expedition HP · Damage Carries Over</div>
         </div>
       </div>
     </div>
@@ -4215,6 +4215,91 @@ function showDecorDeserterPopup(deserters, onDone){
   document.body.appendChild(ov);
 }
 
+// Popup when player taps a defender — shows what they want
+function showDefenderWantPopup(item, dw, gridKey){
+  var existing=document.getElementById('defenderWantPopup');
+  if(existing) existing.remove();
+
+  var want=DECOR_WANT_POOL.find(function(w){return w.id===dw.itemId;});
+  if(!want) return;
+
+  var satisfied=dw.satisfied;
+  var battlesLeft=satisfied?null:Math.max(0,(3-(dw.battlesSince||0)));
+
+  var ov=document.createElement('div');
+  ov.id='defenderWantPopup';
+  ov.style.cssText='position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,0.85);'
+    +'display:flex;align-items:center;justify-content:center;animation:fadeIn 0.15s ease;';
+
+  var statusColor=satisfied?'#06d6a0':'#ef476f';
+  var statusBg=satisfied?'rgba(6,214,160,0.12)':'rgba(239,71,111,0.12)';
+  var statusBorder=satisfied?'rgba(6,214,160,0.4)':'rgba(239,71,111,0.4)';
+  var statusIcon=satisfied?'✅':'⚠️';
+  var statusText=satisfied?'NEED MET — HAPPY!':'NEED NOT MET';
+
+  var urgencyHtml='';
+  if(!satisfied){
+    if(battlesLeft<=1){
+      urgencyHtml='<div style="background:rgba(239,71,111,0.2);border:1.5px solid #ef476f;border-radius:10px;'
+        +'padding:8px 14px;margin-bottom:12px;font-size:0.8rem;font-weight:900;color:#ef476f;text-align:center;">'
+        +'🚨 LEAVING SOON! Only '+(battlesLeft===0?'this battle':'1 more battle')+' before they quit! 🚨</div>';
+    } else {
+      urgencyHtml='<div style="font-size:0.72rem;color:#b89fd4;margin-bottom:12px;text-align:center;">'
+        +'Leaves in ~'+battlesLeft+' battle'+(battlesLeft===1?'':'s')+' if not satisfied.</div>';
+    }
+  }
+
+  var randomComplaint=want.complaint[Math.floor(Math.random()*want.complaint.length)];
+
+  ov.innerHTML='<div style="max-width:320px;width:92%;background:linear-gradient(160deg,#0d1520,#1a2a3a);'
+    +'border:2px solid '+(satisfied?'#06d6a055':'#ef476f55')+';border-radius:20px;padding:24px 22px;'
+    +'text-align:center;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">'
+    // Defender header
+    +'<div style="font-size:3rem;margin-bottom:4px;">'+item.emoji+'</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:12px;">'+item.name+'</div>'
+    // Status badge
+    +'<div style="background:'+statusBg+';border:1.5px solid '+statusBorder+';border-radius:10px;'
+    +'padding:8px 14px;margin-bottom:14px;display:inline-block;">'
+    +'<span style="font-size:0.6rem;font-weight:900;color:'+statusColor+';letter-spacing:2px;text-transform:uppercase;">'+statusIcon+' '+statusText+'</span>'
+    +'</div>'
+    // What they want
+    +'<div style="background:rgba(155,89,182,0.12);border:1.5px solid rgba(155,89,182,0.3);'
+    +'border-radius:14px;padding:14px 16px;margin-bottom:12px;">'
+    +'<div style="font-size:0.6rem;font-weight:900;color:#9b59b6;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">They Want</div>'
+    +'<div style="font-size:2.5rem;margin-bottom:4px;">'+want.emoji+'</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:4px;">'+want.name+'</div>'
+    +(satisfied
+      ? '<div style="font-size:0.75rem;color:#06d6a0;font-weight:700;">✅ Already placed in your castle!</div>'
+      : '<div style="font-size:0.75rem;color:#b89fd4;">Place one in your castle from the 🛒 Shop.</div>'
+    )
+    +'</div>'
+    +urgencyHtml
+    // Quote
+    +(satisfied
+      ? '<div style="font-size:0.78rem;color:#4a7a5a;font-style:italic;margin-bottom:16px;">"Thank you for the '+want.name+'. I am satisfied." 😌</div>'
+      : '<div style="background:rgba(239,71,111,0.08);border-radius:10px;padding:10px 12px;margin-bottom:16px;">'
+        +'<div style="font-size:0.7rem;color:#ef476f;font-weight:700;font-style:italic;">"'+randomComplaint+'"</div>'
+        +'</div>'
+    )
+    // Buttons
+    +'<div style="display:flex;gap:8px;">'
+    +(satisfied
+      ? '<button onclick="document.getElementById(\'defenderWantPopup\').remove()" '
+        +'style="flex:1;background:linear-gradient(135deg,#06d6a0,#04a876);color:#0a1a10;border:none;'
+        +'border-radius:10px;padding:11px;font-family:inherit;font-weight:900;font-size:0.88rem;cursor:pointer;">Great! 😊</button>'
+      : '<button onclick="document.getElementById(\'defenderWantPopup\').remove();switchMPTab(\'shop\')" '
+        +'style="flex:1;background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;'
+        +'border-radius:10px;padding:11px;font-family:inherit;font-weight:900;font-size:0.88rem;cursor:pointer;">Go to Shop 🛒</button>'
+        +'<button onclick="document.getElementById(\'defenderWantPopup\').remove()" '
+        +'style="flex:1;background:rgba(255,255,255,0.06);color:#7a8fb5;border:1px solid rgba(255,255,255,0.1);'
+        +'border-radius:10px;padding:11px;font-family:inherit;font-weight:700;font-size:0.82rem;cursor:pointer;">Later</button>'
+    )
+    +'</div></div>';
+
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
 // Show what a defender wants in the castle view (tooltip on hover/tap their token in grid)
 function getDefenderWantDisplay(gridKey){
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return null;
@@ -4572,11 +4657,22 @@ function launchExpeditionBattle(){
     expDefeat('No defenders remain alive!');
     return;
   }
-  // Apply relic buffs to a copy
-  var partyForBattle=partyLive.map(function(d){return JSON.parse(JSON.stringify(d));});
+  // Deep copy party, tagging each entry with _expIdx so sync can match exactly
+  var partyForBattle=partyLive.map(function(d,i){
+    var copy=JSON.parse(JSON.stringify(d));
+    copy._expIdx=i; // index into partyLive for precise sync
+    copy._expPartyRef=d; // direct reference — used by sync
+    return copy;
+  });
+  // Apply relic buffs AFTER copying (buffs only live for this battle)
   _exp.relics.forEach(function(rid){
     var rel=EXP_RELICS.find(function(x){return x.id===rid;});
     if(rel) try{ rel.apply(partyForBattle); }catch(e){}
+  });
+  // Store the pre-relic HP so we can compute damage delta correctly
+  partyForBattle.forEach(function(copy,i){
+    copy._preRelicHp=partyLive[i].hp; // actual HP going into this battle
+    copy._preRelicMaxHp=partyLive[i].maxHp;
   });
   var wave=buildExpWave();
   window._expBattleActive=true;
@@ -4636,14 +4732,28 @@ function handleExpeditionBattleEnd(victory){
 }
 
 function syncExpPartyHP(){
-  // Copy HP from battle defenders back to _exp.party (track damage taken)
+  // Sync HP losses back to _exp.party using damage-delta (not absolute HP)
+  // This handles relic HP boosts correctly — we only care about damage taken
   _battle.defenders.forEach(function(bd){
-    var p=_exp.party.find(function(x){return x.id===bd.id;});
-    if(p){
-      p.hp=bd.dead?0:bd.hp;
-      p.dead=bd.dead||bd.hp<=0;
+    var p=bd._expPartyRef; // direct reference set in launchExpeditionBattle
+    if(!p){
+      // Fallback: match by id (first unmatched)
+      p=_exp.party.find(function(x){return x.id===bd.id&&!x._synced;});
+    }
+    if(!p) return;
+    p._synced=true;
+    if(bd.dead||bd.hp<=0){
+      p.hp=0;
+      p.dead=true;
+    } else {
+      // Damage taken = pre-relic HP minus current HP (after relic boost applied)
+      var damageTaken = (bd._preRelicHp || p.hp) - bd.hp;
+      p.hp = Math.max(0, p.hp - damageTaken);
+      p.dead = p.hp <= 0;
     }
   });
+  // Clear sync flags
+  _exp.party.forEach(function(p){ delete p._synced; });
 }
 
 function showExpReward(goldEarned){
@@ -7358,8 +7468,17 @@ window.cellClick=function(key){
       showMPToast('Need 💰'+cost+' gold to repair!');
     }
   } else {
-    // Pick up to move
+    // If this is a defender with a decor want, show the want popup first
+    // Second tap (or tap on non-defender) picks up to move
     var pickItem=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
+    if(pickItem&&pickItem.defender&&!_movingFromKey){
+      var _dw=getDefenderWantDisplay(originKey);
+      if(_dw){
+        showDefenderWantPopup(pickItem, _dw, originKey);
+        return;
+      }
+    }
+    // Pick up to move
     _movingFromKey=originKey;
     setSelectedItem(cellItem.id);
     var lbl=document.getElementById('mpSelectedItem');
