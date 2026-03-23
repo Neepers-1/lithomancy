@@ -863,8 +863,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.6 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Expedition System · 10-Battle Gauntlet</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v3.7 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Decor Wants · Gold-Only Farm Penalty</div>
         </div>
       </div>
     </div>
@@ -3047,9 +3047,18 @@ function earnSessionCredits(session){
   // Legendary bonus
   if(session._legendaryCount) earned+=40*session._legendaryCount;
 
-  // ── FARMING DETECTION ──────────────────────────────────────────────────────
+  // ── FARMING DETECTION — only applies when ALL practiced facts are Gold zone ──
   var factFingerprint = window._sessionFactFingerprint || null;
-  if(factFingerprint && earned > 0){
+  // Check if this session was ALL gold zone facts
+  var allGold = false;
+  if(factFingerprint && ud && ud.facts){
+    var fpKeys = factFingerprint.split('|');
+    allGold = fpKeys.length > 0 && fpKeys.every(function(k){
+      var f = ud.facts[k]; var avg = factAvg(f);
+      return avg !== null && avg < 1000; // gold zone = under 1s
+    });
+  }
+  if(factFingerprint && earned > 0 && allGold){
     if(!ud.mp) ud.mp={};
     if(!ud.mp.farmTrack) ud.mp.farmTrack={};
     var track=ud.mp.farmTrack;
@@ -3939,6 +3948,282 @@ function countFacilitiesAndDefenders(){
     if(item.facility){ facs++; provided.push(item.provides); }
   });
   return {defs:defs, facs:facs, provided:provided};
+}
+
+
+// ── DEFENDER DECOR WANTS — each defender placed needs ONE specific decoration ──
+// Randomly assigned when placed. After 2-3 battles without it, they leave.
+
+// Pool of decorative/structural items any defender might want
+var DECOR_WANT_POOL = [
+  { id:'torch',       emoji:'🔦', name:'Torch',          complaint:[
+    "I fight in DARKNESS. Literally. There is no torch anywhere. I am leaving. 🔦",
+    "I tripped on my own sword last night because there was no torch. GOODBYE. 🔦",
+    "A torch. ONE torch. That is all I asked for. Is that so hard? I QUIT. 🔦",
+  ]},
+  { id:'tree',        emoji:'🌲', name:'Tree',            complaint:[
+    "I need to see something ALIVE around here. Just one tree. ONE. I am leaving. 🌲",
+    "There is no nature here. Nothing green. I am spiritually dying. Bye. 🌲",
+    "I did not become a warrior to live in a concrete box. Where are the TREES. 🌲",
+  ]},
+  { id:'banner',      emoji:'🚩', name:'Banner',          complaint:[
+    "We do not even have a banner. What kind of castle has NO BANNER. I quit. 🚩",
+    "I need a banner to feel like this is a REAL settlement. No banner = no me. 🚩",
+    "The enemy doesn't even know whose castle this is. Because there is NO BANNER. 🚩",
+  ]},
+  { id:'flower',      emoji:'🌸', name:'Garden',          complaint:[
+    "There are zero flowers here. Zero. This place is a warzone with no beauty. Bye. 🌸",
+    "I asked for a small garden. Just a few flowers. I got dirt. I am leaving. 🌸",
+    "Life is not just fighting. Sometimes you need flowers. There are none. I quit. 🌸",
+  ]},
+  { id:'campfire',    emoji:'🔥', name:'Campfire',        complaint:[
+    "No campfire. We sit in cold silence after every battle. I cannot do this. 🔥",
+    "I need a campfire to tell battle stories around. There is nothing here. GOODBYE. 🔥",
+    "How are we supposed to roast marshmallows without a campfire?? I QUIT. 🔥😤",
+  ]},
+  { id:'chest',       emoji:'📦', name:'Treasure Chest',  complaint:[
+    "Where is the loot?? I was promised LOOT. I see no chest. I am out. 📦",
+    "I fight dragons for treasure. WHERE IS THE TREASURE CHEST. Unacceptable. 📦",
+    "Even the rats here have no treasure to guard. This place has NO FUTURE. 📦",
+  ]},
+  { id:'fountain',    emoji:'⛲', name:'Fountain',        complaint:[
+    "I dreamed of a castle with a fountain. This is NOT that castle. Goodbye. ⛲",
+    "A fountain would boost morale by 400%. Studies show this. Build one or I leave. ⛲",
+    "I wash my face in a bucket. Like an animal. WHERE IS THE FOUNTAIN. ⛲",
+  ]},
+  { id:'well',        emoji:'🪣', name:'Wishing Well',    complaint:[
+    "I have wishes. This castle has no well. My wishes go unheard. I QUIT. 🪣",
+    "I threw a coin into the dirt because there is no wishing well. I am done. 🪣",
+    "A wishing well brings luck to a castle. We have no luck. Or well. Goodbye. 🪣",
+  ]},
+  { id:'flag_pole',   emoji:'🎌', name:'Flag Pole',       complaint:[
+    "We have no flag pole. The enemy does not fear us. Why would they?? I quit. 🎌",
+    "I cannot point proudly at our flag because there is NO FLAG POLE. Unacceptable. 🎌",
+    "Morale requires symbols. Symbols require flag poles. We have neither. Goodbye. 🎌",
+  ]},
+  { id:'shield_dec',  emoji:'🛡️', name:'Shield (Decoration)', complaint:[
+    "I asked for a decorative shield on the wall. ONE SHIELD. Not given. I quit. 🛡️",
+    "The wall is completely bare. Not even a shield. This is not a castle, it is a shed. 🛡️",
+    "A shield on the wall tells enemies we are serious. We have nothing. Goodbye. 🛡️",
+  ]},
+  { id:'moat',        emoji:'🌊', name:'Moat',            complaint:[
+    "There is no moat. Enemies just WALK up to our walls. I did not sign up for this. 🌊",
+    "A moat is basic castle defense! BASIC! Where is it! I am leaving!! 🌊",
+    "I slipped off the castle wall because there was nothing to fall into. BUILD A MOAT. 🌊",
+  ]},
+  { id:'dirt_road',   emoji:'🟫', name:'Dirt Road',       complaint:[
+    "I walk through mud to get to battle. Every single time. BUILD A ROAD. 🟫",
+    "My boots are ruined. We have no roads. Just endless dirt. I am done. 🟫",
+    "The supply cart sank into the mud again. Third time this week. ROADS PLEASE. 🟫",
+  ]},
+  { id:'brick_road',  emoji:'🧱', name:'Brick Road',      complaint:[
+    "I wanted cobblestone under my feet. Not mud. Just a nice brick road. I quit. 🧱",
+    "The other castles have BRICK ROADS. We have a dirt path and low standards. Bye. 🧱",
+    "Marching to battle on unpaved ground has destroyed my knees. BRICK ROAD. NOW. 🧱",
+  ]},
+  { id:'wood_fence',  emoji:'🟤', name:'Wood Fence',      complaint:[
+    "There is nothing separating the training yard from the kitchen. A fence. Please. 🟤",
+    "The berserker wandered into my room again. A fence would prevent this. I quit. 🟤",
+    "Basic perimeter security requires fences. We have ZERO fences. Unacceptable. 🟤",
+  ]},
+  { id:'stone_fence', emoji:'⬜', name:'Stone Wall',      complaint:[
+    "I said I wanted stone walls. Not more mud. STONE. WALLS. I am leaving. ⬜",
+    "The entire perimeter is just open grass. Anyone could walk in. And they do. Goodbye. ⬜",
+    "I feel exposed every single day. Stone walls would fix this. Build them or lose me. ⬜",
+  ]},
+  { id:'wood_wall',   emoji:'🪵', name:'Wood Plank Wall',  complaint:[
+    "Where are the wooden walls I was promised?? I can see the outside from my bed!! 🪵",
+    "The wind blows right through this castle. Wood planks. Very basic. I QUIT. 🪵",
+    "I sleep in a wall-less castle like a stray cat. Build wooden walls or goodbye. 🪵",
+  ]},
+  { id:'stone_wall',  emoji:'🧱', name:'Stone Block Wall', complaint:[
+    "Stone walls = safety. We have neither stone walls nor safety. I am leaving. 🧱",
+    "You built a castle out of HOPES. And DREAMS. Where are the STONE WALLS. 🧱",
+    "I blocked three arrows with my face because there were no stone walls. DONE. 🧱😤",
+  ]},
+  { id:'tower',       emoji:'🗼', name:'Tower',            complaint:[
+    "I need a tower to feel tall and important. There are none. My ego suffers. Goodbye. 🗼",
+    "The archer needs a TOWER. Without one they are just a person standing in a field. 🗼",
+    "I spotted the enemy from GROUND LEVEL because there is no tower. Absolutely not. 🗼",
+  ]},
+  { id:'door',        emoji:'🚪', name:'Castle Door',      complaint:[
+    "This castle has no proper door. I entered through a HOLE IN THE WALL. I quit. 🚪",
+    "A grand entrance makes a castle feel real. We have a gap. I am leaving. 🚪",
+    "I cannot make a dramatic entrance because there is NO DRAMATIC DOOR. Unacceptable. 🚪",
+  ]},
+  { id:'window',      emoji:'🪟', name:'Window',           complaint:[
+    "There are no windows. I have not seen natural light since I arrived. GOODBYE. 🪟",
+    "I need a window to look out of dramatically. Currently I stare at a wall. I quit. 🪟",
+    "The ventilation in here is atrocious. Windows exist for a reason!! BUILD ONE. 🪟",
+  ]},
+  { id:'arch',        emoji:'⛩️', name:'Stone Arch',       complaint:[
+    "I require a decorative arch. It is not about function. It is about AESTHETICS. ⛩️",
+    "An arch over the gate gives the castle GRAVITAS. We have zero gravitas. Goodbye. ⛩️",
+    "I am a prestigious warrior. Prestigious warriors live behind arches. WHERE IS MINE. ⛩️",
+  ]},
+  { id:'battlement',  emoji:'🏯', name:'Battlement',       complaint:[
+    "There are no battlements. I cannot crouch behind anything during an attack. BYE. 🏯",
+    "Battlements are literally the minimum requirement for a castle. MINIMUM. I quit. 🏯",
+    "I peeked over the wall and got hit by an arrow IMMEDIATELY because NO BATTLEMENT. 🏯",
+  ]},
+  { id:'catapult',    emoji:'⚙️', name:'Catapult',         complaint:[
+    "I want to watch boulders fly. Is that too much to ask?? BUILD A CATAPULT. ⚙️",
+    "Our offensive capability is people with swords. That is all. WHERE IS THE CATAPULT. ⚙️",
+    "I applied here specifically because I heard there was a catapult. There is NOT. ⚙️😤",
+  ]},
+  { id:'tavern',      emoji:'🍺', name:'Tavern',           complaint:[
+    "A castle without a tavern is just a very expensive prison. I am LEAVING. 🍺",
+    "Where do I celebrate victories?? In the dirt?? BUILD A TAVERN. I QUIT. 🍺",
+    "I have won seven battles and had nowhere to celebrate any of them. GOODBYE. 🍺",
+  ]},
+  { id:'bakery',      emoji:'🥐', name:'Bakery',           complaint:[
+    "Fresh bread is the foundation of a functioning society. Build a bakery or lose me. 🥐",
+    "I can SMELL the bakery from the village three miles away. We have NOTHING. I quit. 🥐",
+    "Morale is at zero. Everyone is sad. Fresh bread would fix this. BUILD A BAKERY. 🥐",
+  ]},
+  { id:'weapon_shop', emoji:'⚔️', name:'Weapon Store',     complaint:[
+    "I have been fighting with a SLIGHTLY BENT sword for two months. Where is the shop?? ⚔️",
+    "My axe broke last Tuesday. The weapon shop that does not exist could not help me. ⚔️",
+    "I cannot upgrade my equipment because THERE IS NO WEAPON SHOP. Absolute chaos. ⚔️",
+  ]},
+  { id:'magic_shop',  emoji:'🔮', name:'Magic Shop',       complaint:[
+    "I need spell reagents. The magic shop does not exist. I cannot function. 🔮",
+    "Where do I buy my potions?? FROM THE AIR?? BUILD A MAGIC SHOP. I AM DONE. 🔮",
+    "My enchantments are wearing off and there is no magic shop to restock. GOODBYE. 🔮",
+  ]},
+  { id:'library',     emoji:'📚', name:'Library',          complaint:[
+    "I need a library to expand my tactical knowledge. There are ZERO books here. 📚",
+    "How am I supposed to learn ANYTHING in this anti-intellectual fortress?? Bye. 📚",
+    "I found a single scroll under a rock. That is our entire library. I QUIT. 📚",
+  ]},
+];
+
+// Assign a random decor want to a defender when first placed
+// Stored in ud.mp.defenderDecorWants[gridKey] = { itemId, battleCount }
+function getOrAssignDecorWant(gridKey, defenderId){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return null;
+  if(!ud.mp.defenderDecorWants) ud.mp.defenderDecorWants={};
+  if(ud.mp.defenderDecorWants[gridKey]) return ud.mp.defenderDecorWants[gridKey];
+  // Pick a random want from the pool, biased toward cheap/common items
+  var want=DECOR_WANT_POOL[Math.floor(Math.random()*DECOR_WANT_POOL.length)];
+  ud.mp.defenderDecorWants[gridKey]={ itemId:want.id, battlesSince:0 };
+  d[userKey]=ud; saveData(d);
+  return ud.mp.defenderDecorWants[gridKey];
+}
+
+// Check if a decoration want is satisfied — item must be present anywhere in the grid
+function isDecorWantSatisfied(itemId){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
+  var grid=ud.mp.baseGrid||{};
+  return Object.keys(grid).some(function(k){
+    var cell=grid[k]; return cell&&cell.id===itemId;
+  });
+}
+
+// After each battle, increment unsatisfied defender counters and maybe trigger desertion
+function checkDecorDesertion(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var mp=ud.mp;
+  var grid=mp.baseGrid||{};
+  if(!mp.defenderDecorWants) mp.defenderDecorWants={};
+
+  var deserters=[];
+
+  Object.keys(grid).forEach(function(k){
+    var cell=grid[k]; if(!cell||!cell.id) return;
+    var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+    if(!item||!item.defender) return;
+    if(mp.permaDead&&mp.permaDead[k]) return;
+
+    // Ensure want is assigned
+    if(!mp.defenderDecorWants[k]){
+      var want=DECOR_WANT_POOL[Math.floor(Math.random()*DECOR_WANT_POOL.length)];
+      mp.defenderDecorWants[k]={ itemId:want.id, battlesSince:0 };
+    }
+    var want=mp.defenderDecorWants[k];
+    if(isDecorWantSatisfied(want.itemId)){
+      want.battlesSince=0; // reset if satisfied
+      return;
+    }
+    // Not satisfied — increment
+    want.battlesSince=(want.battlesSince||0)+1;
+    // After 2-3 battles (random) they leave
+    var threshold=2+Math.floor(Math.random()*2); // 2 or 3
+    if(want.battlesSince>=threshold){
+      deserters.push({k:k, cell:cell, item:item, wantId:want.itemId});
+    }
+  });
+
+  if(!deserters.length){ d[userKey]=ud; saveData(d); return; }
+
+  d[userKey]=ud; saveData(d);
+
+  // Show popup and remove them
+  showDecorDeserterPopup(deserters, function(){
+    var d2=getData(), ud2=d2[userKey]; if(!ud2||!ud2.mp) return;
+    deserters.forEach(function(des){
+      delete ud2.mp.baseGrid[des.k];
+      delete ud2.mp.defenderDecorWants[des.k];
+    });
+    d2[userKey]=ud2; saveData(d2);
+    try{ renderBaseGrid&&renderBaseGrid(); }catch(e){}
+    showMPToast('💔 '+deserters.length+' defender'+(deserters.length>1?'s deserted':'  deserted')+'! Give them what they want!');
+  });
+}
+
+function showDecorDeserterPopup(deserters, onDone){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.93);'
+    +'display:flex;align-items:center;justify-content:center;animation:popIn 0.3s ease;';
+
+  var cards=deserters.slice(0,3).map(function(des){
+    var want=DECOR_WANT_POOL.find(function(w){return w.id===des.wantId;});
+    if(!want) return '';
+    var complaint=want.complaint[Math.floor(Math.random()*want.complaint.length)];
+    return '<div style="background:rgba(239,71,111,0.12);border:1.5px solid rgba(239,71,111,0.4);'
+      +'border-radius:14px;padding:14px 16px;margin-bottom:10px;text-align:left;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<span style="font-size:2.2rem;">'+des.item.emoji+'</span>'
+      +'<div><div style="font-size:0.9rem;font-weight:900;color:#fff;">'+des.item.name+'</div>'
+      +'<div style="font-size:0.6rem;color:#ef476f;font-weight:700;letter-spacing:1px;text-transform:uppercase;">DESERTING</div></div>'
+      +'<div style="margin-left:auto;text-align:center;">'
+      +'<div style="font-size:1.6rem;">'+want.emoji+'</div>'
+      +'<div style="font-size:0.48rem;color:#9b59b6;font-weight:900;">WANTED</div>'
+      +'</div></div>'
+      +'<div style="font-size:0.78rem;color:#ffb3b3;line-height:1.5;font-style:italic;">"'+complaint+'"</div>'
+      +'<div style="margin-top:8px;background:rgba(155,89,182,0.15);border-radius:8px;padding:6px 10px;font-size:0.68rem;color:#b89fd4;">'
+      +'🛒 They wanted: <b style="color:#ffd700;">'+want.emoji+' '+want.name+'</b> placed in your castle.'
+      +'</div></div>';
+  }).join('');
+
+  var extra=deserters.length>3?'<div style="font-size:0.7rem;color:#ef476f;text-align:center;margin-bottom:8px;">...and '+(deserters.length-3)+' more.</div>':'';
+
+  ov.innerHTML='<div style="max-width:360px;width:92%;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);max-height:90vh;overflow-y:auto;">'
+    +'<div style="text-align:center;margin-bottom:14px;">'
+    +'<div style="font-size:3rem;animation:mBounce 0.8s ease infinite;">😤</div>'
+    +'<div style="font-size:0.58rem;font-weight:900;letter-spacing:4px;color:#ef476f;text-transform:uppercase;margin:6px 0 4px;">Defender Desertion!</div>'
+    +'<div style="font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:4px;">Your troops want things!</div>'
+    +'<div style="font-size:0.72rem;color:#b89fd4;margin-bottom:10px;">Each defender needs ONE specific item placed in your castle.<br>Check the 🛒 Shop to find what they need!</div>'
+    +'</div>'
+    +cards+extra
+    +'<button onclick="this.parentNode.parentNode.remove();(window._decorDeserterCb&&window._decorDeserterCb());" '
+    +'style="width:100%;background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;'
+    +'border-radius:12px;padding:12px;font-family:inherit;font-weight:900;font-size:0.88rem;'
+    +'cursor:pointer;margin-top:4px;">Visit the Shop! 🛒</button>'
+    +'</div>';
+  window._decorDeserterCb=onDone;
+  document.body.appendChild(ov);
+}
+
+// Show what a defender wants in the castle view (tooltip on hover/tap their token in grid)
+function getDefenderWantDisplay(gridKey){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return null;
+  if(!ud.mp.defenderDecorWants) return null;
+  var want=ud.mp.defenderDecorWants[gridKey]; if(!want) return null;
+  var wantDef=DECOR_WANT_POOL.find(function(w){return w.id===want.itemId;});
+  if(!wantDef) return null;
+  var satisfied=isDecorWantSatisfied(want.itemId);
+  return { emoji:wantDef.emoji, name:wantDef.name, satisfied:satisfied, battlesSince:want.battlesSince||0 };
 }
 
 function checkDefenderMorale(){
@@ -6285,6 +6570,8 @@ function checkBattleEnd(){
     window._activeStudentMonster=null;
     // Expedition battle end
     if(window._expBattleActive){ handleExpeditionBattleEnd(true); return; }
+    // Check if any defenders are about to desert over decor wants
+    setTimeout(function(){ try{ checkDecorDesertion(); }catch(e){} }, 3500);
     checkOminousWarning();
     // Re-check void sovereign — player just got richer from battle reward
     setTimeout(function(){ try{ if(checkVoidSovereign()) setTimeout(showVoidSovereign,2000); }catch(e){} },3500);
@@ -6902,9 +7189,22 @@ function renderBaseGrid(){
       } else {
         var fontSize=Math.min(width,height)*0.45;
         fontSize=Math.max(14,Math.min(40,fontSize));
+        var _decorWantHtml='';
+        if(item.defender){
+          var _dw=getDefenderWantDisplay(key);
+          if(_dw){
+            var _dwColor=_dw.satisfied?'#06d6a0':'#ef476f';
+            var _dwBg=_dw.satisfied?'rgba(6,214,160,0.2)':'rgba(239,71,111,0.2)';
+            var _dwTitle=_dw.satisfied?'✅ '+_dw.name+' — HAPPY!':'❌ Wants: '+_dw.name+' ('+_dw.battlesSince+' battles without it)';
+            _decorWantHtml='<span title="'+_dwTitle+'" style="position:absolute;bottom:2px;left:2px;font-size:0.7rem;'
+              +'background:'+_dwBg+';border-radius:4px;padding:1px 3px;border:1px solid '+_dwColor+'44;'
+              +'line-height:1;cursor:help;">'+(_dw.satisfied?'✅':'⚠️')+_dw.emoji+'</span>';
+          }
+        }
         block.innerHTML='<span class="bi-emoji" style="font-size:'+fontSize+'px;">'+item.emoji+'</span>'
           +'<span class="bi-name">'+item.name+'</span>'
-          +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'');
+          +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'')
+          +_decorWantHtml;
       }
       block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
       block.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); cellRightClick(e, this.dataset.key); });
@@ -7009,6 +7309,15 @@ window.cellClick=function(key){
       ud.mp.inventory[_selectedItemId]=stock-1;
     }
     grid[key]={ id:_selectedItemId, rot:0 };
+    // Assign a decor want if this is a defender
+    var _placedItem=SHOP_ITEMS.find(function(x){return x.id===_selectedItemId;});
+    if(_placedItem&&_placedItem.defender){
+      if(!ud.mp.defenderDecorWants) ud.mp.defenderDecorWants={};
+      if(!ud.mp.defenderDecorWants[key]){
+        var _want=DECOR_WANT_POOL[Math.floor(Math.random()*DECOR_WANT_POOL.length)];
+        ud.mp.defenderDecorWants[key]={ itemId:_want.id, battlesSince:0 };
+      }
+    }
     saveData(d);
     setSelectedItem(null);
     renderBaseGrid();
@@ -7103,6 +7412,8 @@ window.cellRightClick=function(e, key){
   var op=originKey.split('_'), or2=parseInt(op[0]), oc=parseInt(op[1]);
   for(var dr=0;dr<h;dr++) for(var dc=0;dc<w;dc++) delete grid[(or2+dr)+'_'+(oc+dc)];
   ud.mp.inventory[cellItem.id]=(ud.mp.inventory[cellItem.id]||0)+1;
+  // Clear the decor want assignment when defender is removed
+  if(ud.mp.defenderDecorWants) delete ud.mp.defenderDecorWants[originKey];
   saveData(d);
   showMPToast('Returned to inventory 📦');
   renderBaseGrid();
