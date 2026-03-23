@@ -4601,6 +4601,8 @@ function launchExpeditionBattle(){
     titleEl.textContent=isBoss?'⚠️ FINAL BOSS — FIGHT FOR YOUR LIFE!':'⚔️ EXPEDITION BATTLE '+(_exp.battle+1)+'/'+EXP_BATTLES;
     titleEl.style.color=isBoss?'#ffd700':'#9b59b6';
   }
+  // Hide expedition screen so battle is visible
+  document.getElementById('expeditionScreen').style.display='none';
   document.getElementById('battleOverlay').style.display='flex';
   _deathPopupQueue=[];
   _deathPopupOpen=false;
@@ -4614,6 +4616,7 @@ function handleExpeditionBattleEnd(victory){
   if(!window._expBattleActive) return;
   window._expBattleActive=false;
   document.getElementById('battleOverlay').style.display='none';
+  document.getElementById('expeditionScreen').style.display='block';
   if(!victory){
     // Sync HP losses back to party
     syncExpPartyHP();
