@@ -655,7 +655,44 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   animation: goPop 0.7s ease forwards;
 }
 
-/* ── GOLD ATTACK BUTTON GLOW ── */
+/* ── ZONE PIE CHART ── */
+@keyframes zoneFlash {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.55; transform:scale(1.06); }
+}
+@keyframes pieSegPulse {
+  0%,100% { filter:brightness(1) drop-shadow(0 0 0px transparent); }
+  50%      { filter:brightness(1.35) drop-shadow(0 0 8px currentColor); }
+}
+@keyframes badgeSparkle {
+  0%,100% { box-shadow:0 0 6px var(--zbc-glow), 0 0 12px var(--zbc-glow); filter:brightness(1); }
+  50%      { box-shadow:0 0 14px var(--zbc-glow), 0 0 28px var(--zbc-glow), 0 0 40px var(--zbc-glow); filter:brightness(1.2); }
+}
+@keyframes badgeIconSpin {
+  0%   { transform:scale(1) rotate(0deg); }
+  25%  { transform:scale(1.3) rotate(-8deg); }
+  50%  { transform:scale(1.15) rotate(5deg); }
+  75%  { transform:scale(1.25) rotate(-4deg); }
+  100% { transform:scale(1) rotate(0deg); }
+}
+.zone-clear-badge.earned { animation:badgeSparkle 2s ease-in-out infinite; }
+.zone-clear-badge.earned .zcb-icon { animation:badgeIconSpin 3s ease-in-out infinite; display:inline-block; }
+.zone-pie-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+.zone-badge-row { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:8px 0 4px; }
+.zone-clear-badge {
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:rgba(255,255,255,0.05); border:2px solid rgba(255,255,255,0.1);
+  border-radius:12px; padding:6px 10px; min-width:52px; text-align:center;
+  cursor:pointer; transition:all 0.3s;
+}
+.zone-clear-badge.earned {
+  border-color:var(--zbc); background:var(--zbc-bg);
+  box-shadow:0 0 12px var(--zbc-glow);
+}
+.zone-clear-badge .zcb-icon { font-size:1.3rem; }
+.zone-clear-badge .zcb-label { font-size:0.48rem; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; color:var(--zbc,rgba(255,255,255,0.25)); }
+
+/* ── GOLD ATTACK BUTTON GLOW ── *//* ── GOLD ATTACK BUTTON GLOW ── */
 @keyframes goldAttackGlow {
   0%,100% { box-shadow: 0 0 8px rgba(255,215,0,0.5), 0 0 20px rgba(255,215,0,0.2); filter: brightness(1); }
   50%      { box-shadow: 0 0 18px rgba(255,215,0,0.9), 0 0 40px rgba(255,180,0,0.5); filter: brightness(1.15); }
@@ -863,8 +900,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v4.1 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Exploit Fix · I See You Bro 👁️</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v4.7 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Pie + Badge Flanks · Sparkle Earned · Fewer Raids</div>
         </div>
       </div>
     </div>
@@ -1024,7 +1061,9 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       </div>
     </div>
     <div class="tab-panel" id="panel-factmap">
-      <!-- Zone attack buttons at the top -->
+      <!-- Zone pie chart + clearance badges -->
+      <div id="zonePieArea" style="margin-bottom:14px;"></div>
+      <!-- Zone attack buttons -->
       <div id="zoneAttackBtns" style="margin-bottom:12px;"></div>
       <!-- Expanded attack zone facts + launch -->
       <div id="attackPanel" style="display:none;background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.3);border-radius:12px;padding:13px;margin-bottom:12px;">
@@ -2264,6 +2303,7 @@ function applyCastleReset(ud){
   return;
 }
 
+window.godAddGold=godAddGold; window.godAddCharge=godAddCharge;
 function godAddGold(){
   if(userKey!=='god') return;
   var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
@@ -2800,6 +2840,31 @@ function checkAndSaveBadges(){
   // Giver-upper — count saved separately, check for new rank popup
   // (earlyQuits tracked in endEarlyBtn handler)
 
+  // ── ZONE CLEARANCE BADGES ──
+  // clearRed: no facts in red zone (all practiced facts < 5s)
+  var practicedFacts=ALL_FACTS.filter(function(ab){ var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null; });
+  if(practicedFacts.length>=16){ // need at least 16 practiced facts
+    var noRed=practicedFacts.every(function(ab){ return factAvg(facts[fkey(ab[0],ab[1])])<5000; });
+    if(noRed && !ud.badges['clearRed']){ ud.badges['clearRed']=true; changed=true; }
+    // clearOrange: all practiced facts < 3s (blue or faster)
+    var noOrange=practicedFacts.length>=32 && ALL_FACTS.every(function(ab){
+      var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null && avg<3000;
+    });
+    if(noOrange && !ud.badges['clearOrange']){ ud.badges['clearOrange']=true; changed=true; }
+    // clearBlue: all 64 facts < 2s
+    var noBlue=ALL_FACTS.every(function(ab){
+      var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null && avg<2000;
+    });
+    if(noBlue && !ud.badges['clearBlue']){ ud.badges['clearBlue']=true; changed=true; }
+    // clearGreen: all 64 facts < 1s
+    var noGreen=ALL_FACTS.every(function(ab){
+      var avg=factAvg(facts[fkey(ab[0],ab[1])]); return avg!==null && avg<1000;
+    });
+    if(noGreen && !ud.badges['clearGreen']){ ud.badges['clearGreen']=true; changed=true; }
+    // allGoldZone alias
+    if(noGreen && !ud.badges['allGoldZone']){ ud.badges['allGoldZone']=true; changed=true; }
+  }
+
   if(changed) saveData(d);
 }
 
@@ -2892,6 +2957,11 @@ var BADGE_INFO={
   'legendary':   { icon:'👑', name:'Legend',      desc:'Defeat the Legendary boss at least once. Respect.', color:'#9b59b6' },
   'giverUp':     { icon:'🏃', name:'Quitter',     desc:'End a test early 20+ times. A true commitment to giving up.', color:'#ff8c00' },
   'inferno':     { icon:'🔥', name:'Inferno',     desc:'Get a streak of 50+ correct answers in a single session. Unstoppable.', color:'#ff4500' },
+  'clearRed':    { icon:'💀', name:'Red Slayer',    desc:'Every single fact is now faster than 5 seconds. No more Red Zone!', color:'#ff2d55' },
+  'clearOrange': { icon:'🔥', name:'Orange Crusher', desc:'Every fact is now Blue Zone or faster — under 3 seconds each!', color:'#ff8c00' },
+  'clearBlue':   { icon:'🧊', name:'Blue Breaker',  desc:'All 64 facts answered in under 2 seconds. Blazing!', color:'#00aaff' },
+  'clearGreen':  { icon:'⚡', name:'Green Destroyer', desc:'All 64 facts answered in under 1 second. You are a legend.', color:'#00e8a2' },
+  'allGoldZone': { icon:'👑', name:'Golden God',    desc:'Every fact in the Gold Zone. Pure perfection.', color:'#ffd700' },
 };
 
 window.showBadgeTip=function(id, earned){
@@ -3440,8 +3510,12 @@ function checkBattleChargesAfterSession(dur){
     if(ud.mp.ominousCountdown===0) ud.mp.forcedAttackPending=true;
   }
 
-  // Random ominous trigger
-  if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&Math.random()<0.15){
+  // Random ominous trigger — reduced by 70% (0.15 → 0.045), also enforce 3-session cooldown
+  var lastOminous=ud.mp.lastOminousTime||0;
+  var sessionsSinceOminous=ud.mp.sessionsSinceOminous||0;
+  ud.mp.sessionsSinceOminous=(sessionsSinceOminous||0)+1;
+  if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&ud.mp.sessionsSinceOminous>=3&&Math.random()<0.005){
+    ud.mp.sessionsSinceOminous=0;
     var countdown=Math.floor(Math.random()*2)+1;
     ud.mp.ominousCountdown=countdown;
     ud.mp.ominousOriginalCountdown=countdown;
@@ -3452,6 +3526,7 @@ function checkBattleChargesAfterSession(dur){
     d[userKey]=ud; saveData(d);
     setTimeout(function(){ showOminousOverlay(countdown); }, 1200);
   } else {
+    ud.mp.sessionsSinceOminous=ud.mp.sessionsSinceOminous||0; // keep counting
     d[userKey]=ud; saveData(d);
   }
   // Refresh the ominous bar if castle is visible
@@ -4829,6 +4904,11 @@ function launchExpeditionBattle(){
   }
   // Hide expedition screen so battle is visible
   document.getElementById('expeditionScreen').style.display='none';
+  // Hide AUTO button for expedition — manual clicks only
+  var autoBtn=document.getElementById('autoFightBtn');
+  if(autoBtn) autoBtn.style.display='none';
+  // Force auto-fight OFF for expedition
+  _autoFight=false;
   document.getElementById('battleOverlay').style.display='flex';
   _deathPopupQueue=[];
   _deathPopupOpen=false;
@@ -4843,6 +4923,9 @@ function handleExpeditionBattleEnd(victory){
   window._expBattleActive=false;
   document.getElementById('battleOverlay').style.display='none';
   document.getElementById('expeditionScreen').style.display='block';
+  // Restore AUTO button for normal battles
+  var autoBtn=document.getElementById('autoFightBtn');
+  if(autoBtn) autoBtn.style.display='';
   if(!victory){
     // Sync HP losses back to party
     syncExpPartyHP();
@@ -5124,13 +5207,12 @@ function checkGoblinAttack(){
     return;
   }
 
-  // Random castle visit raid: 25% chance if been away ≥1 hour, max once per 2 hours
-  // Also respects 10min battle cooldown so visit-spamming doesn't trigger raids
+  // Random castle visit raid: reduced 70% (0.25 → 0.075), cooldown extended 2hr → 6hr
   var lastRaid=mp.lastRaidTime||0;
   var lastBattle=mp.lastBattleTime||0;
-  var twoHours=7200000;
+  var twelveHours=43200000;
   var tenMin=600000;
-  if(hoursAway>=1 && (now-lastRaid)>twoHours && (now-lastBattle)>tenMin && Math.random()<0.25){
+  if(hoursAway>=1 && (now-lastRaid)>twelveHours && (now-lastBattle)>tenMin && Math.random()<0.009){
     mp.lastRaidTime=now;
     mp.lastBattleTime=now;
     saveData(d);
@@ -5138,8 +5220,8 @@ function checkGoblinAttack(){
     return;
   }
 
-  // Legacy: attack after 24h away (original goblin system)
-  if(hoursAway>=24){
+  // Legacy: attack after 48h away (was 24h) — only if no recent raid
+  if(hoursAway>=48 && (now-lastRaid)>twelveHours){
     mp.lastRaidTime=now;
     saveData(d);
     setTimeout(function(){ showAttackWarning(hoursAway); }, 800);
@@ -5897,6 +5979,8 @@ var _battleLocked=false; // prevents double-tapping ATTACK during animation
 var _autoFight=false;    // fast-forward auto mode
 
 window.toggleAutoFight=function(){
+  // Disable auto-fight during expedition battles
+  if(window._expBattleActive) return;
   _autoFight=!_autoFight;
   var btn=document.getElementById('autoFightBtn');
   if(btn){
@@ -6480,7 +6564,7 @@ function resolveHits(action){
 
 // Player clicks a specific defender to attack
 window.battleRollFor=function(def){
-  if(!_battle.active||def.dead||def._attacked||_autoFight) return;
+  if(!_battle.active||def.dead||def._attacked||(_autoFight&&!window._expBattleActive)) return;
   var monsLeft=_battle.monsters.filter(function(m){return m.hp>0;});
   if(!monsLeft.length){ checkBattleEnd(); return; }
 
@@ -9182,9 +9266,145 @@ function renderOverview(){
 }
 
 // ── Fact Map ─────────────────────────────
+
+// ── ZONE PIE CHART ───────────────────────────────────────────────────────────
+function renderZonePie(){
+  var el=document.getElementById('zonePieArea'); if(!el) return;
+  var d=getData(), ud=d[userKey];
+  var facts=ud&&ud.facts?ud.facts:{};
+
+  var counts={gold:0,green:0,blue:0,yellow:0,red:0,unseen:0};
+  var total=ALL_FACTS.length;
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
+    if(avg===null){ counts.unseen++; return; }
+    var z=getZone(avg);
+    if(counts[z]!==undefined) counts[z]++;
+  });
+
+  var allPiece=[
+    {z:'red',    count:counts.red,    hex:'#ff2d55', label:'Red'},
+    {z:'yellow', count:counts.yellow, hex:'#ff8c00', label:'Orange'},
+    {z:'blue',   count:counts.blue,   hex:'#00aaff', label:'Blue'},
+    {z:'green',  count:counts.green,  hex:'#00e8a2', label:'Green'},
+    {z:'gold',   count:counts.gold,   hex:'#ffd700', label:'Gold'},
+    {z:'unseen', count:counts.unseen, hex:'#1a2535', label:'?'},
+  ];
+
+  // Near-threshold flash detection
+  var nearThresholdZones={};
+  ALL_FACTS.forEach(function(ab){
+    var k=fkey(ab[0],ab[1]), f=facts[k], avg=factAvg(f);
+    if(avg===null) return;
+    [1000,2000,3000,5000].forEach(function(t){
+      if(avg>t && avg<t+300){ nearThresholdZones[getZone(avg)]=true; }
+    });
+  });
+
+  // ── SVG PIE ──
+  var SIZE=200, CX=100, CY=100, R=72, INNER=38, LABEL_R=88;
+
+  function polarToXY(deg, r){
+    var rad=(deg-90)*Math.PI/180;
+    return {x:CX+r*Math.cos(rad), y:CY+r*Math.sin(rad)};
+  }
+
+  function makePath(sa, ea, hex, flash){
+    if(ea-sa<0.5) return '';
+    var gap=1.8, s=sa+gap, e=ea-gap;
+    if(e<=s) return '';
+    var la=e-s>180?1:0;
+    var p1=polarToXY(s,R), p2=polarToXY(e,R);
+    var p3=polarToXY(e,INNER), p4=polarToXY(s,INNER);
+    var path='M'+p1.x.toFixed(1)+' '+p1.y.toFixed(1)
+      +' A'+R+' '+R+' 0 '+la+' 1 '+p2.x.toFixed(1)+' '+p2.y.toFixed(1)
+      +' L'+p3.x.toFixed(1)+' '+p3.y.toFixed(1)
+      +' A'+INNER+' '+INNER+' 0 '+la+' 0 '+p4.x.toFixed(1)+' '+p4.y.toFixed(1)+'Z';
+    var glow=flash?'filter:drop-shadow(0 0 5px '+hex+');':'';
+    return '<path d="'+path+'" fill="'+hex+'" opacity="0.93" style="'+glow+(flash?'animation:pieSegPulse 1.1s ease-in-out infinite;':'')+'"/>';
+  }
+
+  var paths='', labels='', angle=0;
+  allPiece.forEach(function(p){
+    if(!p.count) return;
+    var sweep=(p.count/total)*360;
+    var mid=angle+sweep/2;
+    var flash=!!nearThresholdZones[p.z];
+    paths+=makePath(angle, angle+sweep, p.hex, flash);
+    if(sweep>10){
+      var lp=polarToXY(mid, LABEL_R);
+      labels+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+4).toFixed(1)+'" text-anchor="middle" '
+        +'dominant-baseline="middle" font-size="'+(sweep>25?10:8)+'" font-weight="900" fill="'+p.hex+'" '
+        +'font-family="inherit" opacity="0.95">'+p.count+'</text>';
+    }
+    angle+=sweep;
+  });
+
+  var practised=total-counts.unseen;
+  var cEmoji=counts.gold===64?'👑':counts.green+counts.gold===64?'⚡':counts.blue+counts.green+counts.gold===64?'🧊':practised>48?'🔥':'⚔️';
+
+  var svgStr='<svg width="'+SIZE+'" height="'+SIZE+'" viewBox="0 0 '+SIZE+' '+SIZE+'" xmlns="http://www.w3.org/2000/svg">'
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="#060c14"/>'
+    +paths
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INNER-1)+'" fill="#080f1a"/>'
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INNER-1)+'" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1.5"/>'
+    +'<text x="'+CX+'" y="'+(CY+2)+'" text-anchor="middle" dominant-baseline="middle" font-size="24">'+cEmoji+'</text>'
+    +'<text x="'+CX+'" y="'+(CY+18)+'" text-anchor="middle" font-size="8" fill="#3a5070" font-weight="700" font-family="inherit">'+practised+'/64</text>'
+    +labels
+    +'</svg>';
+
+  // ── BADGES split left / right ──
+  var d2=getData(), ud2=d2[userKey];
+  var badges=ud2&&ud2.badges?ud2.badges:{};
+  var ZONE_BADGES=[
+    {id:'clearRed',    icon:'💀', label:'No Red',    col:'#ff2d55', bg:'rgba(255,45,85,0.18)',  glow:'rgba(255,45,85,0.5)'},
+    {id:'clearOrange', icon:'🔥', label:'No Orange', col:'#ff8c00', bg:'rgba(255,140,0,0.18)', glow:'rgba(255,140,0,0.5)'},
+    {id:'clearBlue',   icon:'🧊', label:'No Blue',   col:'#00aaff', bg:'rgba(0,170,255,0.18)', glow:'rgba(0,170,255,0.5)'},
+    {id:'clearGreen',  icon:'⚡', label:'No Green',  col:'#00e8a2', bg:'rgba(0,232,162,0.18)', glow:'rgba(0,232,162,0.5)'},
+    {id:'allGoldZone', icon:'👑', label:'All Gold',  col:'#ffd700', bg:'rgba(255,215,0,0.18)',  glow:'rgba(255,215,0,0.6)'},
+  ];
+
+  function makeBadge(b){
+    var earned=!!badges[b.id];
+    return '<div class="zone-clear-badge'+(earned?' earned':'')+'" '
+      +'style="--zbc:'+b.col+';--zbc-bg:'+b.bg+';--zbc-glow:'+b.glow+';'
+      +(earned ? 'background:'+b.bg+';border-color:'+b.col+';' : '')
+      +'" data-bid="'+b.id+'" data-earned="'+earned+'" title="'+b.label+(earned?' ✓':'')+'">'
+      +'<div class="zcb-icon" style="font-size:1.5rem;'+(earned?'':'filter:grayscale(1);opacity:0.18;')+'">'+b.icon+'</div>'
+      +'<div class="zcb-label" style="font-size:0.5rem;color:'+(earned?b.col:'rgba(255,255,255,0.15)')+';">'+b.label+'</div>'
+      +'</div>';
+  }
+
+  // Left col: No Red, No Orange  |  Right col: No Blue, No Green, All Gold
+  var leftBadges='<div style="display:flex;flex-direction:column;gap:8px;align-items:stretch;flex:1;">'
+    +makeBadge(ZONE_BADGES[0])+makeBadge(ZONE_BADGES[1])+'</div>';
+  var rightBadges='<div style="display:flex;flex-direction:column;gap:8px;align-items:stretch;flex:1;">'
+    +makeBadge(ZONE_BADGES[2])+makeBadge(ZONE_BADGES[3])+makeBadge(ZONE_BADGES[4])+'</div>';
+
+  // ── LAYOUT: left badges | pie | right badges ──
+  el.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">'
+    +leftBadges
+    +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">'
+    +'<div style="font-size:0.48rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#243040;margin-bottom:3px;">Zone Breakdown</div>'
+    +svgStr
+    +'</div>'
+    +rightBadges
+    +'</div>';
+
+  el.querySelectorAll('.zone-clear-badge').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      showBadgeTip(this.dataset.bid, this.dataset.earned==='true');
+    });
+  });
+}
+
 function renderFactMap(){
   var d=getData(), ud=d[userKey];
   var facts=ud&&ud.facts?ud.facts:{};
+
+  // Render pie chart + clearance badges
+  renderZonePie();
 
   // Build zone counts for attack buttons
   var zoneCounts={gold:0,green:0,blue:0,yellow:0,red:0};
@@ -9193,22 +9413,22 @@ function renderFactMap(){
     if(avg!==null && zoneCounts[getZone(avg)]!==undefined) zoneCounts[getZone(avg)]++;
   });
 
-  // Render zone attack buttons
+  // Render zone attack buttons — single row, compact
   var displayOrder=['red','yellow','blue','green','gold'];
-  var btnHtml='<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;">';
+  var btnHtml='<div style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;">';
   displayOrder.forEach(function(z){
     var cnt=zoneCounts[z], zi=ZONES[z];
     if(!cnt) return;
     var isActive=expandedAttackZone===z;
-    var activeSt=isActive?'outline:2px solid #ffd166;outline-offset:2px;filter:brightness(1.15);':'';
-    var extraClass='';
-    btnHtml+='<button onclick="openZoneAttack(\''+z+'\')" class="'+extraClass+'" style="'+
-      'background:'+zi.hex+';color:'+(z==='gold'||z==='green'?'#1a1a2e':'#fff')+';'+
-      'border:none;border-radius:10px;padding:8px 14px;font-family:inherit;font-weight:900;font-size:0.85rem;cursor:pointer;'+
-      activeSt+'transition:filter 0.15s;'+
-      (z==='red'?'box-shadow:0 0 12px rgba(239,71,111,0.45);':'')+
-      (z==='gold'?'box-shadow:0 0 12px rgba(255,215,0,0.5);':'')+
-      '">'+zi.monster+' Attack '+zi.label.replace(' Zone','')+'! <span style="opacity:0.8;font-size:0.75rem;">('+cnt+')</span></button>';
+    var activeSt=isActive?'outline:2px solid #fff5;outline-offset:1px;filter:brightness(1.2);':'';
+    btnHtml+='<button onclick="openZoneAttack(\''+z+'\')" style="'
+      +'flex-shrink:0;background:'+zi.hex+';color:'+(z==='gold'||z==='green'?'#1a1a2e':'#fff')+';'
+      +'border:none;border-radius:8px;padding:6px 10px;font-family:inherit;font-weight:900;font-size:0.78rem;cursor:pointer;white-space:nowrap;'
+      +activeSt+'transition:filter 0.15s;'
+      +(z==='red'?'box-shadow:0 0 8px rgba(239,71,111,0.5);':'')
+      +(z==='gold'?'box-shadow:0 0 8px rgba(255,215,0,0.5);':'')
+      +'">'+zi.monster+' '+zi.label.replace(' Zone','')
+      +' <span style="opacity:0.85;font-size:0.7rem;font-weight:700;">('+cnt+')</span></button>';
   });
   btnHtml+='</div>';
   var zoneAttackEl=document.getElementById('zoneAttackBtns');
