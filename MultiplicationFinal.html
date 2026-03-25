@@ -530,6 +530,9 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .base-grid-wrap { flex:1;overflow:auto;padding:0 14px 10px;display:flex;flex-direction:column;align-items:center; }
 .base-canvas { display:grid;grid-template-columns:repeat(10,44px);grid-template-rows:repeat(8,44px);gap:2px;background:#0a1520;border:2px solid #1e3a5f;border-radius:10px;padding:6px;position:relative;max-width:100%;overflow-x:auto; }
 .base-cell { width:44px;height:44px;border-radius:5px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:background 0.15s;position:relative;user-select:none; }
+.base-cell.locked-cell { background:rgba(0,0,0,0.4);border:1.5px dashed rgba(255,209,102,0.2);cursor:pointer;flex-direction:column;gap:1px; }
+.base-cell.locked-cell:hover { background:rgba(255,209,102,0.08);border-color:rgba(255,209,102,0.5); }
+.locked-cell-price { font-size:0.48rem;font-weight:900;color:rgba(255,209,102,0.5);letter-spacing:0.3px;line-height:1; }
 .base-cell:hover { background:rgba(255,255,255,0.08); }
 .base-cell.drag-over { background:rgba(17,138,178,0.3);border-color:#118ab2; }
 .base-cell.has-item { cursor:pointer; }
@@ -608,6 +611,18 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 .shop-def-stats { font-size:0.5rem;color:#06d6a0;margin-top:2px;font-weight:700; }
 /* Dragging ghost */
 #dragGhost { position:fixed;pointer-events:none;z-index:9999;font-size:2rem;transform:translate(-50%,-50%);opacity:0.8;display:none; }
+/* Trash zone */
+#trashZone {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%) scale(0);
+  z-index:9998; background:rgba(239,71,111,0.15); border:2.5px dashed rgba(239,71,111,0.5);
+  border-radius:50%; width:72px; height:72px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:1.8rem; transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s, border-color 0.2s;
+  pointer-events:all; cursor:pointer;
+}
+#trashZone.visible { transform:translateX(-50%) scale(1); }
+#trashZone.hovering { background:rgba(239,71,111,0.45); border-color:#ef476f; border-style:solid; transform:translateX(-50%) scale(1.18); }
+#trashZone .trash-label { font-size:0.5rem; font-weight:900; color:#ef476f; letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
 /* Badge tooltip popup */
 .badge-tip-overlay { position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7); }
 .badge-tip-card { background:linear-gradient(160deg,#0d1b2e,#0a0e1a);border:2px solid #1e3a5f;border-radius:18px;padding:22px 24px;text-align:center;max-width:300px;width:88%;box-shadow:0 0 40px rgba(0,0,0,0.6);animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
@@ -665,32 +680,58 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   50%      { filter:brightness(1.35) drop-shadow(0 0 8px currentColor); }
 }
 @keyframes badgeSparkle {
-  0%,100% { box-shadow:0 0 6px var(--zbc-glow), 0 0 12px var(--zbc-glow); filter:brightness(1); }
-  50%      { box-shadow:0 0 14px var(--zbc-glow), 0 0 28px var(--zbc-glow), 0 0 40px var(--zbc-glow); filter:brightness(1.2); }
+  0%,100% { filter:drop-shadow(0 0 4px var(--zbc)) drop-shadow(0 0 10px var(--zbc-glow)) brightness(1); }
+  50%      { filter:drop-shadow(0 0 10px var(--zbc)) drop-shadow(0 0 22px var(--zbc-glow)) drop-shadow(0 0 36px var(--zbc-glow)) brightness(1.25); }
 }
-@keyframes badgeIconSpin {
-  0%   { transform:scale(1) rotate(0deg); }
-  25%  { transform:scale(1.3) rotate(-8deg); }
-  50%  { transform:scale(1.15) rotate(5deg); }
-  75%  { transform:scale(1.25) rotate(-4deg); }
-  100% { transform:scale(1) rotate(0deg); }
+@keyframes badgeIconPop {
+  0%,100% { transform:scale(1); }
+  40%     { transform:scale(1.22) translateY(-2px); }
+  70%     { transform:scale(0.94); }
 }
-.zone-clear-badge.earned { animation:badgeSparkle 2s ease-in-out infinite; }
-.zone-clear-badge.earned .zcb-icon { animation:badgeIconSpin 3s ease-in-out infinite; display:inline-block; }
-.zone-pie-wrap { position:relative; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+@keyframes shieldShimmer {
+  0%   { opacity:0; transform:translateX(-100%) skewX(-20deg); }
+  30%  { opacity:0.35; }
+  60%  { opacity:0; transform:translateX(100%) skewX(-20deg); }
+  100% { opacity:0; transform:translateX(100%) skewX(-20deg); }
+}
+.zone-pie-wrap { position:relative; display:flex; flex-direction:column; align-items:center; }
 .zone-badge-row { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:8px 0 4px; }
+
+/* Shield shape via clip-path */
 .zone-clear-badge {
-  display:flex; flex-direction:column; align-items:center; gap:2px;
-  background:rgba(255,255,255,0.05); border:2px solid rgba(255,255,255,0.1);
-  border-radius:12px; padding:6px 10px; min-width:52px; text-align:center;
-  cursor:pointer; transition:all 0.3s;
+  position:relative; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:3px; cursor:pointer; transition:all 0.3s;
+  width:56px; height:66px;
+  clip-path: polygon(50% 0%, 100% 15%, 100% 62%, 50% 100%, 0% 62%, 0% 15%);
+  background: rgba(255,255,255,0.05);
+  overflow:hidden;
+}
+.zone-clear-badge::before {
+  content:''; position:absolute; inset:2px;
+  clip-path: polygon(50% 0%, 100% 15%, 100% 62%, 50% 100%, 0% 62%, 0% 15%);
+  background: rgba(0,0,0,0.3);
+  z-index:0;
 }
 .zone-clear-badge.earned {
-  border-color:var(--zbc); background:var(--zbc-bg);
-  box-shadow:0 0 12px var(--zbc-glow);
+  background: linear-gradient(160deg, var(--zbc-bg), rgba(0,0,0,0.4));
+  animation:badgeSparkle 2.2s ease-in-out infinite;
 }
-.zone-clear-badge .zcb-icon { font-size:1.3rem; }
-.zone-clear-badge .zcb-label { font-size:0.48rem; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; color:var(--zbc,rgba(255,255,255,0.25)); }
+.zone-clear-badge.earned::after {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background: linear-gradient(90deg, transparent 0%, var(--zbc) 50%, transparent 100%);
+  animation: shieldShimmer 3s ease-in-out infinite;
+  opacity:0;
+}
+.zone-clear-badge .zcb-icon {
+  font-size:1.6rem; position:relative; z-index:2; line-height:1;
+  transition:transform 0.3s;
+}
+.zone-clear-badge.earned .zcb-icon { animation:badgeIconPop 2.5s ease-in-out infinite; }
+.zone-clear-badge .zcb-label {
+  font-size:0.38rem; font-weight:900; letter-spacing:0.3px; text-transform:uppercase;
+  color:rgba(255,255,255,0.2); position:relative; z-index:2; line-height:1;
+}
+.zone-clear-badge.earned .zcb-label { color:var(--zbc); text-shadow:0 0 6px var(--zbc-glow); }
 
 /* ── GOLD ATTACK BUTTON GLOW ── *//* ── GOLD ATTACK BUTTON GLOW ── */
 @keyframes goldAttackGlow {
@@ -900,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v4.7 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Pie + Badge Flanks · Sparkle Earned · Fewer Raids</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.0 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Expandable Base · Buy Cells · Trash Zone</div>
         </div>
       </div>
     </div>
@@ -1143,7 +1184,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <!-- Inventory inline -->
       <div style="font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:#3a4f6b;margin-bottom:5px;">🎒 Tap an item to select it, then tap a grid cell</div>
       <div id="invGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;"></div>
-      <div style="font-size:0.6rem;color:#3a4f6b;text-align:center;">Tap a placed item on the grid to remove it.</div>
+      <div style="font-size:0.6rem;color:#3a4f6b;text-align:center;">Tap a placed item to pick it up · drag to 🗑️ trash or tap another cell to move</div>
     </div>
     <!-- Shop view -->
     <div id="mp-shop-view" style="flex:1;overflow-y:auto;padding:6px 10px 80px;display:none;">
@@ -1261,6 +1302,10 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 <!-- Drag ghost -->
 <div id="dragGhost"></div>
+<div id="trashZone" onclick="trashSelectedItem()">
+  <span>🗑️</span>
+  <span class="trash-label">Trash</span>
+</div>
 
 <!-- ══ FUNERAL OVERLAY ══ -->
 <div id="funeralOverlay" style="display:none;position:fixed;inset:0;z-index:8200;background:rgba(0,0,0,0.97);align-items:center;justify-content:center;flex-direction:column;">
@@ -2285,6 +2330,7 @@ function handleLogin(){
     document.getElementById('startBtn').disabled=true;
     renderModeScreen();
     show('modeScreen');
+    try { checkAndSaveBadges(); } catch(e){}
     try { applyGoldenTheme(); } catch(e){}
     // Init companion for Nani
     try { initCompanion(); } catch(e){}
@@ -3514,7 +3560,7 @@ function checkBattleChargesAfterSession(dur){
   var lastOminous=ud.mp.lastOminousTime||0;
   var sessionsSinceOminous=ud.mp.sessionsSinceOminous||0;
   ud.mp.sessionsSinceOminous=(sessionsSinceOminous||0)+1;
-  if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&ud.mp.sessionsSinceOminous>=3&&Math.random()<0.005){
+  if(!ud.mp.ominousCountdown&&!ud.mp.forcedAttackPending&&ud.mp.sessionsSinceOminous>=8&&Math.random()<0.001){
     ud.mp.sessionsSinceOminous=0;
     var countdown=Math.floor(Math.random()*2)+1;
     ud.mp.ominousCountdown=countdown;
@@ -5210,9 +5256,10 @@ function checkGoblinAttack(){
   // Random castle visit raid: reduced 70% (0.25 → 0.075), cooldown extended 2hr → 6hr
   var lastRaid=mp.lastRaidTime||0;
   var lastBattle=mp.lastBattleTime||0;
-  var twelveHours=43200000;
+  var fortyEightHours=172800000;
   var tenMin=600000;
-  if(hoursAway>=1 && (now-lastRaid)>twelveHours && (now-lastBattle)>tenMin && Math.random()<0.009){
+  // Random raid: very rare (0.2%), only after 3+ hours away, cooldown 48 hours
+  if(hoursAway>=3 && (now-lastRaid)>fortyEightHours && (now-lastBattle)>tenMin && Math.random()<0.002){
     mp.lastRaidTime=now;
     mp.lastBattleTime=now;
     saveData(d);
@@ -5220,8 +5267,8 @@ function checkGoblinAttack(){
     return;
   }
 
-  // Legacy: attack after 48h away (was 24h) — only if no recent raid
-  if(hoursAway>=48 && (now-lastRaid)>twelveHours){
+  // Legacy: only after 7 days away, with 48hr cooldown
+  if(hoursAway>=168 && (now-lastRaid)>fortyEightHours){
     mp.lastRaidTime=now;
     saveData(d);
     setTimeout(function(){ showAttackWarning(hoursAway); }, 800);
@@ -7453,20 +7500,129 @@ function makeRotatableSVG(itemId, rot){
   return svg;
 }
 
+
+// ── EXPANDABLE BASE SYSTEM ──────────────────────────────────────────────────
+// Default grid is 10 cols × 8 rows. Players can unlock adjacent cells for 💰1000 each.
+// Unlocked extra cells stored as ud.mp.unlockedCells = { 'r_c': true, ... }
+// The grid auto-expands to include all unlocked cells.
+
+var EXPAND_COST = 1000;
+
+function getUnlockedCells(){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return {};
+  return ud.mp.unlockedCells || {};
+}
+
+// Is this cell within the standard 10x8 grid OR explicitly unlocked?
+function isCellUnlocked(r, c){
+  if(r>=0 && r<MP_GRID_ROWS && c>=0 && c<MP_GRID_COLS) return true;
+  var unlocked=getUnlockedCells();
+  return !!unlocked[r+'_'+c];
+}
+
+// Get the effective grid bounds (standard + all unlocked cells)
+function getGridBounds(){
+  var unlocked=getUnlockedCells();
+  var maxRow=MP_GRID_ROWS-1, maxCol=MP_GRID_COLS-1;
+  Object.keys(unlocked).forEach(function(k){
+    var p=k.split('_'); var r=parseInt(p[0]), c=parseInt(p[1]);
+    if(r>maxRow) maxRow=r;
+    if(c>maxCol) maxCol=c;
+  });
+  return { rows:maxRow+1, cols:maxCol+1 };
+}
+
+// Is a cell adjacent to any occupied or unlocked cell?
+function isAdjacentToBase(r, c){
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return false;
+  var grid=ud.mp.baseGrid||{};
+  var unlocked=getUnlockedCells();
+  var dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  return dirs.some(function(dir){
+    var nr=r+dir[0], nc=c+dir[1];
+    // Adjacent to standard grid boundary
+    if(nr>=0 && nr<MP_GRID_ROWS && nc>=0 && nc<MP_GRID_COLS) return true;
+    // Adjacent to another unlocked cell
+    if(unlocked[nr+'_'+nc]) return true;
+    return false;
+  });
+}
+
+window.tryBuyCell = function(r, c){
+  if(isCellUnlocked(r, c)) return; // already unlocked
+  if(!isAdjacentToBase(r, c)){ showMPToast('Must be adjacent to your existing base!'); return; }
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var credits=ud.mp.credits||0;
+  if(credits<EXPAND_COST){
+    showMPToast('Need 💰'+EXPAND_COST+' gold to unlock this cell! You have '+credits+'.');
+    return;
+  }
+  // Confirm purchase
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML='<div style="max-width:280px;width:90%;background:linear-gradient(160deg,#1a1a00,#1a1200);'
+    +'border:2px solid #ffd700;border-radius:18px;padding:24px 20px;text-align:center;'
+    +'animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="font-size:2rem;margin-bottom:6px;">🏗️</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#ffd700;margin-bottom:6px;">Expand Base?</div>'
+    +'<div style="font-size:0.8rem;color:#b89fd4;margin-bottom:16px;line-height:1.5;">'
+    +'Unlock 1 new cell for<br><b style="color:#ffd700;font-size:1.2rem;">💰'+EXPAND_COST+' gold</b><br>'
+    +'<span style="font-size:0.7rem;color:#4a5f80;">You have: 💰'+credits+'</span></div>'
+    +'<div style="display:flex;gap:8px;">'
+    +'<button id="expandCancelBtn" style="flex:1;padding:10px;background:rgba(255,255,255,0.06);color:#7a8fb5;'
+    +'border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;">Cancel</button>'
+    +'<button id="expandBuyBtn" style="flex:1;padding:10px;background:linear-gradient(135deg,#ffd700,#ff9500);color:#1a0d00;'
+    +'border:none;border-radius:10px;font-family:inherit;font-weight:900;cursor:pointer;">Buy! 🏗️</button>'
+    +'</div></div>';
+  ov.querySelector('#expandCancelBtn').onclick=function(){ ov.remove(); };
+  ov.querySelector('#expandBuyBtn').onclick=function(){
+    ov.remove();
+    var d2=getData(), ud2=d2[userKey]; if(!ud2||!ud2.mp) return;
+    if((ud2.mp.credits||0)<EXPAND_COST){ showMPToast('Not enough gold!'); return; }
+    ud2.mp.credits-=EXPAND_COST;
+    if(!ud2.mp.unlockedCells) ud2.mp.unlockedCells={};
+    ud2.mp.unlockedCells[r+'_'+c]=true;
+    d2[userKey]=ud2; saveData(d2);
+    document.getElementById('mpCredits').textContent=ud2.mp.credits;
+    showMPToast('🏗️ New cell unlocked!');
+    renderBaseGrid();
+  };
+  document.body.appendChild(ov);
+};
+
 function renderBaseGrid(){
   var d=getData(), ud=d[userKey]; if(!ud) return;
   var baseGrid=(ud.mp&&ud.mp.baseGrid)||{};
   var canvas=document.getElementById('baseCanvas'); if(!canvas) return;
   var CELL=46;
 
-  // Render empty grid cells
+  // Render cells — standard grid + adjacent expandable cells + unlocked extras
+  var bounds=getGridBounds();
+  var unlocked=getUnlockedCells();
+  var showCols=bounds.cols+1, showRows=bounds.rows+1;
+  canvas.style.gridTemplateColumns='repeat('+showCols+',44px)';
+  canvas.style.gridTemplateRows='repeat('+showRows+',44px)';
+
   var html='';
-  for(var r=0;r<MP_GRID_ROWS;r++){
-    for(var c=0;c<MP_GRID_COLS;c++){
+  for(var r=0;r<showRows;r++){
+    for(var c=0;c<showCols;c++){
       var key=r+'_'+c;
-      html+='<div class="base-cell" data-key="'+key+'" '
-        +'onclick="cellClick(\''+key+'\')" '
-        +'oncontextmenu="cellRightClick(event,\''+key+'\')"></div>';
+      var isUnlkd=isCellUnlocked(r,c);
+      var isAdj=!isUnlkd&&isAdjacentToBase(r,c);
+      if(!isUnlkd&&!isAdj){
+        html+='<div style="width:44px;height:44px;visibility:hidden;"></div>';
+      } else if(!isUnlkd&&isAdj){
+        html+='<div class="base-cell locked-cell" data-key="'+key+'" '
+          +'onclick="tryBuyCell('+r+','+c+')" title="Unlock for 💰1000">'
+          +'<span style="font-size:0.9rem;">🔒</span>'
+          +'<span class="locked-cell-price">💰1000</span>'
+          +'</div>';
+      } else {
+        html+='<div class="base-cell" data-key="'+key+'" '
+          +'onclick="cellClick(\''+key+'\')\" '
+          +'oncontextmenu="cellRightClick(event,\''+key+'\')">'
+          +'</div>';
+      }
     }
   }
   canvas.innerHTML=html;
@@ -7555,9 +7711,78 @@ function renderBaseGrid(){
 var _selectedItemId=null;
 var _movingFromKey=null;
 
+
+// ── TRASH ZONE ──────────────────────────────────────────────────────────────
+// Shows when an item is picked up. Player can drag over it or tap it to delete.
+
+function showTrashZone(){
+  var el=document.getElementById('trashZone'); if(el) el.classList.add('visible');
+}
+function hideTrashZone(){
+  var el=document.getElementById('trashZone');
+  if(el){ el.classList.remove('visible'); el.classList.remove('hovering'); }
+}
+function trashHover(on){
+  var el=document.getElementById('trashZone');
+  if(el) el.classList.toggle('hovering', on);
+}
+
+window.trashSelectedItem=function(){
+  if(!_selectedItemId||!_movingFromKey) return;
+  var d=getData(), ud=d[userKey]; if(!ud||!ud.mp) return;
+  var grid=ud.mp.baseGrid;
+  var cell=grid[_movingFromKey]; if(!cell) return;
+
+  // Find all cells this item occupies and remove them
+  var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
+  var w=item?item.w||1:1, h=item?item.h||1:1;
+  var rot=cell.rot||0;
+  if(item&&item.rotatable&&rot===1){ var tmp=w; w=h; h=tmp; }
+  var op=_movingFromKey.split('_'), or2=parseInt(op[0]), oc=parseInt(op[1]);
+  for(var dr=0;dr<h;dr++) for(var dc=0;dc<w;dc++) delete grid[(or2+dr)+'_'+(oc+dc)];
+
+  // Clear decor want if defender
+  if(ud.mp.defenderDecorWants) delete ud.mp.defenderDecorWants[_movingFromKey];
+
+  // NOTE: do NOT return to inventory — it's trashed
+  saveData(d);
+  setSelectedItem(null);
+  hideTrashZone();
+  renderBaseGrid();
+  renderInventory();
+  showMPToast('🗑️ Item deleted permanently.');
+};
+
+// Hook into touch/mouse drag for trash hover detection
+(function(){
+  function onPointerMove(e){
+    if(!_selectedItemId||!_movingFromKey) return;
+    var trash=document.getElementById('trashZone'); if(!trash) return;
+    var x=e.clientX||(e.touches&&e.touches[0]&&e.touches[0].clientX)||0;
+    var y=e.clientY||(e.touches&&e.touches[0]&&e.touches[0].clientY)||0;
+    var r=trash.getBoundingClientRect();
+    var over=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
+    trashHover(over);
+  }
+  function onPointerUp(e){
+    if(!_selectedItemId||!_movingFromKey) return;
+    var trash=document.getElementById('trashZone'); if(!trash) return;
+    var x=e.clientX||(e.changedTouches&&e.changedTouches[0]&&e.changedTouches[0].clientX)||0;
+    var y=e.clientY||(e.changedTouches&&e.changedTouches[0]&&e.changedTouches[0].clientY)||0;
+    var r=trash.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){
+      window.trashSelectedItem();
+    }
+  }
+  document.addEventListener('mousemove', onPointerMove);
+  document.addEventListener('touchmove', onPointerMove, {passive:true});
+  document.addEventListener('mouseup', onPointerUp);
+  document.addEventListener('touchend', onPointerUp);
+})();
+
 function setSelectedItem(id){
   _selectedItemId=id;
-  if(!id) _movingFromKey=null;
+  if(!id){ _movingFromKey=null; hideTrashZone(); } else { showTrashZone(); }
   var label=document.getElementById('mpSelectedItem');
   if(label){
     if(id){
@@ -8549,10 +8774,15 @@ window.launchAttack=function(dur){
   var originalSorted=keys.slice().sort().join('|');
   var normalizedSorted=normalizedKeys.slice().sort().join('|');
   var uniqueNormalized=[...new Set(normalizedKeys)].sort().join('|');
-  // If they have duplicate canonical facts (e.g. 6x4 AND 4x6 → both become 4x6), it's the exploit
-  if(normalizedKeys.length !== new Set(normalizedKeys).size){
-    // They have commutative duplicates — flag it
-    window._commuteExploitDetected = true;
+  // Only flag commutative exploit if ALL the facts being practiced are already Gold zone (<1s)
+  // Practicing your slowest facts naturally includes commutative pairs — that's fine
+  var hasCommutativeDupes = normalizedKeys.length !== new Set(normalizedKeys).size;
+  if(hasCommutativeDupes){
+    var d0=getData(), ud0=d0[userKey];
+    var allFactsGold = ud0&&ud0.facts && keys.every(function(k){
+      var f=ud0.facts[k]; var avg=factAvg(f); return avg!==null && avg<1000;
+    });
+    window._commuteExploitDetected = allFactsGold; // only shame if grinding already-gold facts
   } else {
     window._commuteExploitDetected = false;
   }
@@ -9366,24 +9596,23 @@ function renderZonePie(){
 
   function makeBadge(b){
     var earned=!!badges[b.id];
-    return '<div class="zone-clear-badge'+(earned?' earned':'')+'" '
-      +'style="--zbc:'+b.col+';--zbc-bg:'+b.bg+';--zbc-glow:'+b.glow+';'
-      +(earned ? 'background:'+b.bg+';border-color:'+b.col+';' : '')
-      +'" data-bid="'+b.id+'" data-earned="'+earned+'" title="'+b.label+(earned?' ✓':'')+'">'
-      +'<div class="zcb-icon" style="font-size:1.5rem;'+(earned?'':'filter:grayscale(1);opacity:0.18;')+'">'+b.icon+'</div>'
-      +'<div class="zcb-label" style="font-size:0.5rem;color:'+(earned?b.col:'rgba(255,255,255,0.15)')+';">'+b.label+'</div>'
+    return '<div class="zone-clear-badge'+(earned?' earned':'')+' " '
+      +'style="--zbc:'+b.col+';--zbc-bg:'+b.bg+';--zbc-glow:'+b.glow+';" '
+      +'data-bid="'+b.id+'" data-earned="'+earned+'" title="'+b.label+(earned?' — EARNED!':'')+'">'
+      +'<div class="zcb-icon" style="'+(earned?'':'filter:grayscale(1);opacity:0.14;')+'">'+b.icon+'</div>'
+      +'<div class="zcb-label">'+b.label+'</div>'
       +'</div>';
   }
-
   // Left col: No Red, No Orange  |  Right col: No Blue, No Green, All Gold
-  var leftBadges='<div style="display:flex;flex-direction:column;gap:8px;align-items:stretch;flex:1;">'
-    +makeBadge(ZONE_BADGES[0])+makeBadge(ZONE_BADGES[1])+'</div>';
-  var rightBadges='<div style="display:flex;flex-direction:column;gap:8px;align-items:stretch;flex:1;">'
-    +makeBadge(ZONE_BADGES[2])+makeBadge(ZONE_BADGES[3])+makeBadge(ZONE_BADGES[4])+'</div>';
+  var leftBadges='<div style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;width:70px;">'
+  var leftBadges='<div style="display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;min-width:72px;">'
+  var rightBadges='<div style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;width:70px;">'
+  var rightBadges='<div style="display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;min-width:72px;">'
 
   // ── LAYOUT: left badges | pie | right badges ──
+  // ── LAYOUT: left badges | pie | right badges ──
   el.innerHTML=
-    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">'
+    '<div style="display:flex;align-items:center;justify-content:center;gap:18px;width:100%;">'
     +leftBadges
     +'<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">'
     +'<div style="font-size:0.48rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#243040;margin-bottom:3px;">Zone Breakdown</div>'
@@ -9391,7 +9620,6 @@ function renderZonePie(){
     +'</div>'
     +rightBadges
     +'</div>';
-
   el.querySelectorAll('.zone-clear-badge').forEach(function(btn){
     btn.addEventListener('click', function(){
       showBadgeTip(this.dataset.bid, this.dataset.earned==='true');
@@ -9415,7 +9643,7 @@ function renderFactMap(){
 
   // Render zone attack buttons — single row, compact
   var displayOrder=['red','yellow','blue','green','gold'];
-  var btnHtml='<div style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;">';
+  var btnHtml='<div style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;justify-content:center;flex-wrap:wrap;">';
   displayOrder.forEach(function(z){
     var cnt=zoneCounts[z], zi=ZONES[z];
     if(!cnt) return;
