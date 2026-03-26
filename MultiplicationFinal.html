@@ -941,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.0 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Expandable Base · Buy Cells · Trash Zone</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.1 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Sound Effects · Expandable Base · Trash Zone</div>
         </div>
       </div>
     </div>
@@ -1160,7 +1160,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
             <span class="ominous-bar-label" id="ominousBarLabel">???</span>
           </div>
         </div>
-        <div class="myplace-credits"><span>💰</span><span id="mpCredits">0</span><span style="font-size:0.55rem;color:#b8972a;margin-left:2px;">gold</span></div>
+        <button id="sfxToggleBtn" onclick="toggleSfx()" title="Sound ON (tap to mute)" style="background:none;border:none;font-size:1.1rem;cursor:pointer;padding:4px;opacity:0.7;">🔊</button><div class="myplace-credits"><span>💰</span><span id="mpCredits">0</span><span style="font-size:0.55rem;color:#b8972a;margin-left:2px;">gold</span></div>
       </div>
     </div>
     <div class="myplace-tabs">
@@ -1643,6 +1643,305 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 <script>
 (function(){
 'use strict';
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SOUND ENGINE — Web Audio API, zero external files, all synthesized
+// ══════════════════════════════════════════════════════════════════════════════
+var _sfxCtx = null;
+var _sfxEnabled = true;
+
+function getSfxCtx(){
+  if(!_sfxCtx){
+    try { _sfxCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+  }
+  if(_sfxCtx && _sfxCtx.state === 'suspended') _sfxCtx.resume();
+  return _sfxCtx;
+}
+
+function sfx(type){
+  if(!_sfxEnabled) return;
+  var ctx = getSfxCtx(); if(!ctx) return;
+  try {
+    switch(type){
+
+      // ── UI ──
+      case 'click': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(600, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(900, ctx.currentTime+0.05);
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.08);
+        o.start(); o.stop(ctx.currentTime+0.08);
+        break;
+      }
+      case 'tap': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(440, ctx.currentTime);
+        g.gain.setValueAtTime(0.08, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.06);
+        o.start(); o.stop(ctx.currentTime+0.06);
+        break;
+      }
+      case 'back': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(500, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(300, ctx.currentTime+0.1);
+        g.gain.setValueAtTime(0.1, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.1);
+        o.start(); o.stop(ctx.currentTime+0.1);
+        break;
+      }
+
+      // ── QUIZ ──
+      case 'correct': {
+        [0,0.06,0.12].forEach(function(t, i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+          var freqs=[523,659,784];
+          o.frequency.setValueAtTime(freqs[i], ctx.currentTime+t);
+          g.gain.setValueAtTime(0.15, ctx.currentTime+t);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.15);
+          o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.15);
+        });
+        break;
+      }
+      case 'wrong': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(200, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime+0.2);
+        g.gain.setValueAtTime(0.18, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.2);
+        o.start(); o.stop(ctx.currentTime+0.2);
+        break;
+      }
+      case 'streak': {
+        // ascending arp for streaks
+        [0,0.06,0.12,0.18].forEach(function(t,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+          var freqs=[523,622,740,880];
+          o.frequency.setValueAtTime(freqs[i], ctx.currentTime+t);
+          g.gain.setValueAtTime(0.18, ctx.currentTime+t);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.18);
+          o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.18);
+        });
+        break;
+      }
+      case 'sessionEnd': {
+        // Victory fanfare
+        var notes=[523,587,659,698,784];
+        notes.forEach(function(freq,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(freq, ctx.currentTime+i*0.1);
+          g.gain.setValueAtTime(0.2, ctx.currentTime+i*0.1);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.1+0.25);
+          o.start(ctx.currentTime+i*0.1); o.stop(ctx.currentTime+i*0.1+0.25);
+        });
+        break;
+      }
+      case 'timerWarn': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='square'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        g.gain.setValueAtTime(0.06, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.08);
+        o.start(); o.stop(ctx.currentTime+0.08);
+        break;
+      }
+
+      // ── BATTLE ──
+      case 'attack': {
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.08,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,2)*0.4;
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.3,ctx.currentTime);
+        src.start(); src.stop(ctx.currentTime+0.08);
+        // Add a punch tone
+        var o=ctx.createOscillator(), g2=ctx.createGain();
+        o.type='sine'; o.connect(g2); g2.connect(ctx.destination);
+        o.frequency.setValueAtTime(160, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(60, ctx.currentTime+0.1);
+        g2.gain.setValueAtTime(0.25, ctx.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.1);
+        o.start(); o.stop(ctx.currentTime+0.1);
+        break;
+      }
+      case 'hit': {
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.06,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,1.5)*0.35;
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.25,ctx.currentTime);
+        src.start(); src.stop(ctx.currentTime+0.06);
+        break;
+      }
+      case 'death': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(300, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(50, ctx.currentTime+0.4);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
+        o.start(); o.stop(ctx.currentTime+0.4);
+        break;
+      }
+      case 'victory': {
+        var notes=[392,523,659,784,1047];
+        notes.forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.09);
+          g.gain.setValueAtTime(0.22, ctx.currentTime+i*0.09);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.09+0.3);
+          o.start(ctx.currentTime+i*0.09); o.stop(ctx.currentTime+i*0.09+0.3);
+        });
+        break;
+      }
+      case 'defeat': {
+        var notes=[400,300,200,130];
+        notes.forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.12);
+          g.gain.setValueAtTime(0.18, ctx.currentTime+i*0.12);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.12+0.2);
+          o.start(ctx.currentTime+i*0.12); o.stop(ctx.currentTime+i*0.12+0.2);
+        });
+        break;
+      }
+      case 'monsterArrive': {
+        // Ominous low rumble + descending tone
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(120, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(60, ctx.currentTime+0.5);
+        g.gain.setValueAtTime(0.15, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.5);
+        o.start(); o.stop(ctx.currentTime+0.5);
+        break;
+      }
+
+      // ── CASTLE ──
+      case 'buy': {
+        var freqs=[523,784,1047];
+        freqs.forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.07);
+          g.gain.setValueAtTime(0.14, ctx.currentTime+i*0.07);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.07+0.15);
+          o.start(ctx.currentTime+i*0.07); o.stop(ctx.currentTime+i*0.07+0.15);
+        });
+        break;
+      }
+      case 'place': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(440, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(660, ctx.currentTime+0.08);
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.1);
+        o.start(); o.stop(ctx.currentTime+0.1);
+        break;
+      }
+      case 'remove': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(400, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime+0.1);
+        g.gain.setValueAtTime(0.1, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.1);
+        o.start(); o.stop(ctx.currentTime+0.1);
+        break;
+      }
+      case 'trash': {
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.15,ctx.sampleRate);
+        var d=buf.getChannelData(0);
+        for(var i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,0.8)*0.3;
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        src.start(); src.stop(ctx.currentTime+0.15);
+        break;
+      }
+      case 'gold': {
+        // Coin sound — quick high ping
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(1200, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime+0.12);
+        g.gain.setValueAtTime(0.15, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.2);
+        o.start(); o.stop(ctx.currentTime+0.2);
+        break;
+      }
+      case 'expand': {
+        // Satisfying whoosh + tone for buying a new cell
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(200, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(800, ctx.currentTime+0.2);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.25);
+        o.start(); o.stop(ctx.currentTime+0.25);
+        var o2=ctx.createOscillator(), g2=ctx.createGain();
+        o2.type='triangle'; o2.connect(g2); g2.connect(ctx.destination);
+        o2.frequency.setValueAtTime(1047, ctx.currentTime+0.15);
+        g2.gain.setValueAtTime(0.15, ctx.currentTime+0.15);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.35);
+        o2.start(ctx.currentTime+0.15); o2.stop(ctx.currentTime+0.35);
+        break;
+      }
+      case 'levelUp': {
+        var notes=[523,659,784,1047,1319];
+        notes.forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.08);
+          g.gain.setValueAtTime(0.2, ctx.currentTime+i*0.08);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.08+0.25);
+          o.start(ctx.currentTime+i*0.08); o.stop(ctx.currentTime+i*0.08+0.25);
+        });
+        break;
+      }
+      case 'badgeEarned': {
+        var notes=[784,988,1175,1568];
+        notes.forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.07);
+          g.gain.setValueAtTime(0.16, ctx.currentTime+i*0.07);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.07+0.2);
+          o.start(ctx.currentTime+i*0.07); o.stop(ctx.currentTime+i*0.07+0.2);
+        });
+        break;
+      }
+    }
+  } catch(e){}
+}
+
+// Mute toggle — persisted in localStorage
+(function(){
+  var muted=localStorage.getItem('sfx_muted')==='1';
+  _sfxEnabled=!muted;
+  // Add mute button to castle topbar when castle opens
+  window._sfxMuteBtn=null;
+})();
+
+window.toggleSfx=function(){
+  _sfxEnabled=!_sfxEnabled;
+  localStorage.setItem('sfx_muted',_sfxEnabled?'0':'1');
+  var btn=document.getElementById('sfxToggleBtn');
+  if(btn){ btn.textContent=_sfxEnabled?'🔊':'🔇'; btn.title=_sfxEnabled?'Sound ON (tap to mute)':'Sound OFF (tap to unmute)'; }
+};
 
 // Star field on login
 setTimeout(function(){
@@ -2330,7 +2629,8 @@ function handleLogin(){
     document.getElementById('startBtn').disabled=true;
     renderModeScreen();
     show('modeScreen');
-    try { checkAndSaveBadges(); } catch(e){}
+    sfx('click');
+  try { checkAndSaveBadges(); } catch(e){}
     try { applyGoldenTheme(); } catch(e){}
     // Init companion for Nani
     try { initCompanion(); } catch(e){}
@@ -2424,7 +2724,7 @@ document.getElementById('startBtn').addEventListener('click',function(){
   window._wsipFacts=null;
   startQuiz(false,null);
 });
-document.getElementById('switchPlayerBtn').addEventListener('click',function(){show('loginScreen');});
+document.getElementById('switchPlayerBtn').addEventListener('click',function(){sfx('back');show('loginScreen');});
 document.getElementById('myInfoBtnMode').addEventListener('click',function(){showInfo('overview');});
 [30,60,120,300].forEach(function(s){
   document.getElementById('wsip-'+s).addEventListener('click',function(){startQuiz(true,s);});
@@ -2571,6 +2871,7 @@ function renderLevelBar(){
 }
 
 function showLevelUpPopup(lvl){
+  sfx('levelUp');
   var lv=LEVELS[lvl-1];
   if(!lv) return;
   var overlay=document.getElementById('levelUpOverlay');
@@ -3148,6 +3449,7 @@ function saveMPData(){
 function awardCredits(amount, reason){
   var d=getData(), ud=d[userKey];
   if(!ud) return;
+  sfx('gold');
   if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
   ud.mp.credits=(ud.mp.credits||0)+amount;
   saveData(d);
@@ -5910,6 +6212,7 @@ function showAttackWarning(hoursAway){
       scareBtn.style.pointerEvents='none';
     }
   }
+  sfx('monsterArrive');
   document.getElementById('attackWarningOverlay').style.display='flex';
 }
 
@@ -6274,6 +6577,7 @@ function animateAttack(attackerEl, targetEl, projectileEmoji, isAttackerMonster,
 
 // Show slash → oh noes floats up slowly → DEAD label after 2.5s
 function showDeathOnToken(tokenEl, c, isMonster){
+  sfx('death');
   if(!tokenEl) return;
   // Void battle: maybe zombify this defender
   if(!isMonster){ try{ maybeZombifyDefender(c); }catch(e){} }
@@ -6329,6 +6633,7 @@ function updateTokenHP(c, isMonster){
 // Flash red + shake a token when it takes a hit
 function flashHit(tokenEl){
   if(!tokenEl) return;
+  sfx('hit');
   // Remove any ongoing animation first
   tokenEl.style.animation='none';
   void tokenEl.offsetWidth; // force reflow
@@ -6616,6 +6921,7 @@ window.battleRollFor=function(def){
   if(!monsLeft.length){ checkBattleEnd(); return; }
 
   // Mark this defender as acted and dim immediately — no global lock!
+  sfx('attack');
   def._attacked=true;
   var defKey='tok_def_'+def.name.replace(/\s/g,'_');
   var defEl=document.getElementById(defKey);
@@ -6963,6 +7269,7 @@ function checkBattleEnd(){
       } else {
         msg='🏆 Your defenders crushed the attackers!';
       }
+      sfx('victory');
       showBattleResult(true, msg, totalReward);
     },2800);
     return;
@@ -7057,7 +7364,8 @@ function checkBattleEnd(){
         } else {
           msg='💀 Your defenders were overwhelmed!\n\nThe dark forces damaged your castle!';
         }
-        showBattleResult(false, msg, 0);
+        sfx('defeat');
+      showBattleResult(false, msg, 0);
       }
     },2800);
     return;
@@ -7397,6 +7705,7 @@ window.buyItem=function(itemId){
   var legDefeats=ud.legendaryDefeats||0;
   if(ud.mp.credits<item.cost){ showMPToast('Not enough gold! Need 💰'+item.cost); return; }
   if(legDefeats<item.leg){ showMPToast('Need '+item.leg+' legendary defeats!'); return; }
+  sfx('buy');
   ud.mp.credits=Math.max(0, ud.mp.credits-item.cost);
   var newQty=((ud.mp.inventory[item.id]||0)+(item.qty||1));
   // Hard cap at 99 per item — no infinite stacks
@@ -7584,6 +7893,7 @@ window.tryBuyCell = function(r, c){
     ud2.mp.unlockedCells[r+'_'+c]=true;
     d2[userKey]=ud2; saveData(d2);
     document.getElementById('mpCredits').textContent=ud2.mp.credits;
+    sfx('expand');
     showMPToast('🏗️ New cell unlocked!');
     renderBaseGrid();
   };
@@ -7750,6 +8060,7 @@ window.trashSelectedItem=function(){
   hideTrashZone();
   renderBaseGrid();
   renderInventory();
+  sfx('trash');
   showMPToast('🗑️ Item deleted permanently.');
 };
 
@@ -7860,6 +8171,7 @@ window.cellClick=function(key){
       if(stock<=0){ showMPToast('No more of that item! Buy more in Shop.'); setSelectedItem(null); return; }
       ud.mp.inventory[_selectedItemId]=stock-1;
     }
+    sfx('place');
     grid[key]={ id:_selectedItemId, rot:0 };
     // Assign a decor want if this is a defender
     var _placedItem=SHOP_ITEMS.find(function(x){return x.id===_selectedItemId;});
@@ -7977,6 +8289,7 @@ window.cellRightClick=function(e, key){
   // Clear the decor want assignment when defender is removed
   if(ud.mp.defenderDecorWants) delete ud.mp.defenderDecorWants[originKey];
   saveData(d);
+  sfx('remove');
   showMPToast('Returned to inventory 📦');
   renderBaseGrid();
   renderInventory();
@@ -8984,6 +9297,7 @@ function submitAnswer(){
       var cd=getData(); if(cd[userKey]){ cd[userKey].clutchUnlocked=true; saveData(cd); }
     }
     qTimes.push({p:fkey(ab[0],ab[1]),ms:ms,ok:true});
+    sfx(qStreak>0&&qStreak%5===0?'streak':'correct');
     inp.className='correct';
     qCorrect++; qTotal++; qStreak++;
     updateStats();
@@ -9009,6 +9323,7 @@ function submitAnswer(){
     // Flash red and clear immediately
     answerLocked=true;
     inp.value='';
+    sfx('wrong');
     inp.className=''; void inp.offsetWidth; inp.className='wrong';
     var card=document.querySelector('#quizScreen .card');
     if(card){ card.classList.remove('card-shake'); void card.offsetWidth; card.classList.add('card-shake'); }
@@ -9050,12 +9365,14 @@ function updateTimerDisplay(){
   var pct=(timeLeft/totalTime)*100;
   var bar=document.getElementById('timerBar');
   bar.style.width=pct+'%';
+  if(pct<15&&pct>0&&timeLeft%2===0) sfx('timerWarn');
   bar.className='timer-bar'+(pct<15?' danger':pct<30?' warn':'');
 }
 
 function endQuiz(){
   clearInterval(timer);
   answerLocked=true;
+  sfx('sessionEnd');
   var okTimes=qTimes.filter(function(t){return t.ok;});
   var avgMs=okTimes.length?Math.round(okTimes.reduce(function(s,t){return s+t.ms;},0)/okTimes.length):0;
   var session={date:new Date().toISOString(),dur:totalTime,correct:qCorrect,total:qTotal,avgMs:avgMs,times:qTimes};
