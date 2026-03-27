@@ -941,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.1 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Sound Effects · Expandable Base · Trash Zone</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.2 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Desertion Fix · Expedition All Copies Selectable</div>
         </div>
       </div>
     </div>
@@ -4687,14 +4687,22 @@ function checkDecorDesertion(){
     }
     if(areAllWantsSatisfied(wantEntry)){
       wantEntry.battlesSince=0; // reset if all satisfied
+      delete wantEntry.threshold; // clear stored threshold
       return;
     }
     // Not all satisfied — increment
     wantEntry.battlesSince=(wantEntry.battlesSince||0)+1;
-    // After 2-3 battles (random) they leave
-    var threshold=2+Math.floor(Math.random()*2); // 2 or 3
-    if(wantEntry.battlesSince>=threshold){
+    // Store threshold once when countdown starts (don't re-roll each battle)
+    if(!wantEntry.threshold) wantEntry.threshold=2+Math.floor(Math.random()*2);
+    if(wantEntry.battlesSince>=wantEntry.threshold){
+      // Final safety check — re-verify they're actually unsatisfied right now
+      if(areAllWantsSatisfied(wantEntry)){
+        wantEntry.battlesSince=0;
+        delete wantEntry.threshold;
+        return;
+      }
       var unmetIds=(wantEntry.itemIds||[]).filter(function(id){return !isDecorWantSatisfied(id);});
+      if(!unmetIds.length) { wantEntry.battlesSince=0; delete wantEntry.threshold; return; }
       deserters.push({k:k, cell:cell, item:item, wantIds:unmetIds});
     }
   });
@@ -5018,14 +5026,17 @@ function openExpedition(){
   // Build party pool from placed defenders
   var grid=ud.mp.baseGrid||{};
   var pool=[];
-  var seen={};
+  var seenKeys={};
   Object.keys(grid).forEach(function(k){
     var cell=grid[k]; if(!cell||!cell.id) return;
     var item=SHOP_ITEMS.find(function(x){return x.id===cell.id;});
     if(!item||!item.defender) return;
-    if(seen[item.id]) return; seen[item.id]=true;
+    if(seenKeys[k]) return; seenKeys[k]=true; // dedupe by grid position, not item type
     if(ud.mp.permaDead&&ud.mp.permaDead[k]) return;
-    pool.push({id:item.id,emoji:item.emoji,name:item.name,hp:item.hp,maxHp:item.hp,atk:item.atk,
+    // Give each instance a unique id by appending gridKey so selection works per-slot
+    pool.push({id:item.id+'__'+k, baseId:item.id, emoji:item.emoji,
+      name:item.name+(pool.filter(function(p){return p.baseId===item.id;}).length>0?' #'+(pool.filter(function(p){return p.baseId===item.id;}).length+1):''),
+      hp:item.hp,maxHp:item.hp,atk:item.atk,
       range:item.range,aoe:item.aoe||false,healer:item.healer||false,
       healBudget:item.healer?(item.hp*3):0,healUsed:0,
       dodge:item.dodge||false,stun:item.stun||false,dead:false,gridKey:k});
