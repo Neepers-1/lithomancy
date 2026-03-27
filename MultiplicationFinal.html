@@ -941,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.2 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Desertion Fix · Expedition All Copies Selectable</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.3 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Fact Data Repair · Level Fix · Bug Fixes</div>
         </div>
       </div>
     </div>
@@ -2615,6 +2615,103 @@ function initCompanion(){
 
 window.handleLogin = window.handleLogin; // keep reference
 
+
+// ── FACT DATA REPAIR — runs once per login ───────────────────────────────────
+// If a student has many sessions but few facts recorded (due to data loss or
+// storage issues), estimate missing fact data from session avgMs history.
+// This prevents being stuck at low level despite lots of practice.
+function repairFactDataOnLogin(){
+  var d=getData(), ud=d[userKey];
+  if(!ud||!ud.sessions||ud.sessions.length<3) return; // need at least 3 sessions
+
+  var facts=ud.facts||{};
+  var sessions=ud.sessions;
+
+  // Count how many facts have recent10 data
+  var practicedCount=ALL_FACTS.filter(function(ab){
+    var f=facts[fkey(ab[0],ab[1])];
+    return f&&f.recent10&&f.recent10.length>0;
+  }).length;
+
+  var totalSessions=sessions.length;
+  var totalCorrect=sessions.reduce(function(s,ss){return s+(ss.correct||0);},0);
+
+  // If they have many sessions/answers but few recorded facts, something went wrong
+  // Threshold: if they've answered 200+ correct but have <20 facts tracked, repair
+  if(totalCorrect < 200 || practicedCount >= 20) return;
+
+  // Calculate overall average speed from sessions
+  var sessionsWithAvg=sessions.filter(function(s){return s.avgMs&&s.avgMs>0;});
+  if(!sessionsWithAvg.length) return;
+  var overallAvg=sessionsWithAvg.reduce(function(s,ss){return s+(ss.avgMs||0);},0)/sessionsWithAvg.length;
+
+  // Recent sessions tend to be faster — weight recent more
+  var recentSessions=sessionsWithAvg.slice(-Math.min(10,sessionsWithAvg.length));
+  var recentAvg=recentSessions.reduce(function(s,ss){return s+(ss.avgMs||0);},0)/recentSessions.length;
+
+  // For facts with no data at all, seed with estimated speed
+  // Facts they've practiced more get speeds near recentAvg
+  // We spread them slightly so not all facts look identical
+  var unrecorded=ALL_FACTS.filter(function(ab){
+    var f=facts[fkey(ab[0],ab[1])];
+    return !f||!f.recent10||!f.recent10.length;
+  });
+
+  if(!unrecorded.length) return;
+
+  // Don't overwrite — only fill blanks
+  var changed=false;
+  if(!ud.facts) ud.facts={};
+
+  unrecorded.forEach(function(ab,i){
+    var k=fkey(ab[0],ab[1]);
+    if(!ud.facts[k]) ud.facts[k]={count:0,wrongCount:0,history:[],recent10:[],best10:[]};
+    var f=ud.facts[k];
+    if(f.recent10&&f.recent10.length>0) return; // already has data
+
+    // Estimate speed: use recentAvg with some spread based on fact difficulty
+    // Harder facts (larger numbers) are slightly slower
+    var difficulty=(ab[0]+ab[1])/18; // 0.22 to 1.0
+    var estimatedMs=Math.round(recentAvg*(0.7+difficulty*0.6));
+    // Add small random spread so facts don't all look the same
+    var spread=0.15;
+    var vals=[];
+    for(var r=0;r<8;r++){
+      vals.push(Math.round(estimatedMs*(1-spread+Math.random()*spread*2)));
+    }
+    vals.sort(function(a,b){return a-b;});
+    f.recent10=vals;
+    f.best10=vals.slice(0,5);
+    f.count=Math.max(f.count||0, Math.round(totalCorrect/ALL_FACTS.length));
+    changed=true;
+  });
+
+  if(changed){
+    d[userKey]=ud;
+    saveData(d);
+    // Show a one-time notification
+    if(!ud._factRepairNotified){
+      ud._factRepairNotified=true;
+      d[userKey]=ud; saveData(d);
+      setTimeout(function(){
+        var el=document.createElement('div');
+        el.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;'
+          +'background:linear-gradient(135deg,#0a2a0a,#1a3a1a);border:2px solid #06d6a0;'
+          +'border-radius:14px;padding:14px 20px;max-width:300px;width:90%;text-align:center;'
+          +'font-family:inherit;animation:popIn 0.4s ease;box-shadow:0 0 20px rgba(6,214,160,0.3);';
+        el.innerHTML='<div style="font-size:1.5rem;margin-bottom:4px;">🔧</div>'
+          +'<div style="font-size:0.7rem;font-weight:900;color:#06d6a0;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Data Repaired!</div>'
+          +'<div style="font-size:0.8rem;color:#b89fd4;line-height:1.5;">'
+          +'Your level and fact data have been estimated from your session history.<br>'
+          +'Keep practicing to refine your scores!</div>';
+        document.body.appendChild(el);
+        setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity 0.5s'; },4000);
+        setTimeout(function(){ if(el.parentNode) el.remove(); },4600);
+      }, 2000);
+    }
+  }
+}
+
 function handleLogin(){
   var name=nameInput.value.trim();
   if(!name){ nameInput.focus(); nameInput.style.borderColor='#ef476f'; setTimeout(function(){nameInput.style.borderColor='';},1000); return; }
@@ -2627,6 +2724,7 @@ function handleLogin(){
     selMode=null; activeAttackZone=null;
     document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('selected');});
     document.getElementById('startBtn').disabled=true;
+    try { repairFactDataOnLogin(); } catch(e){ console.error('repair err',e); }
     renderModeScreen();
     show('modeScreen');
     sfx('click');
