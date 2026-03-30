@@ -917,7 +917,7 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <h1 style="font-size:2rem;font-weight:900;line-height:1.1;margin-bottom:4px;background:linear-gradient(135deg,#ffd700 0%,#fff 50%,#ffd700 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;filter:drop-shadow(0 0 20px rgba(255,215,0,0.5));">
         MULTIPLICATION<br>BATTLE MASTERS
       </h1>
-      <p style="color:#7a8fb5;font-size:0.82rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:0;">Times Tables &middot; Grade 4</p>
+      <p style="color:#7a8fb5;font-size:0.82rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:0;">Times Tables Practice</p>
       <!-- zone trophies -->
       <div style="display:flex;justify-content:center;gap:8px;margin:14px 0 0;flex-wrap:wrap;">
         <span style="background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:800;color:#ef476f;">👹 Red</span>
@@ -941,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.4 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Expanded Cell Placement Fix</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.6 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">15 New Sounds · Chiptune BG Music · Richer Audio</div>
         </div>
       </div>
     </div>
@@ -1924,9 +1924,320 @@ function sfx(type){
         });
         break;
       }
+
+      case 'kick': {
+        // Drum kick — low thud
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(180, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime+0.12);
+        g.gain.setValueAtTime(0.7, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.18);
+        o.start(); o.stop(ctx.currentTime+0.18);
+        break;
+      }
+      case 'snare': {
+        // Snare — noise burst with tone
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.15,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,1.2);
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.35, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.15);
+        src.start(); src.stop(ctx.currentTime+0.15);
+        var o=ctx.createOscillator(), g2=ctx.createGain();
+        o.type='triangle'; o.connect(g2); g2.connect(ctx.destination);
+        o.frequency.setValueAtTime(220, ctx.currentTime);
+        g2.gain.setValueAtTime(0.15, ctx.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.08);
+        o.start(); o.stop(ctx.currentTime+0.08);
+        break;
+      }
+      case 'hihat': {
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.05,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,0.5)*0.3;
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        var hpf=ctx.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=8000;
+        src.buffer=buf; src.connect(hpf); hpf.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.18, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.05);
+        src.start(); src.stop(ctx.currentTime+0.05);
+        break;
+      }
+      case 'laser': {
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(1200, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(200, ctx.currentTime+0.18);
+        g.gain.setValueAtTime(0.18, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.18);
+        o.start(); o.stop(ctx.currentTime+0.18);
+        break;
+      }
+      case 'powerup': {
+        // Fast ascending sweep
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='square'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(200, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(1600, ctx.currentTime+0.3);
+        g.gain.setValueAtTime(0.12, ctx.currentTime);
+        g.gain.setValueAtTime(0.12, ctx.currentTime+0.25);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.35);
+        o.start(); o.stop(ctx.currentTime+0.35);
+        break;
+      }
+      case 'transition': {
+        // Whoosh screen transition
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.25,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.15*Math.sin(Math.PI*i/data.length);
+        var src=ctx.createBufferSource();
+        var lpf=ctx.createBiquadFilter(); lpf.type='bandpass'; lpf.frequency.value=1200; lpf.Q.value=0.5;
+        var g=ctx.createGain();
+        src.buffer=buf; src.connect(lpf); lpf.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.25);
+        src.start(); src.stop(ctx.currentTime+0.25);
+        break;
+      }
+      case 'notification': {
+        // Soft two-tone ding
+        [523, 784].forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.12);
+          g.gain.setValueAtTime(0.12, ctx.currentTime+i*0.12);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.12+0.25);
+          o.start(ctx.currentTime+i*0.12); o.stop(ctx.currentTime+i*0.12+0.25);
+        });
+        break;
+      }
+      case 'voidArrive': {
+        // Deep ominous drone for Void Sovereign
+        [40, 60, 80].forEach(function(f, i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime);
+          o.frequency.linearRampToValueAtTime(f*0.7, ctx.currentTime+1.5);
+          g.gain.setValueAtTime(0, ctx.currentTime);
+          g.gain.linearRampToValueAtTime(0.1-i*0.02, ctx.currentTime+0.4);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+1.8);
+          o.start(); o.stop(ctx.currentTime+1.8);
+        });
+        // Rumble
+        var buf=ctx.createBuffer(1,ctx.sampleRate*1.5,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.08*Math.pow(1-i/data.length,0.3);
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.25, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+1.5);
+        src.start(); src.stop(ctx.currentTime+1.5);
+        break;
+      }
+      case 'monsterRare': {
+        // Rare monster — deeper, scarier arrival
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(80, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime+0.6);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.7);
+        o.start(); o.stop(ctx.currentTime+0.7);
+        var o2=ctx.createOscillator(), g2=ctx.createGain();
+        o2.type='square'; o2.connect(g2); g2.connect(ctx.destination);
+        o2.frequency.setValueAtTime(160, ctx.currentTime+0.1);
+        o2.frequency.exponentialRampToValueAtTime(60, ctx.currentTime+0.5);
+        g2.gain.setValueAtTime(0.1, ctx.currentTime+0.1);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.6);
+        o2.start(ctx.currentTime+0.1); o2.stop(ctx.currentTime+0.6);
+        break;
+      }
+      case 'monsterLegendary': {
+        // Legendary — earth-shaking arrival
+        [30,45,60].forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sawtooth'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.05);
+          o.frequency.exponentialRampToValueAtTime(f*0.5, ctx.currentTime+0.8);
+          g.gain.setValueAtTime(0.18, ctx.currentTime+i*0.05);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+1.0);
+          o.start(ctx.currentTime+i*0.05); o.stop(ctx.currentTime+1.0);
+        });
+        break;
+      }
+      case 'hammer': {
+        // Placing a building — stone/wood thunk
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.12,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,2)*0.5;
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.4, ctx.currentTime);
+        src.start(); src.stop(ctx.currentTime+0.12);
+        var o=ctx.createOscillator(), g2=ctx.createGain();
+        o.type='sine'; o.connect(g2); g2.connect(ctx.destination);
+        o.frequency.setValueAtTime(90, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime+0.1);
+        g2.gain.setValueAtTime(0.2, ctx.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.12);
+        o.start(); o.stop(ctx.currentTime+0.12);
+        break;
+      }
+      case 'explosion': {
+        var buf=ctx.createBuffer(1,ctx.sampleRate*0.6,ctx.sampleRate);
+        var data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,0.6)*0.7;
+        var src=ctx.createBufferSource(), g=ctx.createGain();
+        src.buffer=buf; src.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.6, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.6);
+        src.start(); src.stop(ctx.currentTime+0.6);
+        var o=ctx.createOscillator(), g2=ctx.createGain();
+        o.type='sawtooth'; o.connect(g2); g2.connect(ctx.destination);
+        o.frequency.setValueAtTime(120, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(20, ctx.currentTime+0.4);
+        g2.gain.setValueAtTime(0.3, ctx.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.5);
+        o.start(); o.stop(ctx.currentTime+0.5);
+        break;
+      }
+      case 'coin': {
+        // Classic coin collect
+        [1047,1319,1568].forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.04);
+          g.gain.setValueAtTime(0.16, ctx.currentTime+i*0.04);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.04+0.12);
+          o.start(ctx.currentTime+i*0.04); o.stop(ctx.currentTime+i*0.04+0.12);
+        });
+        break;
+      }
+      case 'legendaryFanfare': {
+        var notes=[392,494,587,740,988,1175,1568];
+        notes.forEach(function(f,i){
+          var o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+          o.frequency.setValueAtTime(f, ctx.currentTime+i*0.1);
+          g.gain.setValueAtTime(0.22, ctx.currentTime+i*0.1);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.1+0.35);
+          o.start(ctx.currentTime+i*0.1); o.stop(ctx.currentTime+i*0.1+0.35);
+          // Harmonics
+          var o2=ctx.createOscillator(), g2=ctx.createGain();
+          o2.type='sine'; o2.connect(g2); g2.connect(ctx.destination);
+          o2.frequency.setValueAtTime(f*2, ctx.currentTime+i*0.1);
+          g2.gain.setValueAtTime(0.08, ctx.currentTime+i*0.1);
+          g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+i*0.1+0.2);
+          o2.start(ctx.currentTime+i*0.1); o2.stop(ctx.currentTime+i*0.1+0.2);
+        });
+        break;
+      }
     }
   } catch(e){}
 }
+
+
+// ── BACKGROUND MUSIC ─────────────────────────────────────────────────────────
+var _bgMusic = { nodes:[], playing:false, step:0, timer:null };
+
+// Simple pentatonic chiptune melody — upbeat, looping
+var BG_MELODY = [
+  // [freq, duration_s, volume]
+  [523,0.18,0.07],[659,0.18,0.07],[784,0.18,0.07],[659,0.18,0.07],
+  [523,0.18,0.07],[392,0.18,0.07],[440,0.18,0.07],[523,0.36,0.07],
+  [0,0.18,0],[659,0.18,0.07],[784,0.18,0.07],[880,0.18,0.07],
+  [784,0.18,0.07],[659,0.18,0.07],[523,0.18,0.07],[440,0.36,0.07],
+  [0,0.18,0],[523,0.12,0.06],[659,0.12,0.06],[784,0.12,0.06],
+  [880,0.12,0.06],[784,0.12,0.06],[659,0.12,0.06],[523,0.36,0.07],
+  [392,0.18,0.07],[440,0.18,0.07],[523,0.18,0.07],[440,0.18,0.07],
+  [392,0.18,0.07],[330,0.18,0.07],[294,0.18,0.07],[330,0.36,0.07],
+];
+
+// Bass line — lower octave pulse
+var BG_BASS = [
+  [131,0.36,0.06],[0,0.36,0],[165,0.36,0.05],[0,0.36,0],
+  [131,0.36,0.06],[0,0.36,0],[175,0.36,0.05],[0,0.36,0],
+  [131,0.36,0.06],[0,0.36,0],[165,0.36,0.05],[0,0.36,0],
+  [131,0.72,0.06],[0,0.72,0],
+];
+
+function startBgMusic(){
+  if(!_sfxEnabled) return;
+  if(_bgMusic.playing) return;
+  var ctx=getSfxCtx(); if(!ctx) return;
+  _bgMusic.playing=true;
+
+  var melodyIdx=0, bassIdx=0;
+  var melodyTime=ctx.currentTime+0.1;
+  var bassTime=ctx.currentTime+0.1;
+
+  function scheduleMelody(){
+    if(!_bgMusic.playing) return;
+    // Schedule next 4 notes ahead
+    for(var i=0;i<4;i++){
+      var note=BG_MELODY[melodyIdx%BG_MELODY.length];
+      if(note[0]>0){
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='square'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(note[0], melodyTime);
+        g.gain.setValueAtTime(0, melodyTime);
+        g.gain.linearRampToValueAtTime(note[2], melodyTime+0.01);
+        g.gain.setValueAtTime(note[2], melodyTime+note[1]*0.7);
+        g.gain.linearRampToValueAtTime(0, melodyTime+note[1]);
+        o.start(melodyTime); o.stop(melodyTime+note[1]+0.05);
+        _bgMusic.nodes.push(o);
+      }
+      melodyTime+=note[1];
+      melodyIdx++;
+    }
+    // Schedule next batch
+    var delay=(melodyTime-ctx.currentTime-0.2)*1000;
+    _bgMusic.timer=setTimeout(scheduleMelody, Math.max(50,delay));
+  }
+
+  function scheduleBass(){
+    if(!_bgMusic.playing) return;
+    for(var i=0;i<2;i++){
+      var note=BG_BASS[bassIdx%BG_BASS.length];
+      if(note[0]>0){
+        var o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='triangle'; o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(note[0], bassTime);
+        g.gain.setValueAtTime(0, bassTime);
+        g.gain.linearRampToValueAtTime(note[2], bassTime+0.02);
+        g.gain.setValueAtTime(note[2]*0.7, bassTime+note[1]*0.6);
+        g.gain.linearRampToValueAtTime(0, bassTime+note[1]);
+        o.start(bassTime); o.stop(bassTime+note[1]+0.05);
+      }
+      bassTime+=note[1];
+      bassIdx++;
+    }
+    var delay=(bassTime-ctx.currentTime-0.2)*1000;
+    setTimeout(scheduleBass, Math.max(50,delay));
+  }
+
+  scheduleMelody();
+  scheduleBass();
+}
+
+function stopBgMusic(){
+  _bgMusic.playing=false;
+  if(_bgMusic.timer) clearTimeout(_bgMusic.timer);
+  _bgMusic.nodes.forEach(function(n){ try{ n.stop(); }catch(e){} });
+  _bgMusic.nodes=[];
+}
+
+// Update toggleSfx to also stop music
+var _origToggleSfx=window.toggleSfx;
+window.toggleSfx=function(){
+  _origToggleSfx();
+  if(!_sfxEnabled) stopBgMusic();
+  var btn=document.getElementById('sfxToggleBtn');
+  if(btn){ btn.textContent=_sfxEnabled?'🔊':'🔇'; }
+};
 
 // Mute toggle — persisted in localStorage
 (function(){
@@ -2112,6 +2423,7 @@ var answerLocked=false;
 // SCREEN HELPER
 // ══════════════════════════════════════════
 function show(id){
+  sfx('transition');
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
@@ -2620,6 +2932,47 @@ window.handleLogin = window.handleLogin; // keep reference
 // If a student has many sessions but few facts recorded (due to data loss or
 // storage issues), estimate missing fact data from session avgMs history.
 // This prevents being stuck at low level despite lots of practice.
+
+function showFirstTimeWelcome(displayName){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:9900;background:rgba(0,0,0,0.95);'
+    +'display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease;';
+
+  ov.innerHTML='<div style="max-width:360px;width:92%;text-align:center;'
+    +'animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">'
+    // Sword graphic
+    +'<div style="font-size:4rem;margin-bottom:8px;animation:mBounce 0.8s ease infinite;">⚔️</div>'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:4px;color:#ff9500;text-transform:uppercase;margin-bottom:10px;">New Warrior</div>'
+    +'<div style="font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:10px;line-height:1.3;">'
+    +'Welcome, <span style="color:#ffd700;">'+displayName+'</span>! 🎉</div>'
+    +'<div style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,209,102,0.3);'
+    +'border-radius:14px;padding:16px 18px;margin-bottom:20px;">'
+    +'<div style="font-size:0.92rem;color:#e8f0fe;font-weight:700;line-height:1.7;">'
+    +'The first thing we need to do is<br>'
+    +'<span style="color:#ffd700;font-size:1.05rem;">see what you know!</span></div>'
+    +'<div style="font-size:0.78rem;color:#7a8fb5;margin-top:8px;line-height:1.5;">'
+    +'We will give you a quick 1-minute challenge to<br>map out your multiplication skills.<br>'
+    +'<span style="color:#06d6a0;font-weight:700;">Just do your best — no pressure!</span></div>'
+    +'</div>'
+    +'<button id="firstTimeStartBtn" style="width:100%;background:linear-gradient(135deg,#ffd700,#ff9500);'
+    +'color:#1a0d00;border:none;border-radius:14px;padding:16px;font-family:inherit;font-weight:900;'
+    +'font-size:1.05rem;cursor:pointer;letter-spacing:1px;box-shadow:0 0 24px rgba(255,215,0,0.4);">'
+    +'Lets Go! ⚡</button>'
+    +'</div>';
+
+  ov.querySelector('#firstTimeStartBtn').addEventListener('click', function(){
+    sfx('click');
+    ov.remove();
+    // Start a 1-minute diagnostic session across all facts
+    selMode=60;
+    activeAttackZone=null;
+    window._wsipFacts=null;
+    startQuiz(false, 60);
+  });
+
+  document.body.appendChild(ov);
+}
+
 function repairFactDataOnLogin(){
   var d=getData(), ud=d[userKey];
   if(!ud||!ud.sessions||ud.sessions.length<3) return; // need at least 3 sessions
@@ -2718,6 +3071,7 @@ function handleLogin(){
   try {
     userKey=name.toLowerCase();
     var ud=initUser(name);
+    var isFirstEver=!ud.sessions||ud.sessions.length===0;
     if(userKey==='god') seedGodAccount();
     applyCastleResetV2(ud, getData());
     document.getElementById('modeGreeting').textContent='Hi, '+ud.displayName+'! \uD83D\uDC4B';
@@ -2728,6 +3082,8 @@ function handleLogin(){
     renderModeScreen();
     show('modeScreen');
     sfx('click');
+    // First-ever login — show welcome and auto-start a diagnostic session
+    if(isFirstEver){ showFirstTimeWelcome(ud.displayName); return; }
   try { checkAndSaveBadges(); } catch(e){}
     try { applyGoldenTheme(); } catch(e){}
     // Init companion for Nani
@@ -2969,7 +3325,7 @@ function renderLevelBar(){
 }
 
 function showLevelUpPopup(lvl){
-  sfx('levelUp');
+  sfx(lvl===10?'legendaryFanfare':'levelUp');
   var lv=LEVELS[lvl-1];
   if(!lv) return;
   var overlay=document.getElementById('levelUpOverlay');
@@ -3547,7 +3903,7 @@ function saveMPData(){
 function awardCredits(amount, reason){
   var d=getData(), ud=d[userKey];
   if(!ud) return;
-  sfx('gold');
+  sfx('coin');
   if(!ud.mp) ud.mp={ credits:0, inventory:{}, baseGrid:{}, lastLogin:Date.now() };
   ud.mp.credits=(ud.mp.credits||0)+amount;
   saveData(d);
@@ -3997,7 +4353,8 @@ function checkBattleChargesAfterSession(dur){
   if(newCharges>0){
     var chargeTotal=ud.mp.battleCharges;
     setTimeout(function(){
-      showMPToastGlobal('⚔️ Battle charge earned! ('+chargeTotal+'/'+maxCharges+') — visit your castle!');
+      sfx('powerup');
+  showMPToastGlobal('⚔️ Battle charge earned! ('+chargeTotal+'/'+maxCharges+') — visit your castle!');
     }, newCharges>0&&ud.mp.trackingProgress<100 ? 2200 : 800);
   }
 }
@@ -4189,6 +4546,7 @@ function showVoidSovereign(){
   if(document.getElementById('myPlaceScreen') && !document.getElementById('myPlaceScreen').classList.contains('active')){
     showMyPlace();
   }
+  sfx('voidArrive');
   ov.style.display='flex';
   ov.style.pointerEvents='all';
   ov.style.background='rgba(10,0,20,0.97)';
@@ -6103,7 +6461,8 @@ function buildWave(isTough){
   for(var sti=0;sti<studentPool.length;sti++){
     var stm=studentPool[sti];
     if(Math.floor(Math.random()*stm.dropChance)===0){
-      showStudentEncounterBanner(stm);
+      sfx('monsterLegendary');
+  showStudentEncounterBanner(stm);
       // Student monsters fight solo — they don't need help
       var studentEntry={
         id:stm.id, name:stm.name, emoji:stm.emoji,
@@ -7559,6 +7918,7 @@ window.destroyBaseStep=function(step){
   } else if(step===3){
     overlay.style.display='none';
     // Show explosion
+    sfx('explosion');
     document.getElementById('explosionEmojis').textContent='💥 🔥 💣 ☠️ 🌋 ⚡ 💥 🔥 💥';
     explosion.style.display='flex';
     // Return all placed items to inventory (except permaDead — they stay)
@@ -7827,6 +8187,7 @@ window.buyItem=function(itemId){
 };
 
 function showMPToast(msg){
+  sfx('notification');
   var t=document.getElementById('mpToast');
   if(!t){
     t=document.createElement('div');
@@ -8282,7 +8643,7 @@ window.cellClick=function(key){
       if(stock<=0){ showMPToast('No more of that item! Buy more in Shop.'); setSelectedItem(null); return; }
       ud.mp.inventory[_selectedItemId]=stock-1;
     }
-    sfx('place');
+    sfx('hammer');
     grid[key]={ id:_selectedItemId, rot:0 };
     // Assign a decor want if this is a defender
     var _placedItem=SHOP_ITEMS.find(function(x){return x.id===_selectedItemId;});
@@ -9344,6 +9705,7 @@ function startQuiz(isFocus, forceDur){
     inp.focus();
     clearInterval(timer);
     timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
+    startBgMusic();
     return;
   }
 
@@ -9375,6 +9737,7 @@ function startQuiz(isFocus, forceDur){
         inp.focus();
         clearInterval(timer);
         timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
+        startBgMusic();
       }, 650);
     }
   }
@@ -9482,6 +9845,7 @@ function updateTimerDisplay(){
 
 function endQuiz(){
   clearInterval(timer);
+  stopBgMusic();
   answerLocked=true;
   sfx('sessionEnd');
   var okTimes=qTimes.filter(function(t){return t.ok;});
