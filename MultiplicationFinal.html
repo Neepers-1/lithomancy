@@ -941,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.6 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">15 New Sounds · Chiptune BG Music · Richer Audio</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.7 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Quiz Music Removed</div>
         </div>
       </div>
     </div>
@@ -9705,7 +9705,6 @@ function startQuiz(isFocus, forceDur){
     inp.focus();
     clearInterval(timer);
     timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
-    startBgMusic();
     return;
   }
 
@@ -9737,7 +9736,6 @@ function startQuiz(isFocus, forceDur){
         inp.focus();
         clearInterval(timer);
         timer=setInterval(function(){timeLeft--; updateTimerDisplay(); if(timeLeft<=0) endQuiz();},1000);
-        startBgMusic();
       }, 650);
     }
   }
@@ -9845,7 +9843,6 @@ function updateTimerDisplay(){
 
 function endQuiz(){
   clearInterval(timer);
-  stopBgMusic();
   answerLocked=true;
   sfx('sessionEnd');
   var okTimes=qTimes.filter(function(t){return t.ok;});
