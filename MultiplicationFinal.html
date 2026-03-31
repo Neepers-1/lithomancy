@@ -673,14 +673,44 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 /* ── FIRE / SUPERNOVA EFFECTS ──────────────────────────────────────── */
 @keyframes fireFlicker {
-  0%,100% { transform:scaleX(1) scaleY(1) translateY(0); opacity:0.85; }
-  25%      { transform:scaleX(1.05) scaleY(1.08) translateY(-3px); opacity:1; }
-  50%      { transform:scaleX(0.97) scaleY(1.12) translateY(-5px); opacity:0.9; }
-  75%      { transform:scaleX(1.03) scaleY(1.06) translateY(-2px); opacity:0.95; }
+  0%   { transform:scaleX(1)    scaleY(1)    translateY(0);   opacity:0.88; }
+  20%  { transform:scaleX(1.06) scaleY(1.10) translateY(-4px);opacity:1;    }
+  45%  { transform:scaleX(0.95) scaleY(1.14) translateY(-7px);opacity:0.92; }
+  70%  { transform:scaleX(1.04) scaleY(1.08) translateY(-3px);opacity:0.96; }
+  100% { transform:scaleX(1)    scaleY(1)    translateY(0);   opacity:0.88; }
+}
+@keyframes fireFlicker2 {
+  0%   { transform:scaleX(0.97) scaleY(1.12) translateY(-5px);opacity:0.9; }
+  30%  { transform:scaleX(1.07) scaleY(1.05) translateY(-1px);opacity:1;   }
+  60%  { transform:scaleX(0.93) scaleY(1.18) translateY(-9px);opacity:0.85;}
+  100% { transform:scaleX(0.97) scaleY(1.12) translateY(-5px);opacity:0.9; }
 }
 @keyframes fireParticle {
-  0%   { transform:translateY(0) translateX(0) scale(1); opacity:1; }
-  100% { transform:translateY(-120px) translateX(var(--dx,0px)) scale(0); opacity:0; }
+  0%   { transform:translateY(0)    translateX(0)             scale(1);   opacity:1; }
+  100% { transform:translateY(var(--rise,-150px)) translateX(var(--dx,0px)) scale(0); opacity:0; }
+}
+@keyframes sparkle {
+  0%   { transform:scale(0) rotate(0deg);   opacity:0; }
+  30%  { transform:scale(1) rotate(120deg); opacity:1; }
+  70%  { transform:scale(1.2) rotate(240deg);opacity:0.8; }
+  100% { transform:scale(0) rotate(360deg); opacity:0; }
+}
+@keyframes heatWave {
+  0%,100% { transform:translateX(0)    skewX(0deg);  opacity:0.4; }
+  33%      { transform:translateX(3px)  skewX(1deg);  opacity:0.6; }
+  66%      { transform:translateX(-3px) skewX(-1deg); opacity:0.5; }
+}
+@keyframes screenGlow {
+  0%,100% { opacity:var(--base-glow,0.08); }
+  50%      { opacity:var(--peak-glow,0.18); }
+}
+@keyframes megaFlicker {
+  0%   { transform:scaleX(1)    scaleY(1)    translateY(0);    opacity:0.95; filter:brightness(1); }
+  15%  { transform:scaleX(1.08) scaleY(1.15) translateY(-8px); opacity:1;    filter:brightness(1.3); }
+  35%  { transform:scaleX(0.92) scaleY(1.22) translateY(-14px);opacity:0.9;  filter:brightness(1.1); }
+  55%  { transform:scaleX(1.10) scaleY(1.12) translateY(-6px); opacity:1;    filter:brightness(1.25); }
+  75%  { transform:scaleX(0.94) scaleY(1.18) translateY(-10px);opacity:0.95; filter:brightness(1.15); }
+  100% { transform:scaleX(1)    scaleY(1)    translateY(0);    opacity:0.95; filter:brightness(1); }
 }
 @keyframes supernovaExpand {
   0%   { transform:translate(-50%,-50%) scale(0); opacity:1; }
@@ -708,14 +738,30 @@ tr:hover td { background: rgba(255,255,255,0.03); }
   100% { transform:translateY(-200px) scale(0.3) rotate(var(--spin,20deg)); opacity:0; }
 }
 #fireOverlay {
-  position:fixed; bottom:0; left:0; right:0; height:180px;
-  pointer-events:none; z-index:8100; overflow:hidden;
-  background:transparent;
+  position:fixed; bottom:0; left:0; right:0; height:0;
+  pointer-events:none; z-index:8100; overflow:visible;
+  background:transparent; transition:height 0.6s ease;
+}
+#fireGlow {
+  position:fixed; inset:0; pointer-events:none; z-index:8099;
+  background:radial-gradient(ellipse at 50% 100%, var(--glow-col,#ff440033) 0%, transparent 70%);
+  opacity:0; transition:opacity 0.8s ease;
 }
 .fire-tongue {
-  position:absolute; bottom:0; border-radius:50% 50% 20% 20%;
-  animation: fireFlicker var(--dur,0.8s) ease-in-out infinite;
-  transform-origin: bottom center;
+  position:absolute; bottom:0; border-radius:52% 48% 22% 18% / 60% 60% 40% 40%;
+  transform-origin: bottom center; will-change:transform;
+}
+.fire-tongue.flicker1 { animation: fireFlicker  var(--dur,0.8s) ease-in-out infinite; }
+.fire-tongue.flicker2 { animation: fireFlicker2 var(--dur,0.7s) ease-in-out infinite; }
+.fire-tongue.mega     { animation: megaFlicker  var(--dur,0.5s) ease-in-out infinite; }
+.fire-sparkle {
+  position:absolute; pointer-events:none;
+  animation: sparkle var(--sdur,0.8s) ease-out var(--sdel,0s) infinite;
+}
+.fire-heat {
+  position:absolute; bottom:0; left:0; right:0;
+  pointer-events:none; border-radius:0;
+  animation: heatWave 1.2s ease-in-out infinite;
 }
 #supernovaOverlay {
   position:fixed; inset:0; pointer-events:none; z-index:8200;
@@ -1018,8 +1064,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.9 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">🔥 Fire Streaks · 🌟 SUPERNOVA Mode</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.0 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">🔥 6-Level Fire · ✨ Sparkles · Mega Blaze</div>
         </div>
       </div>
     </div>
@@ -1379,7 +1425,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 <!-- Drag ghost -->
 <div id="dragGhost"></div>
-<div id="fireOverlay" style="display:none;"></div>
+<div id="fireGlow"></div>
+<div id="fireOverlay"></div>
 <div id="supernovaOverlay" style="display:none;"></div>
 <div id="trashZone" onclick="trashSelectedItem()">
   <span>🗑️</span>
@@ -4058,97 +4105,206 @@ function checkExploiterBadgeOnLogin(){
 
 
 // ── FIRE & SUPERNOVA SYSTEM ────────────────────────────────────────────────
-var _fireLevel = 0;       // 0=none, 1-3=building, 4=raging, 5=SUPERNOVA
-var _fireStreakMs = [];   // rolling window of last N answer times in streak
+// 7 levels: 0=none → 6=SUPERNOVA threshold
+// Levels 1-6 render progressively more fire with sparkles and screen glow
+var _fireLevel = 0;
+var _firePrevLevel = 0;
+var _fireStreakMs = [];
 var _supernovaActive = false;
+var _fireRenderTimer = null;
+
+// Level thresholds — [minStreak, maxAvgMs]
+var FIRE_LEVELS = [
+  null,                 // 0 = off
+  [3,  2000],          // 1 — tiny flicker (just started)
+  [5,  1500],          // 2 — small flames
+  [8,  1200],          // 3 — real fire
+  [10, 1000],          // 4 — raging
+  [12, 850],           // 5 — ENORMOUS blazing
+  [15, 750],           // 6 — SUPERNOVA trigger
+];
 
 function updateFireEffect(streakLen, answerMs){
-  // Only count gold-zone speed answers (<1200ms) toward fire
-  if(answerMs > 1500){ _fireLevel = Math.max(0, _fireLevel-1); _fireStreakMs=[]; renderFire(); return; }
+  if(answerMs > 2200){ _fireLevel=Math.max(0,_fireLevel-1); _fireStreakMs=[]; _renderFireDebounced(); return; }
 
   _fireStreakMs.push(answerMs);
-  if(_fireStreakMs.length > 12) _fireStreakMs = _fireStreakMs.slice(-12);
-
+  if(_fireStreakMs.length > 15) _fireStreakMs = _fireStreakMs.slice(-15);
   var avgMs = _fireStreakMs.reduce(function(s,v){return s+v;},0)/_fireStreakMs.length;
 
-  // Fire levels based on streak + speed
   var newLevel = 0;
-  if(streakLen >= 5  && avgMs < 1500) newLevel = 1;
-  if(streakLen >= 8  && avgMs < 1200) newLevel = 2;
-  if(streakLen >= 10 && avgMs < 1000) newLevel = 3;
-  if(streakLen >= 12 && avgMs < 900)  newLevel = 4;
-  if(streakLen >= 15 && avgMs < 750 && !_supernovaActive) newLevel = 5; // SUPERNOVA
-
-  if(newLevel === 5 && _fireLevel < 5){
-    _fireLevel = 5;
-    triggerSupernova();
-    return;
+  for(var lv=1; lv<=6; lv++){
+    var thresh=FIRE_LEVELS[lv];
+    if(streakLen >= thresh[0] && avgMs < thresh[1]) newLevel=lv;
   }
 
-  if(newLevel > _fireLevel || (newLevel === _fireLevel && newLevel > 0)){
-    _fireLevel = newLevel;
+  if(newLevel===6 && !_supernovaActive){
+    _fireLevel=6; triggerSupernova(); return;
   }
-  renderFire();
+  if(newLevel > _fireLevel) _fireLevel = newLevel;
+  _renderFireDebounced();
 }
 
 function resetFire(){
-  _fireLevel = 0;
-  _fireStreakMs = [];
-  renderFire();
+  _fireLevel=0; _firePrevLevel=0; _fireStreakMs=[];
+  var gl=document.getElementById('fireGlow');
+  if(gl){ gl.style.opacity='0'; }
+  var el=document.getElementById('fireOverlay');
+  if(el){ el.innerHTML=''; el.style.height='0'; }
+}
+
+function _renderFireDebounced(){
+  if(_fireRenderTimer) clearTimeout(_fireRenderTimer);
+  _fireRenderTimer = setTimeout(renderFire, 80);
 }
 
 function renderFire(){
-  var el = document.getElementById('fireOverlay');
-  if(!el) return;
-  if(_fireLevel === 0){ el.innerHTML=''; el.style.display='none'; return; }
-  el.style.display='block';
+  var el=document.getElementById('fireOverlay'); if(!el) return;
+  var gl=document.getElementById('fireGlow');
 
-  var configs = [
-    // level 1 — small flickers
-    [{w:30,h:60,left:15,color:'#ff6600',dur:0.9},{w:25,h:50,left:45,color:'#ff4400',dur:1.1},{w:35,h:70,left:70,color:'#ff8800',dur:0.8}],
-    // level 2 — more tongues
-    [{w:40,h:90,left:8,color:'#ff5500',dur:0.7},{w:35,h:80,left:30,color:'#ff3300',dur:0.85},{w:30,h:75,left:52,color:'#ff7700',dur:0.65},{w:38,h:85,left:72,color:'#ff4400',dur:0.9}],
-    // level 3 — raging
-    [{w:50,h:120,left:5,color:'#ff4400',dur:0.6},{w:45,h:110,left:22,color:'#ff6600',dur:0.7},{w:40,h:100,left:40,color:'#ff2200',dur:0.55},{w:48,h:115,left:58,color:'#ff5500',dur:0.65},{w:42,h:105,left:76,color:'#ff7700',dur:0.75}],
-    // level 4 — RAGING INFERNO
-    [{w:60,h:150,left:2,color:'#ff3300',dur:0.5},{w:55,h:140,left:18,color:'#ff6600',dur:0.55},{w:65,h:155,left:33,color:'#ff4400',dur:0.45},{w:50,h:130,left:50,color:'#ff2200',dur:0.6},{w:58,h:145,left:65,color:'#ff5500',dur:0.5},{w:52,h:135,left:80,color:'#ff8800',dur:0.65}],
-  ];
-
-  var lvl = Math.min(_fireLevel, 4);
-  var tongues = configs[lvl-1];
-  var html = '';
-
-  tongues.forEach(function(t){
-    // Each tongue also has an inner brighter core
-    var glowColor = t.color.replace('ff','ff').replace('#ff','#fff');
-    html += '<div class="fire-tongue" style="'
-      +'width:'+t.w+'px;height:'+t.h+'px;left:'+t.left+'%;'
-      +'background:radial-gradient(ellipse at 50% 100%, '+t.color+' 0%, '+t.color+'aa 50%, transparent 100%);'
-      +'--dur:'+t.dur+'s;'
-      +'box-shadow:0 0 '+(t.w/2)+'px '+t.color+'88;'
-      +'opacity:0.88;"></div>';
-    // Inner bright core
-    html += '<div class="fire-tongue" style="'
-      +'width:'+(t.w*0.5)+'px;height:'+(t.h*0.7)+'px;left:calc('+t.left+'% + '+(t.w*0.25)+'px);'
-      +'background:radial-gradient(ellipse at 50% 100%, #ffffff 0%, #ffdd00 40%, transparent 100%);'
-      +'--dur:'+(t.dur*0.9)+'s;opacity:0.6;"></div>';
-  });
-
-  // Floating ember particles
-  for(var p=0;p<(lvl*3);p++){
-    var px=Math.random()*100;
-    var psize=4+Math.random()*8;
-    var pdur=0.8+Math.random()*1.2;
-    var pdx=(Math.random()-0.5)*80;
-    html += '<div style="position:absolute;bottom:'+(5+Math.random()*40)+'px;left:'+px+'%;'
-      +'width:'+psize+'px;height:'+psize+'px;border-radius:50%;'
-      +'background:radial-gradient(circle, #ffee00, #ff6600);'
-      +'--dx:'+pdx+'px;'
-      +'animation:fireParticle '+pdur+'s ease-out '+(Math.random()*2)+'s infinite;'
-      +'opacity:0.9;"></div>';
+  if(_fireLevel===0){ 
+    el.innerHTML=''; el.style.height='0';
+    if(gl) gl.style.opacity='0';
+    return; 
   }
 
-  el.innerHTML = html;
+  var lv = _fireLevel;
+
+  // Screen glow — grows with level
+  if(gl){
+    var glowAlpha=[0,0.04,0.1,0.18,0.28,0.38,0.5][lv];
+    var glowColors=['','#ff660055','#ff550088','#ff4400aa','#ff2200cc','#ff1100ee','#ff0000ff'];
+    gl.style.setProperty('--glow-col', glowColors[lv]);
+    gl.style.opacity = glowAlpha;
+  }
+
+  // Height of overlay grows with level
+  var heights=[0,60,100,150,220,320,420];
+  el.style.height = heights[lv]+'px';
+
+  // Per-level tongue configs: [count, baseW, baseH, colors, flickerClass, dur, hasSparkles, hasMegaCore]
+  var cfgs=[
+    null,
+    // Level 1 — tiny baby flickers
+    { tongues:[
+        {w:18,h:35,l:20,c:'#ff7700',cls:'flicker1',dur:1.1},
+        {w:14,h:28,l:48,c:'#ff5500',cls:'flicker2',dur:1.3},
+        {w:20,h:38,l:72,c:'#ff8800',cls:'flicker1',dur:1.0},
+      ], embers:2, sparkles:0, heat:false },
+    // Level 2 — small real flames
+    { tongues:[
+        {w:28,h:60,l:10,c:'#ff6600',cls:'flicker1',dur:0.9},
+        {w:22,h:50,l:28,c:'#ff4400',cls:'flicker2',dur:1.0},
+        {w:32,h:65,l:48,c:'#ff5500',cls:'flicker1',dur:0.85},
+        {w:24,h:55,l:68,c:'#ff7700',cls:'flicker2',dur:1.05},
+        {w:20,h:45,l:84,c:'#ff3300',cls:'flicker1',dur:0.95},
+      ], embers:5, sparkles:3, heat:false },
+    // Level 3 — proper fire
+    { tongues:[
+        {w:42,h:95,l:3, c:'#ff5500',cls:'flicker1',dur:0.75},
+        {w:36,h:82,l:16,c:'#ff3300',cls:'flicker2',dur:0.82},
+        {w:48,h:105,l:30,c:'#ff6600',cls:'flicker1',dur:0.68},
+        {w:38,h:88,l:46,c:'#ff2200',cls:'flicker2',dur:0.78},
+        {w:44,h:98,l:60,c:'#ff4400',cls:'flicker1',dur:0.72},
+        {w:34,h:78,l:76,c:'#ff5500',cls:'flicker2',dur:0.85},
+        {w:40,h:90,l:88,c:'#ff7700',cls:'flicker1',dur:0.70},
+      ], embers:10, sparkles:6, heat:true },
+    // Level 4 — RAGING
+    { tongues:[
+        {w:58,h:140,l:0, c:'#ff4400',cls:'flicker1',dur:0.60},
+        {w:50,h:125,l:11,c:'#ff2200',cls:'flicker2',dur:0.65},
+        {w:64,h:155,l:23,c:'#ff5500',cls:'mega',   dur:0.55},
+        {w:52,h:130,l:36,c:'#ff3300',cls:'flicker1',dur:0.62},
+        {w:60,h:148,l:48,c:'#ff6600',cls:'mega',   dur:0.50},
+        {w:54,h:132,l:60,c:'#ff1100',cls:'flicker2',dur:0.68},
+        {w:62,h:152,l:72,c:'#ff4400',cls:'mega',   dur:0.52},
+        {w:48,h:122,l:84,c:'#ff5500',cls:'flicker1',dur:0.63},
+      ], embers:18, sparkles:12, heat:true },
+    // Level 5 — ENORMOUS BLAZING MEGA FIRE ✨
+    { tongues:[
+        {w:72,h:200,l:0, c:'#ff3300',cls:'mega',   dur:0.48},
+        {w:60,h:180,l:9, c:'#ff5500',cls:'flicker1',dur:0.52},
+        {w:80,h:220,l:18,c:'#ff2200',cls:'mega',   dur:0.43},
+        {w:65,h:190,l:29,c:'#ff6600',cls:'flicker2',dur:0.50},
+        {w:78,h:215,l:40,c:'#ff4400',cls:'mega',   dur:0.45},
+        {w:62,h:185,l:51,c:'#ff1100',cls:'flicker1',dur:0.54},
+        {w:76,h:210,l:62,c:'#ff5500',cls:'mega',   dur:0.47},
+        {w:64,h:192,l:73,c:'#ff3300',cls:'flicker2',dur:0.51},
+        {w:70,h:205,l:83,c:'#ff6600',cls:'mega',   dur:0.44},
+      ], embers:28, sparkles:22, heat:true, megaGlow:true },
+  ];
+
+  var cfg = cfgs[lv]; if(!cfg) return;
+  var html='';
+
+  // Heat haze layer at base
+  if(cfg.heat){
+    html+='<div class="fire-heat" style="height:'+(heights[lv]*0.3)+'px;'
+      +'background:linear-gradient(to top, rgba(255,80,0,0.08), transparent);'
+      +'filter:blur(4px);"></div>';
+  }
+
+  // Fire tongues
+  cfg.tongues.forEach(function(t,i){
+    // Main tongue
+    var delay=(i*0.07).toFixed(2);
+    html+='<div class="fire-tongue '+t.cls+'" style="'
+      +'width:'+t.w+'px;height:'+t.h+'px;left:'+t.l+'%;'
+      +'background:radial-gradient(ellipse at 48% 100%, '
+        +'#ffffff 0%, '+t.c+' 25%, '+t.c+'cc 55%, '+t.c+'44 80%, transparent 100%);'
+      +'box-shadow:0 0 '+(t.w*0.6)+'px '+t.c+'88, 0 0 '+(t.w*1.2)+'px '+t.c+'44;'
+      +'--dur:'+t.dur+'s;'
+      +'animation-delay:'+delay+'s;"></div>';
+    // Secondary wispy layer
+    html+='<div class="fire-tongue '+t.cls+'" style="'
+      +'width:'+(t.w*0.55)+'px;height:'+(t.h*1.15)+'px;'
+      +'left:calc('+t.l+'% + '+(t.w*0.22)+'px);'
+      +'background:radial-gradient(ellipse at 50% 100%, #ffee00 0%, #ff8800 30%, transparent 75%);'
+      +'opacity:0.45;--dur:'+(t.dur*0.88)+'s;animation-delay:'+(delay*1.3)+'s;"></div>';
+  });
+
+  // Mega glow aura for level 5
+  if(cfg.megaGlow){
+    html+='<div style="position:absolute;bottom:0;left:-20px;right:-20px;height:'+(heights[lv]*0.6)+'px;'
+      +'background:radial-gradient(ellipse at 50% 100%, rgba(255,100,0,0.35) 0%, rgba(255,50,0,0.15) 50%, transparent 75%);'
+      +'filter:blur(12px);pointer-events:none;"></div>';
+  }
+
+  // Ember particles
+  for(var p=0;p<cfg.embers;p++){
+    var px=Math.random()*100;
+    var ps=3+Math.random()*7*(lv/5);
+    var pdur=0.7+Math.random()*1.5;
+    var pdel=Math.random()*2.5;
+    var pdx=(Math.random()-0.5)*100;
+    var rise=80+Math.random()*140*(lv/5);
+    var emberColor=Math.random()<0.5?'#ffee00':'#ff6600';
+    html+='<div style="position:absolute;bottom:'+(Math.random()*heights[lv]*0.3)+'px;left:'+px+'%;'
+      +'width:'+ps+'px;height:'+ps+'px;border-radius:50%;'
+      +'background:radial-gradient(circle, #ffffff, '+emberColor+');'
+      +'box-shadow:0 0 '+(ps*2)+'px '+emberColor+';'
+      +'--dx:'+pdx+'px;--rise:-'+rise+'px;'
+      +'animation:fireParticle '+pdur+'s ease-out '+pdel+'s infinite;"></div>';
+  }
+
+  // Sparkles ✨ — golden stars that appear at higher levels
+  for(var s=0;s<cfg.sparkles;s++){
+    var sx=5+Math.random()*90;
+    var sy=10+Math.random()*80;
+    var ss=6+Math.random()*10*(lv/5);
+    var sdur=0.6+Math.random()*0.8;
+    var sdel=Math.random()*3;
+    var sparkColors=['#ffffff','#ffee00','#ffdd00','#ffffaa','#fff8dc'];
+    var sc=sparkColors[Math.floor(Math.random()*sparkColors.length)];
+    html+='<div class="fire-sparkle" style="'
+      +'left:'+sx+'%;bottom:'+sy+'%;'
+      +'width:'+ss+'px;height:'+ss+'px;'
+      +'background:'+sc+';'
+      +'clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);'
+      +'box-shadow:0 0 '+(ss*1.5)+'px '+sc+';'
+      +'--sdur:'+sdur+'s;--sdel:'+sdel+'s;"></div>';
+  }
+
+  el.innerHTML=html;
 }
 
 function triggerSupernova(){
