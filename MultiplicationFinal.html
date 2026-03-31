@@ -941,8 +941,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.7 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Quiz Music Removed</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v5.8 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Black Fact Repair Fix · Fills All Blanks</div>
         </div>
       </div>
     </div>
@@ -2975,23 +2975,24 @@ function showFirstTimeWelcome(displayName){
 
 function repairFactDataOnLogin(){
   var d=getData(), ud=d[userKey];
-  if(!ud||!ud.sessions||ud.sessions.length<3) return; // need at least 3 sessions
+  if(!ud||!ud.sessions||ud.sessions.length<3) return;
 
   var facts=ud.facts||{};
   var sessions=ud.sessions;
 
-  // Count how many facts have recent10 data
-  var practicedCount=ALL_FACTS.filter(function(ab){
-    var f=facts[fkey(ab[0],ab[1])];
-    return f&&f.recent10&&f.recent10.length>0;
-  }).length;
-
-  var totalSessions=sessions.length;
   var totalCorrect=sessions.reduce(function(s,ss){return s+(ss.correct||0);},0);
 
-  // If they have many sessions/answers but few recorded facts, something went wrong
-  // Threshold: if they've answered 200+ correct but have <20 facts tracked, repair
-  if(totalCorrect < 200 || practicedCount >= 20) return;
+  // Need enough session data to estimate from
+  if(totalCorrect < 50) return;
+
+  // Find ALL facts with no recent10 data (blank/black facts)
+  var unrecorded=ALL_FACTS.filter(function(ab){
+    var f=facts[fkey(ab[0],ab[1])];
+    return !f||!f.recent10||!f.recent10.length;
+  });
+
+  // Nothing to fix
+  if(!unrecorded.length) return;
 
   // Calculate overall average speed from sessions
   var sessionsWithAvg=sessions.filter(function(s){return s.avgMs&&s.avgMs>0;});
@@ -3040,6 +3041,13 @@ function repairFactDataOnLogin(){
   });
 
   if(changed){
+    // Clear the notified flag if there are still unfilled blanks
+    // so the repair keeps running on future logins until everything is filled
+    var stillBlank=ALL_FACTS.filter(function(ab){
+      var f=ud.facts[fkey(ab[0],ab[1])];
+      return !f||!f.recent10||!f.recent10.length;
+    }).length;
+    if(stillBlank>0) delete ud._factRepairNotified;
     d[userKey]=ud;
     saveData(d);
     // Show a one-time notification
