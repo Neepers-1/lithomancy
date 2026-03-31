@@ -1064,8 +1064,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.0 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">🔥 6-Level Fire · ✨ Sparkles · Mega Blaze</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.1 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Early Quit Zero Gold · Brick Move Fix · Long-Press Move</div>
         </div>
       </div>
     </div>
@@ -4394,6 +4394,8 @@ function triggerSupernova(){
 
 function earnSessionCredits(session){
   var d=getData(), ud=d[userKey]; if(!ud) return;
+  // Early quit = zero gold
+  if(window._isEarlyQuit){ window._isEarlyQuit=false; return 0; }
   var earned=0;
   // Base pay: just for showing up and doing math
   earned+=10;
@@ -8892,8 +8894,26 @@ function renderBaseGrid(){
           +(damaged?'<span class="bi-dmg">🔨'+cell.repairCost+'</span>':'')
           +_decorWantHtml;
       }
-      block.addEventListener('click', function(e){ e.stopPropagation(); cellClick(this.dataset.key); });
-      block.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); cellRightClick(e, this.dataset.key); });
+      (function(b){
+        var pressTimer=null, pressKey=b.dataset.key, pressLong=false;
+        b.addEventListener('pointerdown', function(e){
+          pressLong=false;
+          pressTimer=setTimeout(function(){
+            pressLong=true;
+            window._longPressKey=pressKey; // signal to cellClick
+            cellClick(pressKey);
+            window._longPressKey=null;
+          }, 420);
+        });
+        b.addEventListener('pointerup', function(e){ clearTimeout(pressTimer); });
+        b.addEventListener('pointerleave', function(e){ clearTimeout(pressTimer); });
+        b.addEventListener('click', function(e){
+          e.stopPropagation();
+          if(pressLong) return; // already handled by long press
+          cellClick(this.dataset.key);
+        });
+        b.addEventListener('contextmenu', function(e){ e.preventDefault(); e.stopPropagation(); cellRightClick(e, this.dataset.key); });
+      })(block);
     }
 
     canvas.appendChild(block);
@@ -9094,12 +9114,22 @@ window.cellClick=function(key){
 
   var item=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
 
-  // Rotatable item → rotate on tap
+  // Rotatable item — first tap rotates, second tap (same cell) picks up to move
   if(item&&item.rotatable&&!cellItem.damaged){
-    cellItem.rot=((cellItem.rot||0)+1)%2;
-    saveData(d);
-    renderBaseGrid();
-    return;
+    if(window._lastRotatedKey===originKey){
+      // Second tap on same rotatable — pick it up to move
+      window._lastRotatedKey=null;
+    } else {
+      // First tap — rotate
+      window._lastRotatedKey=originKey;
+      cellItem.rot=((cellItem.rot||0)+1)%2;
+      sfx('tap');
+      saveData(d);
+      renderBaseGrid();
+      return;
+    }
+  } else {
+    window._lastRotatedKey=null;
   }
 
   if(cellItem.damaged){
@@ -9115,10 +9145,9 @@ window.cellClick=function(key){
       showMPToast('Need 💰'+cost+' gold to repair!');
     }
   } else {
-    // If this is a defender with a decor want, show the want popup first
-    // Second tap (or tap on non-defender) picks up to move
+    // Defenders: short tap = show wants popup, long press = pick up to move
     var pickItem=SHOP_ITEMS.find(function(x){return x.id===cellItem.id;});
-    if(pickItem&&pickItem.defender&&!_movingFromKey){
+    if(pickItem&&pickItem.defender&&!_movingFromKey&&!window._longPressKey){
       var _dw=getDefenderWantDisplay(originKey);
       if(_dw){
         showDefenderWantPopup(pickItem, _dw, originKey);
@@ -10247,6 +10276,7 @@ document.getElementById('answerInput').addEventListener('keydown',function(e){
 });
 document.getElementById('endEarlyBtn').addEventListener('click', function(){
   clearInterval(timer);
+  window._isEarlyQuit = true;
   recordEarlyQuit();
   endQuiz();
 });
