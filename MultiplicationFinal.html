@@ -1064,8 +1064,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.1 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Early Quit Zero Gold · Brick Move Fix · Long-Press Move</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.2 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Levels Go Down · Level-Down Popup · Persistent Levels</div>
         </div>
       </div>
     </div>
@@ -3421,6 +3421,13 @@ function renderLevelTooltip(){
 
 var lastKnownLevel=null;
 
+function getStoredLevel(){
+  try{ var v=localStorage.getItem('level_'+userKey); return v!==null?parseInt(v):null; }catch(e){ return null; }
+}
+function storeLevel(lv){
+  try{ localStorage.setItem('level_'+userKey, lv); }catch(e){}
+}
+
 function renderLevelBar(){
   var res=computeLevel(), curLevel=res.level;
   var pct=curLevel===0 ? 2 : Math.round((curLevel/10)*100);
@@ -3451,11 +3458,55 @@ function renderLevelBar(){
   }
   track.innerHTML='<div class="level-bar-fill'+(curLevel===10?' at-gold':'')+'" id="levelBarFill" style="height:'+pct+'%;"></div>'+notchHtml;
 
-  // Level-up detection
-  if(lastKnownLevel!==null && curLevel>lastKnownLevel && curLevel>0){
-    setTimeout(function(){ showLevelUpPopup(curLevel); }, 400);
+  // Level-up / level-down detection
+  // Use persisted level so it survives refreshes
+  if(lastKnownLevel===null) lastKnownLevel=getStoredLevel();
+  if(lastKnownLevel!==null){
+    if(curLevel > lastKnownLevel && curLevel > 0){
+      setTimeout(function(){ showLevelUpPopup(curLevel); }, 400);
+    } else if(curLevel < lastKnownLevel && lastKnownLevel > 0){
+      setTimeout(function(){ showLevelDownPopup(lastKnownLevel, curLevel); }, 600);
+    }
   }
   lastKnownLevel=curLevel;
+  storeLevel(curLevel);
+}
+
+
+function showLevelDownPopup(fromLevel, toLevel){
+  sfx('defeat');
+  var fromLv=LEVELS[Math.max(0,fromLevel-1)];
+  var toLv=toLevel>0?LEVELS[toLevel-1]:null;
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,0.88);'
+    +'display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease;';
+  var toColor=toLv?toLv.color:'#7a8fb5';
+  var toLabel=toLv?toLv.label:'Beginner';
+  overlay.innerHTML='<div style="max-width:320px;width:92%;background:linear-gradient(160deg,#1a0808,#0f0505);'
+    +'border:2px solid rgba(239,71,111,0.5);border-radius:20px;padding:26px 22px;text-align:center;'
+    +'animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);">'
+    +'<div style="font-size:2.8rem;margin-bottom:6px;">📉</div>'
+    +'<div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#ef476f;text-transform:uppercase;margin-bottom:8px;">Level Down</div>'
+    +'<div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:4px;">'
+      +'Level '+fromLevel+' → <span style="color:'+toColor+';">Level '+toLevel+'</span></div>'
+    +'<div style="font-size:0.88rem;color:'+toColor+';font-weight:700;margin-bottom:14px;">'+toLabel+'</div>'
+    +'<div style="background:rgba(239,71,111,0.1);border:1px solid rgba(239,71,111,0.3);'
+      +'border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:0.8rem;color:#b89fd4;line-height:1.6;">'
+      +'Your recent answer times slipped below the threshold.<br>'
+      +'<span style="color:#ffd700;font-weight:700;">Keep practicing to climb back up!</span>'
+    +'</div>'
+    +'<div style="font-size:0.72rem;color:#4a5f80;margin-bottom:16px;">'
+      +'Level '+fromLevel+' requires: <span style="color:#7a8fb5;">'+fromLv.req+'</span>'
+    +'</div>'
+    +'<button id="levelDownOkBtn" style="width:100%;background:linear-gradient(135deg,#ef476f,#c0392b);'
+      +'color:#fff;border:none;border-radius:12px;padding:12px;font-family:inherit;font-weight:900;'
+      +'font-size:0.95rem;cursor:pointer;">Lets Go! 💪</button>'
+    +'</div>';
+  overlay.querySelector('#levelDownOkBtn').addEventListener('click', function(){
+    sfx('click'); overlay.remove();
+  });
+  overlay.addEventListener('click', function(e){ if(e.target===overlay){ sfx('back'); overlay.remove(); } });
+  document.body.appendChild(overlay);
 }
 
 function showLevelUpPopup(lvl){
