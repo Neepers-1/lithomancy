@@ -1116,8 +1116,8 @@ tr:hover td { background: rgba(255,255,255,0.03); }
       <div style="text-align:center;margin-top:16px;">
         <div style="display:inline-block;background:linear-gradient(135deg,rgba(155,89,182,0.25),rgba(100,50,160,0.15));border:1.5px solid rgba(155,89,182,0.5);border-radius:14px;padding:7px 20px;box-shadow:0 0 16px rgba(155,89,182,0.2);">
           <div style="font-size:0.6rem;font-weight:900;letter-spacing:3px;color:#9b59b6;text-transform:uppercase;margin-bottom:2px;">Current Version</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.5 <span style="color:#ffd700;">⚡</span></div>
-          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Isac Victory Poop · Castle Contamination · 6-7</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#e0c0ff;letter-spacing:1px;">v6.7 <span style="color:#ffd700;">⚡</span></div>
+          <div style="font-size:0.62rem;color:#9b59b6;font-weight:700;letter-spacing:1px;margin-top:1px;">Exploit Badge Only When Truly Cheating</div>
         </div>
       </div>
     </div>
@@ -5521,6 +5521,7 @@ function showVoidSovereign(){
   ov.style.background='rgba(10,0,20,0.97)';
 }
 
+window.acceptVoidSovereign=acceptVoidSovereign;
 function acceptVoidSovereign(){
   var ov=document.getElementById('voidSovereignOverlay');
   ov.style.display='none';
@@ -10575,10 +10576,21 @@ window.launchAttack=function(dur){
   var hasCommutativeDupes = normalizedKeys.length !== new Set(normalizedKeys).size;
   if(hasCommutativeDupes){
     var d0=getData(), ud0=d0[userKey];
+    // Count how many non-gold facts they still have left
+    var nonGoldCount = 0;
+    if(ud0&&ud0.facts){
+      ALL_FACTS.forEach(function(ab){
+        var avg=factAvg(ud0.facts[fkey(ab[0],ab[1])]);
+        if(avg===null||avg>=1000) nonGoldCount++;
+      });
+    }
+    // Only flag if ALL practiced facts are gold AND they have plenty of non-gold facts left
+    // If they have <= 10 facts left to work on, small selections are legitimate
     var allFactsGold = ud0&&ud0.facts && keys.every(function(k){
       var f=ud0.facts[k]; var avg=factAvg(f); return avg!==null && avg<1000;
     });
-    window._commuteExploitDetected = allFactsGold; // only shame if grinding already-gold facts
+    var fewFactsRemaining = nonGoldCount <= 10;
+    window._commuteExploitDetected = allFactsGold && !fewFactsRemaining;
   } else {
     window._commuteExploitDetected = false;
   }
