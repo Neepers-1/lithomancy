@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyboard Quest — Typing Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f0eaf8; --surface:#ffffff; --border:#c9b8e8; --accent:#7a5aaa;
+    --accent-soft:#efe7fb; --sky:#4aa8e0; --good:#34c77b; --bad:#ef5a73;
+    --gold:#ffc24b; --ink:#3a2f4d; --muted:#8b7fa6;
+    --shadow:0 8px 24px rgba(122,90,170,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Nunito',-apple-system,'Segoe UI',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 500px at 80% -10%, #e7ddff 0%, transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, #dcefff 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink); min-height:100%;
+    display:flex; flex-direction:column; align-items:center;
+    padding:18px 14px 40px;
+  }
+  .wrap{width:100%; max-width:960px}
+  /* ---- Top bar ---- */
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap}
+  .logo{font-weight:900; font-size:26px; letter-spacing:-.5px; color:var(--accent);
+    display:flex; align-items:center; gap:10px}
+  .logo .mark{font-size:30px}
+  .spacer{flex:1}
+  .pill{background:var(--surface); border:2px solid var(--border); border-radius:999px;
+    padding:8px 14px; font-weight:800; box-shadow:var(--shadow); display:flex; gap:8px;
+    align-items:center; font-size:15px}
+  .pill small{color:var(--muted); font-weight:700}
+  .iconbtn{cursor:pointer; user-select:none}
+  button{font-family:inherit; cursor:pointer; border:none}
+  .btn{background:var(--accent); color:#fff; font-weight:800; font-size:16px;
+    padding:12px 22px; border-radius:14px; box-shadow:var(--shadow);
+    transition:transform .08s ease, filter .15s ease}
+  .btn:hover{filter:brightness(1.07)} .btn:active{transform:translateY(2px)}
+  .btn.ghost{background:var(--surface); color:var(--accent); border:2px solid var(--border)}
+  .btn.sky{background:var(--sky)}
+  .btn.small{padding:9px 16px; font-size:14px; border-radius:11px}
+  /* ---- Cards ---- */
+  .card{background:var(--surface); border:2px solid var(--border); border-radius:22px;
+    box-shadow:var(--shadow); padding:22px}
+  /* ---- Profile screen ---- */
+  .center-title{text-align:center; margin:26px 0 8px}
+  .center-title h1{font-size:40px; font-weight:900; color:var(--accent); letter-spacing:-1px}
+  .center-title p{color:var(--muted); font-weight:700; font-size:17px; margin-top:6px}
+  .profile-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px; margin-top:18px}
+  .pcard{background:var(--accent-soft); border:2px solid var(--border); border-radius:16px;
+    padding:16px; text-align:center; cursor:pointer; transition:transform .1s, box-shadow .15s}
+  .pcard:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
+  .pcard .av{font-size:34px}
+  .pcard .nm{font-weight:900; font-size:18px; margin-top:6px}
+  .pcard .meta{font-size:12px; color:var(--muted); font-weight:700; margin-top:4px}
+  .pcard.add{background:#fff; border-style:dashed; color:var(--accent); display:flex;
+    flex-direction:column; justify-content:center; align-items:center; font-weight:900}
+  .delx{position:absolute; top:6px; right:8px; color:var(--muted); font-size:14px}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  input.txt{font-family:inherit; font-weight:800; font-size:16px; padding:12px 14px;
+    border:2px solid var(--border); border-radius:12px; background:#fff; color:var(--ink); flex:1; min-width:160px}
+  input.txt:focus{outline:none; border-color:var(--accent)}
+  /* ---- Map screen ---- */
+  .progress-strip{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px}
+  .stat-chip{flex:1; min-width:120px; background:var(--surface); border:2px solid var(--border);
+    border-radius:16px; padding:14px 16px; box-shadow:var(--shadow)}
+  .stat-chip .v{font-size:26px; font-weight:900; color:var(--accent)}
+  .stat-chip .l{font-size:13px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.5px}
+  .rankbar{height:12px; background:var(--accent-soft); border-radius:999px; overflow:hidden; margin-top:8px}
+  .rankbar > i{display:block; height:100%; background:linear-gradient(90deg,var(--sky),var(--accent)); border-radius:999px}
+  .zone{margin-top:18px}
+  .zone-head{display:flex; align-items:center; gap:10px; margin:0 4px 10px}
+  .zone-head .ic{font-size:24px}
+  .zone-head h2{font-size:21px; font-weight:900}
+  .zone-head .sub{color:var(--muted); font-weight:700; font-size:14px}
+  .levels{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
+  .lvl{background:var(--surface); border:2px solid var(--border); border-radius:16px;
+    padding:14px; cursor:pointer; transition:transform .1s, box-shadow .15s; position:relative}
+  .lvl:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
+  .lvl.locked{opacity:.55; cursor:not-allowed; background:#f6f2fb}
+  .lvl .ln{font-weight:900; font-size:16px}
+  .lvl .ld{font-size:12.5px; color:var(--muted); font-weight:700; margin-top:2px; min-height:32px}
+  .stars{font-size:16px; letter-spacing:2px; margin-top:6px}
+  .stars .e{opacity:.25}
+  .lock{position:absolute; top:12px; right:14px; font-size:18px}
+  .best{font-size:11.5px; color:var(--accent); font-weight:800; margin-top:4px}
+  /* ---- Game screen ---- */
+  .game-top{display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap}
+  .game-stats{display:flex; gap:10px; flex-wrap:wrap}
+  .gstat{background:var(--surface); border:2px solid var(--border); border-radius:14px;
+    padding:8px 16px; text-align:center; min-width:84px}
+  .gstat .v{font-size:24px; font-weight:900; color:var(--accent); line-height:1}
+  .gstat .l{font-size:11px; color:var(--muted); font-weight:800; text-transform:uppercase}
+  .pbar{height:14px; background:var(--accent-soft); border-radius:999px; overflow:hidden; margin:6px 0 18px}
+  .pbar > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--good),var(--sky)); transition:width .08s linear}
+  .typebox{background:var(--surface); border:2px solid var(--border); border-radius:18px;
+    padding:26px 22px; box-shadow:var(--shadow); font-size:34px; font-weight:800; line-height:1.7;
+    letter-spacing:1px; min-height:120px; display:flex; flex-wrap:wrap; align-content:flex-start; gap:2px 0}
+  .ch{padding:0 1px; border-radius:6px; color:var(--muted); position:relative; transition:color .05s}
+  .ch.done{color:var(--good)}
+  .ch.cur{color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 -4px 0 var(--accent)}
+  .ch.cur.space, .ch.space{min-width:18px}
+  .ch.space.cur{background:var(--accent-soft)}
+  .ch.err{color:#fff!important; background:var(--bad)!important; animation:shake .18s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+  .hint{text-align:center; font-weight:800; color:var(--muted); margin:16px 0 8px; font-size:15px; min-height:22px}
+  .hint b{color:var(--accent)}
+  /* ---- Keyboard ---- */
+  .keeb{margin:6px auto 0; max-width:640px; display:flex; flex-direction:column; gap:7px; align-items:center}
+  .krow{display:flex; gap:7px; justify-content:center; width:100%}
+  .key{flex:1; max-width:54px; aspect-ratio:1/1; border-radius:11px; border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-weight:900; font-size:17px;
+    color:var(--ink); background:#fff; transition:transform .06s, box-shadow .1s}
+  .key.wide{max-width:none; flex:5; aspect-ratio:auto; height:42px; font-size:13px; color:var(--muted)}
+  .key.shift{flex:1.6; max-width:none; aspect-ratio:auto; height:42px; font-size:12px; color:var(--muted)}
+  .key.next{transform:translateY(-3px); border-width:3px; color:#fff!important;
+    box-shadow:0 6px 0 rgba(0,0,0,.12); font-size:19px}
+  .key.shift.armed{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+  /* ---- Results ---- */
+  .result{text-align:center; padding:30px 22px}
+  .result .bigstars{font-size:60px; letter-spacing:8px; margin:6px 0 10px}
+  .result .bigstars .e{opacity:.2}
+  .result h2{font-size:30px; font-weight:900; color:var(--accent)}
+  .result .sub{color:var(--muted); font-weight:800; margin-top:4px; font-size:16px}
+  .res-stats{display:flex; gap:14px; justify-content:center; margin:22px 0; flex-wrap:wrap}
+  .res-stats .gstat{min-width:110px; padding:14px 18px}
+  .res-stats .gstat .v{font-size:32px}
+  .newbadge{background:linear-gradient(90deg,#fff7e6,#fff); border:2px solid var(--gold);
+    border-radius:14px; padding:12px 16px; margin:8px auto; max-width:420px; font-weight:800;
+    display:flex; gap:10px; align-items:center; justify-content:center}
+  .newbadge .bi{font-size:26px}
+  .res-actions{display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap}
+  /* ---- Stats / badges ---- */
+  .badge-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-top:14px}
+  .badge{background:var(--accent-soft); border:2px solid var(--border); border-radius:16px;
+    padding:14px; text-align:center}
+  .badge.locked{background:#f6f2fb; opacity:.55}
+  .badge .bi{font-size:30px}
+  .badge .bn{font-weight:900; font-size:14px; margin-top:6px}
+  .badge .bd{font-size:11.5px; color:var(--muted); font-weight:700; margin-top:3px}
+  .sec-h{font-weight:900; font-size:20px; margin:24px 4px 4px; display:flex; align-items:center; gap:8px}
+  .legend{display:flex; gap:10px 16px; flex-wrap:wrap; justify-content:center; margin:14px 0 0; font-size:12.5px; font-weight:800; color:var(--muted)}
+  .legend span{display:flex; align-items:center; gap:6px}
+  .dot{width:12px; height:12px; border-radius:50%; display:inline-block}
+  .footer-note{text-align:center; color:var(--muted); font-weight:700; font-size:13px; margin-top:22px}
+  /* ---- Laws of the Universe ---- */
+  .laws-card{background:
+      radial-gradient(700px 300px at 50% -20%, #ece2ff 0%, transparent 70%), var(--surface)}
+  .laws-list{display:flex; flex-direction:column; gap:14px; margin-top:8px}
+  .law{border-radius:18px; padding:20px 22px; border:2px solid var(--border); text-align:center}
+  .law .law-rn{font-weight:900; letter-spacing:2px; text-transform:uppercase; font-size:13px; color:var(--muted)}
+  .law .law-quote{font-size:24px; font-weight:900; margin:8px 0 8px; line-height:1.35}
+  .law .law-quote.dim{color:var(--muted); font-weight:800; letter-spacing:4px}
+  .law .law-mean{font-size:14px; font-weight:700; color:var(--muted)}
+  .law.unlocked{background:linear-gradient(135deg,#f3ecff 0%,#e9f3ff 100%); border-color:var(--accent)}
+  .law.unlocked .law-rn{color:var(--accent)}
+  .law.unlocked .law-quote{color:var(--accent); font-style:italic}
+  .law.locked{background:#f7f3fc}
+  .law.mystery{background:#f4f1f8; border-style:dashed}
+  .lawreveal{background:linear-gradient(135deg,#efe5ff,#e7f1ff); border:2px solid var(--accent);
+    border-radius:16px; padding:16px 18px; margin:10px auto; max-width:440px; box-shadow:var(--shadow)}
+  .lawreveal .lr-top{font-weight:900; color:var(--accent); font-size:14px; letter-spacing:.3px}
+  .lawreveal .lr-quote{font-size:21px; font-weight:900; font-style:italic; color:var(--ink); margin:8px 0 4px; line-height:1.35}
+  .lawreveal .lr-tag{font-weight:800; color:var(--muted); font-size:13px}
+  @media(max-width:560px){
+    .typebox{font-size:26px; padding:18px}
+    .key{font-size:14px} .key.next{font-size:16px}
+    .center-title h1{font-size:30px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar" id="topbar"></div>
+  <div id="app"></div>
+  <div class="footer-note">Keyboard Quest · sit up tall, fingers on the home row, eyes on the screen. You've got this! ⌨️</div>
+</div>
+
+<script>
+/* ============================================================
+   KEYBOARD QUEST — a Grade 4 typing adventure
+   Single self-contained file. Progress saved per student.
+   ============================================================ */
+
+/* ---------- storage (with safe fallback) ---------- */
+var SKEY='kbQuest_profiles_v1', CKEY='kbQuest_current_v1', MKEY='kbQuest_muted_v1';
+var mem={}; // fallback if localStorage blocked
+function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return mem[k]||null;} }
+function lsSet(k,v){ try{localStorage.setItem(k,v);}catch(e){mem[k]=v;} }
+function loadProfiles(){ try{return JSON.parse(lsGet(SKEY))||{};}catch(e){return {};} }
+function saveProfiles(){ lsSet(SKEY, JSON.stringify(profiles)); }
+var profiles=loadProfiles();
+var current=lsGet(CKEY);
+var muted=lsGet(MKEY)==='1';
+
+var AVATARS=['🦊','🐼','🐧','🦄','🐸','🐯','🦉','🐙','🐝','🦖','🐬','🐨','🦋','🐢','🦁','🐰'];
+function blankProgress(av){return {avatar:av,levels:{},xp:0,badges:[],laws:[],totalTimeMs:0,attempts:0,bestWpm:0,accSum:0,accCount:0};}
+function P(){return profiles[current];}
+
+/* ---------- content ---------- */
+var POOLS={
+  homeRow:['a','s','d','f','g','h','j','k','l'],
+  topRow:['q','w','e','r','t','y','u','i','o','p'],
+  botRow:['z','x','c','v','b','n','m'],
+  allLetters:'abcdefghijklmnopqrstuvwxyz'.split(''),
+  doubles:['ll','ss','ee','oo','ff','tt','pp','mm','nn','dd','rr','gg'],
+  blends:['th','ch','sh','wh','ph','ck','ng','st','nd','nk','mp','lt'],
+  starts:['bl','cl','fl','gl','pl','br','cr','dr','fr','gr','tr','sp','sk','sw','sn','sm'],
+  vowels:['ai','ea','oa','ie','ou','ow','ay','oy','oo','ee','igh','aw'],
+  short:['cat','dog','sun','hat','run','big','red','box','cup','pen','map','bus','fox','top','hop','sit','bat','jam','leg','mud'],
+  sight:['the','and','was','you','are','for','not','but','had','his','her','him','she','can','did','get','put','out','one','two'],
+  mid:['jump','play','book','tree','fish','bird','hand','milk','star','frog','ship','gold','rain','road','snow','wind','cake','game','kite','lamp'],
+  longer:['apple','happy','water','green','about','world','there','light','music','plant','house','smile','queen','dream','party','cloud','beach','tiger','sweet','train'],
+  big5:['friend','school','yellow','purple','animal','flower','garden','orange','family','pencil','dragon','wizard','planet','rocket','castle','jungle'],
+  big6:['rainbow','morning','teacher','dolphin','journey','picture','monster','crystal','library','cabbage','volcano','octopus','penguin','diamond'],
+  hard:['adventure','beautiful','dinosaur','butterfly','mountain','elephant','chocolate','treasure','telescope','crocodile','astronaut','submarine'],
+  mixed:['knowledge','important','favourite','computer','different','together','because','answer','question','science','history','remember'],
+  sShort:['The cat ran fast.','I like to play.','We can read now.','She has a big dog.','He is my best pal.','The sun is hot.','We won the game.','My pet is a frog.'],
+  sMid:['The sun is very bright today.','My friend likes to draw pictures.','We will go to the zoo soon.','I can ride my bike to school.','The little bird sang a sweet song.','We made a cake for the party.'],
+  sLong:['We went to the park to play with our brand new ball.','My sister and I built a giant castle out of soft sand.','The brave knight rode across the green field on his horse.','After lunch we read a funny story about a talking cat.'],
+  sChal:['The quick brown fox jumps over the lazy dog.','Five busy wizards jump quickly to vex the gnome.','Pack my box with five dozen jugs of liquid.']
+};
+
+/* zones -> levels. type: letters | pairs | words | sentence */
+var ZONES=[
+  {ic:'🔤',name:'Single Letters',sub:'Learn each key, one at a time',levels:[
+    {t:'Home Row',d:'a s d f g h j k l',type:'letters',pool:'homeRow',n:22,target:14},
+    {t:'Top Row',d:'q w e r t y u i o p',type:'letters',pool:'topRow',n:22,target:14},
+    {t:'Bottom Row',d:'z x c v b n m',type:'letters',pool:'botRow',n:20,target:14},
+    {t:'All Letters',d:'every letter, mixed up',type:'letters',pool:'allLetters',n:24,target:16},
+  ]},
+  {ic:'🔁',name:'Double Letters & Pairs',sub:'Two letters that go together',levels:[
+    {t:'Double Trouble',d:'ll ss ee oo ff ...',type:'pairs',pool:'doubles',n:14,target:14},
+    {t:'Sticky Sounds',d:'th ch sh ck ng ...',type:'pairs',pool:'blends',n:14,target:14},
+    {t:'Fast Starts',d:'bl cl tr sp gr ...',type:'pairs',pool:'starts',n:14,target:15},
+    {t:'Vowel Teams',d:'ai ea ow oo ...',type:'pairs',pool:'vowels',n:14,target:15},
+  ]},
+  {ic:'📝',name:'Simple Words',sub:'Short words you know',levels:[
+    {t:'Tiny Words',d:'cat · dog · sun',type:'words',pool:'short',n:8,target:16},
+    {t:'Sight Words',d:'the · and · you',type:'words',pool:'sight',n:8,target:16},
+    {t:'Fun Words',d:'jump · book · star',type:'words',pool:'mid',n:8,target:17},
+    {t:'Five Letters',d:'apple · happy · water',type:'words',pool:'longer',n:7,target:17},
+  ]},
+  {ic:'📖',name:'Big Words',sub:'Longer, trickier words',levels:[
+    {t:'Six Letters',d:'friend · school · yellow',type:'words',pool:'big5',n:6,target:17},
+    {t:'Seven Letters',d:'rainbow · teacher',type:'words',pool:'big6',n:6,target:18},
+    {t:'Long Words',d:'dinosaur · butterfly',type:'words',pool:'hard',n:5,target:18},
+    {t:'Word Wizard',d:'knowledge · favourite',type:'words',pool:'mixed',n:5,target:18},
+  ]},
+  {ic:'✍️',name:'Sentences',sub:'Whole sentences with capitals',levels:[
+    {t:'Short Lines',d:'The cat ran fast.',type:'sentence',pool:'sShort',n:1,target:18},
+    {t:'Medium Lines',d:'The sun is bright today.',type:'sentence',pool:'sMid',n:1,target:19},
+    {t:'Long Lines',d:'We went to the park to play.',type:'sentence',pool:'sLong',n:1,target:20},
+    {t:'Champion Lines',d:'The quick brown fox...',type:'sentence',pool:'sChal',n:1,target:22},
+  ]},
+];
+/* flatten with ids */
+var LEVELS=[]; ZONES.forEach(function(z,zi){z.levels.forEach(function(l,li){l.id='L'+zi+'_'+li; l.zi=zi; l.li=li; l.num=LEVELS.length+1; LEVELS.push(l);});});
+function levelById(id){return LEVELS.find(function(l){return l.id===id;});}
+
+/* ---------- fingers / keyboard ---------- */
+var FINGERS={
+ 'Q':['left pinky','#ef5a73'],'A':['left pinky','#ef5a73'],'Z':['left pinky','#ef5a73'],
+ 'W':['left ring','#f08a3c'],'S':['left ring','#f08a3c'],'X':['left ring','#f08a3c'],
+ 'E':['left middle','#d99a00'],'D':['left middle','#d99a00'],'C':['left middle','#d99a00'],
+ 'R':['left index','#34c77b'],'F':['left index','#34c77b'],'V':['left index','#34c77b'],'T':['left index','#34c77b'],'G':['left index','#34c77b'],'B':['left index','#34c77b'],
+ 'Y':['right index','#2bb6c4'],'H':['right index','#2bb6c4'],'N':['right index','#2bb6c4'],'U':['right index','#2bb6c4'],'J':['right index','#2bb6c4'],'M':['right index','#2bb6c4'],
+ 'I':['right middle','#4aa8e0'],'K':['right middle','#4aa8e0'],',':['right middle','#4aa8e0'],
+ 'O':['right ring','#7a5aaa'],'L':['right ring','#7a5aaa'],'.':['right ring','#7a5aaa'],
+ 'P':['right pinky','#c061b0'],
+ ' ':['either thumb','#9aa3b2']
+};
+var KB_ROWS=[
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L'],
+  ['Z','X','C','V','B','N','M',',','.']
+];
+function keyIdFor(ch){ if(ch===' ')return 'space'; return ch.toUpperCase(); }
+function needShift(ch){ return ch>='A' && ch<='Z'; }
+function fingerOf(ch){ var u=ch===' '?' ':ch.toUpperCase(); return FINGERS[u]||['','#9aa3b2']; }
+function hexA(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
+
+/* ---------- sounds ---------- */
+var actx=null;
+function ac(){ if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} return actx; }
+function beep(freq,dur,type,vol){ if(muted)return; var c=ac(); if(!c)return;
+  try{var o=c.createOscillator(),g=c.createGain(); o.type=type||'sine'; o.frequency.value=freq;
+  g.gain.value=vol||0.12; o.connect(g); g.connect(c.destination); var t=c.currentTime;
+  o.start(t); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.stop(t+dur);}catch(e){} }
+function sTick(){ beep(880,0.05,'square',0.05); }
+function sBuzz(){ beep(150,0.13,'sawtooth',0.13); }
+function sStar(i){ beep(523+i*130,0.18,'triangle',0.16); }
+function sWin(){ [523,659,784,1047].forEach(function(f,i){setTimeout(function(){beep(f,0.22,'triangle',0.16);},i*120);}); }
+function sBadge(){ [784,988,1319].forEach(function(f,i){setTimeout(function(){beep(f,0.25,'sine',0.16);},i*140);}); }
+function sLaw(){ [392,523,659,784,1047].forEach(function(f,i){setTimeout(function(){beep(f,0.5,'sine',0.13);},i*180);}); }
+
+/* ---------- ranks ---------- */
+var RANKS=[[0,'Keyboard Cadet'],[120,'Key Explorer'],[300,'Word Wrangler'],[550,'Speed Scout'],[900,'Typing Knight'],[1350,'Keyboard Captain'],[2000,'Master Typist']];
+function rankFor(xp){ var r=RANKS[0],next=null; for(var i=0;i<RANKS.length;i++){ if(xp>=RANKS[i][0]){r=RANKS[i]; next=RANKS[i+1]||null;} } return {name:r[1],base:r[0],next:next}; }
+
+/* ---------- badges ---------- */
+var BADGES=[
+  {id:'first',ic:'🌱',n:'First Steps',d:'Finish your first level',test:function(p){return Object.keys(p.levels).length>=1;}},
+  {id:'five',ic:'🚀',n:'On a Roll',d:'Finish 5 levels',test:function(p){return Object.keys(p.levels).length>=5;}},
+  {id:'sharp',ic:'🎯',n:'Sharpshooter',d:'Get 100% accuracy',test:function(p){return Object.values(p.levels).some(function(x){return x.bestAcc>=100;});}},
+  {id:'speedy',ic:'⚡',n:'Speedy Fingers',d:'Reach 25 WPM',test:function(p){return p.bestWpm>=25;}},
+  {id:'stars25',ic:'⭐',n:'Star Collector',d:'Earn 25 stars',test:function(p){return totalStars(p)>=25;}},
+  {id:'triple',ic:'💎',n:'Triple Crown',d:'3 stars on 8 levels',test:function(p){return Object.values(p.levels).filter(function(x){return x.stars>=3;}).length>=8;}},
+  {id:'home',ic:'🏠',n:'Home Row Hero',d:'3 stars on every Single Letters level',test:function(p){return ZONES[0].levels.every(function(l){return (p.levels[l.id]||{}).stars>=3;});}},
+  {id:'pairs',ic:'🔗',n:'Pair Master',d:'3 stars on every Pairs level',test:function(p){return ZONES[1].levels.every(function(l){return (p.levels[l.id]||{}).stars>=3;});}},
+  {id:'words',ic:'📚',n:'Wordsmith',d:'Finish all word levels',test:function(p){return ZONES[2].levels.concat(ZONES[3].levels).every(function(l){return p.levels[l.id];});}},
+  {id:'marathon',ic:'⏳',n:'Marathon Typist',d:'Practice for 20 minutes',test:function(p){return p.totalTimeMs>=20*60000;}},
+  {id:'all',ic:'🏆',n:'Quest Champion',d:'Finish all 20 levels',test:function(p){return Object.keys(p.levels).length>=LEVELS.length;}},
+];
+function totalStars(p){ return Object.values(p.levels).reduce(function(s,x){return s+(x.stars||0);},0); }
+function avgAcc(p){ return p.accCount? Math.round(p.accSum/p.accCount):0; }
+
+/* ---------- Laws of the Universe (Yoda-esque wisdom, unlocked over time) ---------- */
+/* text:null  => a mystery, not yet revealed. Fill in later when the words are ready. */
+function levelsDone(p){ return Object.keys(p.levels).length; }
+var LAWS=[
+  {rn:'I',  text:'You must go slow to go fast.',  meaning:'Type carefully and correctly first — speed grows on its own once your fingers know the way.',
+    need:2,  metric:levelsDone, hint:'Finish 2 levels to reveal this law'},
+  {rn:'II', text:'Use your brain, not your eyes.', meaning:'Trust your fingers to remember the keys. Looking down slows you and stops your hands from learning.',
+    need:6,  metric:levelsDone, hint:'Finish 6 levels to reveal this law'},
+  {rn:'III', text:null},
+  {rn:'IV',  text:null},
+  {rn:'V',   text:null}
+];
+function lawUnlocked(p,i){ var L=LAWS[i]; return !!(L.text && L.metric(p)>=L.need); }
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+var app=document.getElementById('app');
+var topbar=document.getElementById('topbar');
+var state=null; // game state when playing
+
+function el(html){ var d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstChild; }
+
+function renderTopbar(){
+  if(!current || !P()){ topbar.innerHTML='<div class="logo"><span class="mark">⌨️</span>Keyboard Quest</div>'; return; }
+  var p=P(); var rk=rankFor(p.xp);
+  topbar.innerHTML=''+
+    '<div class="logo"><span class="mark">⌨️</span>Keyboard Quest</div>'+
+    '<div class="spacer"></div>'+
+    '<div class="pill">'+p.avatar+' '+current+'</div>'+
+    '<div class="pill"><small>RANK</small> '+rk.name+'</div>'+
+    '<div class="pill"><small>⭐</small> '+totalStars(p)+'/'+(LEVELS.length*3)+'</div>'+
+    '<div class="pill iconbtn" id="muteBtn" title="Sound on/off">'+(muted?'🔇':'🔊')+'</div>';
+  var mb=document.getElementById('muteBtn');
+  if(mb) mb.onclick=function(){ muted=!muted; lsSet(MKEY,muted?'1':'0'); renderTopbar(); };
+}
+
+/* ----- profile picker ----- */
+function screenProfiles(){
+  state=null; renderTopbar();
+  var names=Object.keys(profiles);
+  var cards=names.map(function(nm){ var p=profiles[nm];
+    return '<div class="pcard" data-nm="'+nm+'" style="position:relative">'+
+      '<span class="delx iconbtn" data-del="'+nm+'" title="Remove">✕</span>'+
+      '<div class="av">'+p.avatar+'</div><div class="nm">'+nm+'</div>'+
+      '<div class="meta">⭐ '+totalStars(p)+' · '+Object.keys(p.levels).length+'/'+LEVELS.length+' levels</div></div>';
+  }).join('');
+  app.innerHTML=''+
+    '<div class="center-title"><h1>Welcome, Typists! ⌨️</h1><p>Pick your name to start your typing adventure.</p></div>'+
+    '<div class="card">'+
+      '<div class="profile-grid">'+cards+
+        '<div class="pcard add" id="addCard"><div class="av">＋</div><div class="nm">Add Name</div></div>'+
+      '</div>'+
+      '<div id="addRow" style="display:none; margin-top:16px" class="row">'+
+        '<input class="txt" id="newName" maxlength="14" placeholder="Type your first name...">'+
+        '<button class="btn" id="createBtn">Start ✨</button>'+
+      '</div>'+
+    '</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('.pcard[data-nm]'),function(c){
+    c.onclick=function(e){ if(e.target.dataset.del)return; current=c.dataset.nm; lsSet(CKEY,current); screenMap(); };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(x){
+    x.onclick=function(e){ e.stopPropagation(); var nm=x.dataset.del;
+      if(confirm('Remove '+nm+' and their progress?')){ delete profiles[nm]; if(current===nm){current=null;lsSet(CKEY,'');} saveProfiles(); screenProfiles(); } };
+  });
+  document.getElementById('addCard').onclick=function(){
+    var r=document.getElementById('addRow'); r.style.display='flex'; document.getElementById('newName').focus(); };
+  function create(){
+    var v=document.getElementById('newName').value.trim();
+    if(!v) return; if(profiles[v]){ alert('That name is already on the list!'); return; }
+    var av=AVATARS[Object.keys(profiles).length % AVATARS.length];
+    profiles[v]=blankProgress(av); saveProfiles(); current=v; lsSet(CKEY,current); screenMap();
+  }
+  document.getElementById('createBtn').onclick=create;
+  document.getElementById('newName').addEventListener('keydown',function(e){ if(e.key==='Enter')create(); });
+}
+
+/* ----- level map ----- */
+function unlocked(idx){ if(idx===0)return true; var prev=LEVELS[idx-1]; return !!(P().levels[prev.id]); }
+function screenMap(){
+  state=null; renderTopbar();
+  var p=P(); var rk=rankFor(p.xp);
+  var pct = rk.next ? Math.round((p.xp-rk.base)/(rk.next[0]-rk.base)*100) : 100;
+  var html=''+
+    '<div class="progress-strip">'+
+      '<div class="stat-chip"><div class="v">'+(p.bestWpm||0)+'</div><div class="l">Best WPM</div></div>'+
+      '<div class="stat-chip"><div class="v">'+avgAcc(p)+'%</div><div class="l">Avg Accuracy</div></div>'+
+      '<div class="stat-chip"><div class="v">⭐'+totalStars(p)+'</div><div class="l">Stars Earned</div></div>'+
+      '<div class="stat-chip"><div class="v">'+Object.keys(p.levels).length+'/'+LEVELS.length+'</div><div class="l">Levels Done</div></div>'+
+    '</div>'+
+    '<div class="card" style="padding:16px 20px">'+
+      '<div class="row"><b style="font-size:16px">Rank: '+rk.name+'</b><div class="spacer"></div>'+
+      '<button class="btn ghost small" id="statsBtn">🏅 My Badges & Stats</button>'+
+      '<button class="btn ghost small" id="lawsBtn">📜 Laws of the Universe</button>'+
+      '<button class="btn ghost small" id="switchBtn">Switch Player</button></div>'+
+      '<div class="rankbar"><i style="width:'+pct+'%"></i></div>'+
+      '<div style="font-size:13px;color:var(--muted);font-weight:700;margin-top:6px">'+
+        (rk.next? ('Earn '+(rk.next[0]-p.xp)+' more XP to become '+rk.next[1]+'!') : 'Top rank reached — amazing! 🏆')+'</div>'+
+    '</div>';
+  ZONES.forEach(function(z){
+    html+='<div class="zone"><div class="zone-head"><span class="ic">'+z.ic+'</span><div><h2>'+z.name+'</h2><div class="sub">'+z.sub+'</div></div></div><div class="levels">';
+    z.levels.forEach(function(l){
+      var idx=LEVELS.indexOf(l); var open=unlocked(idx); var rec=p.levels[l.id];
+      var st=rec?rec.stars:0;
+      var stars='<span class="stars">'+[1,2,3].map(function(i){return '<span class="'+(i<=st?'':'e')+'">★</span>';}).join('')+'</span>';
+      html+='<div class="lvl'+(open?'':' locked')+'" data-id="'+l.id+'">'+
+        (open?'':'<span class="lock">🔒</span>')+
+        '<div class="ln">'+l.num+'. '+l.t+'</div>'+
+        '<div class="ld">'+l.d+'</div>'+ stars +
+        (rec?'<div class="best">Best: '+rec.bestWpm+' WPM · '+rec.bestAcc+'%</div>':'')+
+      '</div>';
+    });
+    html+='</div></div>';
+  });
+  app.innerHTML=html;
+  Array.prototype.forEach.call(document.querySelectorAll('.lvl:not(.locked)'),function(c){
+    c.onclick=function(){ startLevel(c.dataset.id); };
+  });
+  document.getElementById('statsBtn').onclick=screenStats;
+  document.getElementById('lawsBtn').onclick=screenLaws;
+  document.getElementById('switchBtn').onclick=screenProfiles;
+}
+
+/* ----- text generation ----- */
+function pick(arr,prev){ var c; do{ c=arr[Math.floor(Math.random()*arr.length)]; }while(arr.length>2 && c===prev); return c; }
+function genText(l){
+  var pool=POOLS[l.pool];
+  if(l.type==='sentence'){ return pool[Math.floor(Math.random()*pool.length)]; }
+  var out=[],prev=null;
+  for(var i=0;i<l.n;i++){ var c=pick(pool,prev); out.push(c); prev=c; }
+  return out.join(' ');
+}
+
+/* ----- game ----- */
+function startLevel(id){
+  var l=levelById(id);
+  state={ id:id, level:l, text:genText(l), pos:0, total:0, correct:0, start:null, mode:'playing' };
+  renderTopbar();
+  app.innerHTML=''+
+    '<div class="game-top">'+
+      '<button class="btn ghost small" id="backBtn">← Map</button>'+
+      '<div class="spacer"></div>'+
+      '<div class="game-stats">'+
+        '<div class="gstat"><div class="v" id="gWpm">0</div><div class="l">WPM</div></div>'+
+        '<div class="gstat"><div class="v" id="gAcc">100%</div><div class="l">Accuracy</div></div>'+
+        '<div class="gstat"><div class="v">'+l.num+'</div><div class="l">Level</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="pbar"><i id="pbar"></i></div>'+
+    '<div class="typebox" id="typebox"></div>'+
+    '<div class="hint" id="hint"></div>'+
+    '<div class="keeb" id="keeb"></div>';
+  document.getElementById('backBtn').onclick=function(){ state=null; screenMap(); };
+  buildKeyboard();
+  renderText();
+  updateKeyboard();
+  ac(); // warm up audio on first interaction context
+}
+
+function buildKeyboard(){
+  var kb=document.getElementById('keeb'); kb.innerHTML='';
+  KB_ROWS.forEach(function(row){
+    var r=el('<div class="krow"></div>');
+    row.forEach(function(k){
+      var f=FINGERS[k]||['','#9aa3b2'];
+      var key=el('<div class="key" data-key="'+k+'">'+k+'</div>');
+      key.style.background=hexA(f[1],0.14);
+      key.style.borderColor=hexA(f[1],0.5);
+      r.appendChild(key);
+    });
+    kb.appendChild(r);
+  });
+  var r4=el('<div class="krow"></div>');
+  r4.appendChild(el('<div class="key shift" data-key="shiftL">⇧ Shift</div>'));
+  var sp=el('<div class="key wide" data-key="space">space</div>'); sp.style.background=hexA('#9aa3b2',0.14);
+  r4.appendChild(sp);
+  r4.appendChild(el('<div class="key shift" data-key="shiftR">Shift ⇧</div>'));
+  document.getElementById('keeb').appendChild(r4);
+}
+
+function renderText(){
+  var box=document.getElementById('typebox'); box.innerHTML='';
+  for(var i=0;i<state.text.length;i++){
+    var ch=state.text[i]; var isSpace=ch===' ';
+    var cls='ch'+(isSpace?' space':'');
+    if(i<state.pos) cls+=' done';
+    else if(i===state.pos) cls+=' cur';
+    var span=el('<span class="'+cls+'">'+(isSpace?'&nbsp;':ch)+'</span>');
+    box.appendChild(span);
+  }
+}
+function refreshText(){
+  var box=document.getElementById('typebox'); if(!box)return;
+  var spans=box.children;
+  for(var i=0;i<spans.length;i++){
+    var c=spans[i]; var base='ch'+(state.text[i]===' '?' space':'');
+    if(i<state.pos) base+=' done'; else if(i===state.pos) base+=' cur';
+    c.className=base;
+  }
+}
+function updateStatsLive(){
+  var acc = state.total? Math.round(state.correct/state.total*100):100;
+  var wpm = liveWpm();
+  var aE=document.getElementById('gAcc'), wE=document.getElementById('gWpm'), pb=document.getElementById('pbar');
+  if(aE)aE.textContent=acc+'%'; if(wE)wE.textContent=wpm;
+  if(pb)pb.style.width=(state.pos/state.text.length*100)+'%';
+}
+function liveWpm(){ if(state.start===null)return 0; var m=(performance.now()-state.start)/60000; if(m<=0)return 0; return Math.max(0,Math.round((state.correct/5)/m)); }
+
+function updateKeyboard(){
+  var kb=document.getElementById('keeb'); if(!kb)return;
+  Array.prototype.forEach.call(kb.querySelectorAll('.key'),function(k){ k.classList.remove('next'); k.classList.remove('armed'); });
+  if(state.pos>=state.text.length)return;
+  var ch=state.text[state.pos]; var f=fingerOf(ch); var id=keyIdFor(ch);
+  var keyEl=kb.querySelector('[data-key="'+id+'"]');
+  if(keyEl){ keyEl.classList.add('next'); keyEl.style.background=f[1]; keyEl.style.borderColor=f[1]; }
+  // reset other key backgrounds to faint
+  Array.prototype.forEach.call(kb.querySelectorAll('.key:not(.next):not(.wide):not(.shift)'),function(k){
+    var ff=FINGERS[k.dataset.key]||['','#9aa3b2']; k.style.background=hexA(ff[1],0.14); k.style.borderColor=hexA(ff[1],0.5);
+  });
+  if(id==='space'){ var spk=kb.querySelector('[data-key="space"]'); if(spk){spk.style.background=hexA('#9aa3b2',0.14);} }
+  // shift
+  var shiftNeeded=needShift(ch);
+  if(shiftNeeded){ kb.querySelector('[data-key="shiftL"]').classList.add('armed'); kb.querySelector('[data-key="shiftR"]').classList.add('armed'); }
+  // hint
+  var hint=document.getElementById('hint');
+  var label = ch===' ' ? 'the space bar' : ('the '+(shiftNeeded?'capital ':'')+'"'+ch+'" key');
+  hint.innerHTML='Next: press <b>'+label+'</b> with your <b>'+f[0]+'</b>'+(shiftNeeded?' (hold <b>Shift</b> with the other pinky)':'');
+}
+
+document.addEventListener('keydown',function(e){
+  if(!state || state.mode!=='playing') return;
+  if(e.key==='Escape'){ state=null; screenMap(); return; }
+  if(e.key && e.key.length!==1) return;            // ignore Shift/Backspace/etc.
+  e.preventDefault();
+  var expected=state.text[state.pos];
+  state.total++;
+  if(e.key===expected){
+    if(state.start===null) state.start=performance.now();
+    state.correct++; state.pos++; sTick();
+    if(state.pos>=state.text.length){ finishLevel(); return; }
+    refreshText(); updateKeyboard(); updateStatsLive();
+  } else {
+    sBuzz();
+    var box=document.getElementById('typebox');
+    if(box && box.children[state.pos]){ var c=box.children[state.pos]; c.classList.add('err');
+      setTimeout(function(){ c.classList.remove('err'); refreshText(); },180); }
+    updateStatsLive();
+  }
+});
+
+/* ----- finish & rewards ----- */
+function finishLevel(){
+  state.mode='done';
+  var elapsed = state.start? (performance.now()-state.start):1;
+  var minutes=elapsed/60000;
+  var wpm=Math.max(0,Math.round((state.text.length/5)/minutes));
+  var acc=state.total?Math.round(state.correct/state.total*100):100;
+  var l=state.level;
+  // stars
+  var stars=1;
+  if(acc>=90 && wpm>=l.target) stars=2;
+  if(acc>=97 && wpm>=l.target+8) stars=3;
+  // save progress
+  var p=P();
+  var prev=p.levels[l.id]; var firstTime=!prev;
+  var rec=prev||{stars:0,bestWpm:0,bestAcc:0};
+  rec.stars=Math.max(rec.stars,stars);
+  rec.bestWpm=Math.max(rec.bestWpm,wpm);
+  rec.bestAcc=Math.max(rec.bestAcc,acc);
+  p.levels[l.id]=rec;
+  p.bestWpm=Math.max(p.bestWpm,wpm);
+  p.accSum+=acc; p.accCount++; p.attempts++;
+  p.totalTimeMs+=elapsed;
+  var xpGain = 10 + stars*15 + (firstTime?20:0);
+  p.xp+=xpGain;
+  // badges
+  var newBadges=[];
+  BADGES.forEach(function(b){ if(p.badges.indexOf(b.id)<0 && b.test(p)){ p.badges.push(b.id); newBadges.push(b); } });
+  // laws of the universe
+  p.laws=p.laws||[];
+  var newLaws=[];
+  LAWS.forEach(function(L,i){ if(L.text && p.laws.indexOf(i)<0 && lawUnlocked(p,i)){ p.laws.push(i); newLaws.push(L); } });
+  saveProfiles();
+  renderTopbar();
+  // sounds
+  setTimeout(function(){ for(var i=0;i<stars;i++){ (function(k){ setTimeout(function(){sStar(k);},k*180); })(i); } },150);
+  setTimeout(sWin, stars*180+200);
+  if(newBadges.length) setTimeout(sBadge, stars*180+700);
+  if(newLaws.length) setTimeout(sLaw, stars*180+(newBadges.length?1400:700));
+  screenResult(wpm,acc,stars,xpGain,newBadges,newLaws,l);
+}
+
+function screenResult(wpm,acc,stars,xp,newBadges,newLaws,l){
+  var msgs=['Nice typing!','Great work!','Awesome!','Fantastic!','Super!'];
+  var top=stars===3?'Perfect run! 🌟':stars===2?'Really well done!':'Level complete!';
+  var idx=LEVELS.indexOf(l); var next=LEVELS[idx+1];
+  var starHtml='<div class="bigstars">'+[1,2,3].map(function(i){return '<span class="'+(i<=stars?'':'e')+'">★</span>';}).join('')+'</div>';
+  var badgeHtml=newBadges.map(function(b){return '<div class="newbadge"><span class="bi">'+b.ic+'</span> New badge unlocked: <b>'+b.n+'</b></div>';}).join('');
+  var lawHtml=(newLaws||[]).map(function(L){return '<div class="lawreveal"><div class="lr-top">📜 A Law of the Universe has been revealed!</div><div class="lr-quote">"'+L.text+'"</div><div class="lr-tag">— Law '+L.rn+'</div></div>';}).join('');
+  app.innerHTML='<div class="card result">'+
+    starHtml+'<h2>'+top+'</h2><div class="sub">'+msgs[stars+1]+' Level '+l.num+': '+l.t+'</div>'+
+    '<div class="res-stats">'+
+      '<div class="gstat"><div class="v">'+wpm+'</div><div class="l">Words / min</div></div>'+
+      '<div class="gstat"><div class="v">'+acc+'%</div><div class="l">Accuracy</div></div>'+
+      '<div class="gstat"><div class="v">+'+xp+'</div><div class="l">XP earned</div></div>'+
+    '</div>'+
+    badgeHtml+
+    lawHtml+
+    '<div class="res-actions">'+
+      '<button class="btn ghost" id="retryBtn">↻ Try Again</button>'+
+      (next && unlocked(idx+1)?'<button class="btn sky" id="nextBtn">Next Level →</button>':'')+
+      '<button class="btn" id="mapBtn">Back to Map</button>'+
+    '</div>'+
+    (stars<3?'<div style="margin-top:16px;color:var(--muted);font-weight:700;font-size:14px">Tip: aim for <b>'+l.target+'+ WPM</b> and <b>97% accuracy</b> to earn all three stars. Accuracy first, speed second!</div>':'')+
+  '</div>';
+  document.getElementById('retryBtn').onclick=function(){ startLevel(l.id); };
+  document.getElementById('mapBtn').onclick=function(){ state=null; screenMap(); };
+  if(next && unlocked(idx+1)){ document.getElementById('nextBtn').onclick=function(){ startLevel(next.id); }; }
+}
+
+/* ----- stats & badges ----- */
+function screenStats(){
+  state=null; var p=P(); var rk=rankFor(p.xp);
+  var mins=Math.round(p.totalTimeMs/60000);
+  var badges=BADGES.map(function(b){ var got=p.badges.indexOf(b.id)>=0;
+    return '<div class="badge'+(got?'':' locked')+'"><div class="bi">'+(got?b.ic:'🔒')+'</div><div class="bn">'+b.n+'</div><div class="bd">'+b.d+'</div></div>';
+  }).join('');
+  var zoneRows=ZONES.map(function(z){
+    var done=z.levels.filter(function(l){return p.levels[l.id];}).length;
+    var st=z.levels.reduce(function(s,l){return s+((p.levels[l.id]||{}).stars||0);},0);
+    return '<div class="stat-chip" style="min-width:160px"><div class="v" style="font-size:18px">'+z.ic+' '+done+'/'+z.levels.length+'</div><div class="l">'+z.name+' · ⭐'+st+'</div></div>';
+  }).join('');
+  app.innerHTML='<div class="card">'+
+    '<div class="row"><button class="btn ghost small" id="backBtn">← Map</button>'+
+      '<div class="spacer"></div><b style="font-size:20px">'+p.avatar+' '+current+' — '+rk.name+'</b></div>'+
+    '<div class="progress-strip" style="margin-top:16px">'+
+      '<div class="stat-chip"><div class="v">'+(p.bestWpm||0)+'</div><div class="l">Best WPM</div></div>'+
+      '<div class="stat-chip"><div class="v">'+avgAcc(p)+'%</div><div class="l">Avg Accuracy</div></div>'+
+      '<div class="stat-chip"><div class="v">'+p.xp+'</div><div class="l">Total XP</div></div>'+
+      '<div class="stat-chip"><div class="v">'+mins+'m</div><div class="l">Time Practiced</div></div>'+
+      '<div class="stat-chip"><div class="v">'+p.attempts+'</div><div class="l">Rounds Played</div></div>'+
+    '</div>'+
+    '<div class="sec-h">📍 Progress by zone</div>'+
+    '<div class="progress-strip">'+zoneRows+'</div>'+
+    '<div class="sec-h">🏅 Badges ('+p.badges.length+'/'+BADGES.length+')</div>'+
+    '<div class="badge-grid">'+badges+'</div>'+
+    '<div class="sec-h">✋ Finger colours</div>'+
+    '<div class="legend">'+
+      '<span><i class="dot" style="background:#ef5a73"></i>left pinky</span>'+
+      '<span><i class="dot" style="background:#f08a3c"></i>left ring</span>'+
+      '<span><i class="dot" style="background:#d99a00"></i>left middle</span>'+
+      '<span><i class="dot" style="background:#34c77b"></i>left index</span>'+
+      '<span><i class="dot" style="background:#2bb6c4"></i>right index</span>'+
+      '<span><i class="dot" style="background:#4aa8e0"></i>right middle</span>'+
+      '<span><i class="dot" style="background:#7a5aaa"></i>right ring</span>'+
+      '<span><i class="dot" style="background:#c061b0"></i>right pinky</span>'+
+      '<span><i class="dot" style="background:#9aa3b2"></i>thumbs</span>'+
+    '</div>'+
+  '</div>';
+  document.getElementById('backBtn').onclick=screenMap;
+}
+
+/* ----- Laws of the Universe ----- */
+function screenLaws(){
+  state=null; var p=P(); p.laws=p.laws||[];
+  var found=p.laws.length, revealable=LAWS.filter(function(L){return L.text;}).length;
+  var rows=LAWS.map(function(L,i){
+    if(L.text && p.laws.indexOf(i)>=0){
+      return '<div class="law unlocked"><div class="law-rn">Law '+L.rn+'</div>'+
+        '<div class="law-quote">"'+L.text+'"</div>'+
+        '<div class="law-mean">'+L.meaning+'</div></div>';
+    }
+    if(L.text){ // exists but not yet earned
+      var have=L.metric(p);
+      return '<div class="law locked"><div class="law-rn">Law '+L.rn+'</div>'+
+        '<div class="law-quote dim">🔒 Not yet revealed</div>'+
+        '<div class="law-mean">'+L.hint+' &nbsp;·&nbsp; <b>'+have+' / '+L.need+'</b> done</div></div>';
+    }
+    return '<div class="law mystery"><div class="law-rn">Law '+L.rn+'</div>'+
+      '<div class="law-quote dim">❓ ❓ ❓</div>'+
+      '<div class="law-mean">This law is still a mystery, waiting to be discovered...</div></div>';
+  }).join('');
+  app.innerHTML='<div class="card laws-card">'+
+    '<div class="row"><button class="btn ghost small" id="backBtn">← Map</button>'+
+      '<div class="spacer"></div><b style="font-size:20px">📜 Laws of the Universe</b></div>'+
+    '<p style="text-align:center;color:var(--muted);font-weight:700;margin:14px 0 4px">Ancient typing wisdom. Keep practising to reveal all five.</p>'+
+    '<p style="text-align:center;color:var(--accent);font-weight:900;margin-bottom:10px">'+found+' of '+LAWS.length+' revealed</p>'+
+    '<div class="laws-list">'+rows+'</div>'+
+  '</div>';
+  document.getElementById('backBtn').onclick=screenMap;
+}
+
+/* ---------- boot ---------- */
+(function boot(){
+  renderTopbar();
+  if(current && profiles[current]) screenMap(); else screenProfiles();
+})();
+</script>
+</body>
+</html>
